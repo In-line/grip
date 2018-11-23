@@ -29,7 +29,6 @@
  *
  */
 
-
 use std::collections::HashMap;
 
 /// Just a simple, general and limited abstraction for storing Pawn handle id's
@@ -38,6 +37,11 @@ pub struct CellMap<T> {
     counter: isize,
 }
 
+impl<T> Default for CellMap<T> {
+    fn default() -> Self {
+        CellMap::new()
+    }
+}
 impl<T> CellMap<T> {
     pub fn new() -> CellMap<T> {
         CellMap {
@@ -50,7 +54,7 @@ impl<T> CellMap<T> {
     pub fn insert_with_unique_id(&mut self, item: T) -> isize {
         assert!(self.counter >= 1);
 
-        self.inner.insert(self.counter as isize, item).unwrap();
+        assert!(self.inner.insert(self.counter as isize, item).is_none());
         self.counter += 1;
 
         self.counter - 1

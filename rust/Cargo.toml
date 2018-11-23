@@ -8,6 +8,7 @@ crate-type = ["staticlib"]
 
 [profile.release]
 lto = true
+panic = "abort"
 
 [dependencies]
 bytes = "0.4.11"
@@ -18,3 +19,10 @@ hyper = "0.12.16"
 derive_more = "0.13.0"
 libc = "0.2.43"
 tokio = "0.1.11"
+derive_builder = "0.7.0"
+error-chain = "0.12.0"
+log = "0.4.6"
+rust-ini = "0.13.0"
+clone_all = "0.1.1"
+either = "1.5.0"
+lazy_static = "1.2.0"

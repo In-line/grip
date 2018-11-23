@@ -34,8 +34,4 @@
 
 #include "amxxmodule.h"
 
-AMX_NATIVE_INFO ep_exports[] = {
-	{nullptr, nullptr}
-};
-
 #endif // MAIN_H

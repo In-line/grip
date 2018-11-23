@@ -28,28 +28,55 @@
  *    version.
  *
  */
-
-
+#![recursion_limit = "1024"]
+extern crate bytes;
 extern crate crossbeam_channel;
 extern crate futures;
 extern crate hyper;
 
+extern crate either;
+
+#[macro_use]
+extern crate log;
+
+#[macro_use]
+extern crate derive_builder;
+
 #[macro_use]
 extern crate derive_more;
 
+#[macro_use]
+extern crate error_chain;
+
+#[macro_use]
+extern crate clone_all;
+
+#[macro_use]
+extern crate lazy_static;
+
+mod errors {
+    error_chain! {
+        errors {
+            FFIError(t: String) {
+                display("FFI Error: {}", t)
+            }
+        }
+
+        foreign_links {
+            CrossBeamError(::crossbeam_channel::TryRecvError);
+            HTTPError(::hyper::Error);
+        }
+    }
+
+    pub fn ffi_error<T: Into<String>>(t: T) -> Error {
+        ErrorKind::FFIError(t.into()).into()
+    }
+}
+
 pub mod cell_map;
 pub mod client;
+pub mod ffi;
 pub mod networking_queue;
-
-#[no_mangle]
-pub extern "C" fn restry_deinit() {
-    println!("Resty deinit");
-}
-
-#[no_mangle]
-pub extern "C" fn restry_init() {
-    println!("Resty deinit");
-}
 
 #[cfg(test)]
 mod tests {

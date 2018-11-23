@@ -25,12 +25,12 @@
  * -For both library and library class, you can use a comma
  *   to add multiple entries.
  */
-#define MODULE_NAME "Restry"
+#define MODULE_NAME "gRIP"
 #define MODULE_VERSION "0.01 Alpha"
 #define MODULE_AUTHOR "Inline"
 #define MODULE_URL "NotSure"
-#define MODULE_LOGTAG "Restry"
-#define MODULE_LIBRARY "restry"
+#define MODULE_LOGTAG "gRIP"
+#define MODULE_LIBRARY "grip"
 #define MODULE_LIBCLASS ""
 // If you want the module not to be reloaded on mapchange, remove / comment out the next line
 //#define MODULE_RELOAD_ON_MAPCHANGE
@@ -42,7 +42,7 @@
 #endif // __DATE__
 
 // metamod plugin?
-// #define USE_METAMOD
+#define USE_METAMOD
 
 // use memory manager/tester?
 // note that if you use this, you cannot construct/allocate 
@@ -134,7 +134,7 @@
 // #define FN_ServerDeactivate			ServerDeactivate			/* pfnServerDeactivate()		(wd) Server is leaving the map (shutdown or changelevel); SDK2 */
 // #define FN_PlayerPreThink			PlayerPreThink				/* pfnPlayerPreThink() */
 // #define FN_PlayerPostThink			PlayerPostThink				/* pfnPlayerPostThink() */
-// #define FN_StartFrame				StartFrame					/* pfnStartFrame() */
+   #define FN_StartFrame				StartFrame					/* pfnStartFrame() */
 // #define FN_ParmsNewLevel				ParmsNewLevel				/* pfnParmsNewLevel() */
 // #define FN_ParmsChangeLevel			ParmsChangeLevel			/* pfnParmsChangeLevel() */
 // #define FN_GetGameDescription		GetGameDescription			/* pfnGetGameDescription()		Returns string describing current .dll.  E.g. "TeamFotrress 2" "Half-Life" */
@@ -143,7 +143,7 @@
 // #define FN_SpectatorDisconnect		SpectatorDisconnect			/* pfnSpectatorDisconnect()	Called when spectator leaves the server */
 // #define FN_SpectatorThink			SpectatorThink				/* pfnSpectatorThink()			Called when spectator sends a command packet (usercmd_t) */
 // #define FN_Sys_Error					Sys_Error					/* pfnSys_Error()				Notify game .dll that engine is going to shut down.  Allows mod authors to set a breakpoint.  SDK2 */
-// #define FN_PM_Move					PM_Move						/* pfnPM_Move()				(wd) SDK2 */
+// #define FN_PM_M111ove					PM_Move						/* pfnPM_Move()				(wd) SDK2 */
 // #define FN_PM_Init					PM_Init						/* pfnPM_Init()				Server version of player movement initialization; (wd) SDK2 */
 // #define FN_PM_FindTextureType		PM_FindTextureType			/* pfnPM_FindTextureType()		(wd) SDK2 */
 // #define FN_SetupVisibility			SetupVisibility				/* pfnSetupVisibility()		Set up PVS and PAS for networking for this client; (wd) SDK2 */

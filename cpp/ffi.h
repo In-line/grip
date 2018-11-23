@@ -5,14 +5,20 @@
 #ifndef RESTRY_FFI_H
 #define RESTRY_FFI_H
 
+#include "amxxmodule.h"
 
 extern "C" {
-//    typedef (*void) RestryRequest;
-//    RestryRequest restry_create_post_request();
-//    RestryRequest destroy_request();
+    typedef void (*GripErrorLogger)(const void* amx, const char* str);
 
-    void restry_init();
-    void restry_deinit();
+    void grip_init(GripErrorLogger logger, const char* config_file_path);
+    void grip_deinit();
+    void grip_process_request();
+
+    cell grip_body_from_string(const void* amx, const char* str);
+    cell grip_destroy_body(const void* amx, cell body);
+    
+// void handler(cell forward_handle, cell response_handle, const cell *user_data, cell user_data_size);
+    typedef void (*GripHandler)(cell, cell, const cell*, cell);
+    cell grip_request(const void* amx, cell forward_id, const char *uri, cell request_type, cell body_handle, GripHandler handler,  const cell *user_data, cell user_data_size);
 }
-
 #endif //RESTRY_FFI_H
