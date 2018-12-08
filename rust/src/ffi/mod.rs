@@ -151,7 +151,6 @@ pub unsafe extern "C" fn grip_body_from_string(amx: *const c_void, str: *const c
     )
 }
 
-
 #[no_mangle]
 pub unsafe extern "C" fn grip_request(
     amx: *const c_void,
@@ -215,8 +214,6 @@ pub unsafe extern "C" fn grip_request(
             })
             .chain_err(|| ffi_error(format!("Invalid body handle: {}", body_handle)))
     );
-
-
 
     get_module_mut().global_queue.send_request(
         RequestBuilder::default()

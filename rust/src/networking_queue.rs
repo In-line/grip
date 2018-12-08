@@ -33,15 +33,12 @@ use std::thread;
 
 use futures::future;
 use futures::prelude::*;
-use futures::prelude::*;
+use futures::sync::oneshot;
 use hyper::rt::*;
 use std::mem;
 use std::time::{Duration, Instant};
 
 use crate::errors::*;
-use std::cell::RefCell;
-
-use either::*;
 
 #[derive(Clone, Debug)]
 pub enum RequestType {
@@ -51,7 +48,10 @@ pub enum RequestType {
     Delete,
 }
 
-#[derive(Builder, Constructor, Clone, Debug)]
+#[derive(Debug)]
+pub struct RequestCancellation(oneshot::Sender<()>);
+
+#[derive(Builder, Clone, Constructor, Debug)]
 pub struct Request {
     pub http_type: RequestType,
     pub uri: hyper::Uri,
@@ -70,6 +70,7 @@ type ResponseCallBack = Fn(Result<Response>) + Sync + Send;
 
 enum InputCommand {
     Request {
+        cancellation_signal: oneshot::Receiver<()>,
         request: Request,
         callback: Box<ResponseCallBack>,
     },
@@ -99,6 +100,12 @@ impl Drop for Queue {
     fn drop(&mut self) {
         self.stop();
     }
+}
+
+enum State {
+    Successful((Request, Vec<u8>)),
+    Error(Error),
+    Canceled,
 }
 
 impl Queue {
@@ -136,9 +143,13 @@ impl Queue {
                                 })
                             }).for_each(move |cmd| {
                                 clone_all!(response_sender);
+
+
+
                                 match cmd {
                                     InputCommand::Quit => unreachable!(),
-                                    InputCommand::Request { request, callback } => {
+                                    InputCommand::Request { request, callback, cancellation_signal } => {
+
 
                                         executor.spawn(
                                             client.request(match request.http_type {
@@ -150,14 +161,22 @@ impl Queue {
                                                 .and_then(move |res| res.into_body().concat2())
                                                 .map(|body| {
                                                     use bytes::buf::FromBuf;
-                                                    Either::Left((request, Vec::from_buf(body.into_bytes())))
+                                                    State::Successful((request, Vec::from_buf(body.into_bytes())))
                                                 })
                                                 .or_else(|e| {
-                                                    future::ok(Either::Right(ErrorKind::HTTPError(e).into()))
+                                                    future::ok(State::Error(ErrorKind::HTTPError(e).into()))
                                                 })
-                                                .and_then(move |either| {
-                                                    future::ok(match either {
-                                                        Either::Left((request, vec)) => {
+                                                .select2(cancellation_signal
+                                                    .map(|_| State::Canceled)
+                                                    .or_else(|_| future::ok(State::Canceled))
+                                                )
+                                                .map_err(|_: future::Either<((), _), ((), _)>| unreachable!())
+                                                .map(|either| {
+                                                    either.split().0
+                                                })
+                                                .and_then(move |state| {
+                                                    match state {
+                                                        State::Successful((request, vec)) => {
                                                             response_sender.send(OutputCommand::Response {
                                                                 response: Response::new(
                                                                     request,
@@ -166,13 +185,20 @@ impl Queue {
                                                                 callback
                                                             }).unwrap()
                                                         },
-                                                        Either::Right(error) => {
+                                                        State::Error(error) => {
                                                             response_sender.send(OutputCommand::Error {
                                                                 error,
                                                                 callback,
                                                             }).unwrap();
+                                                        },
+                                                        State::Canceled => {
+                                                            response_sender.send(OutputCommand::Error {
+                                                                error: ErrorKind::RequestCancelled(()).into(),
+                                                                callback,
+                                                            }).unwrap();
                                                         }
-                                                    })
+                                                    }
+                                                    future::ok(())
                                                 }).map(|_| {})
                                         )
                                     }
@@ -201,15 +227,23 @@ impl Queue {
         }
     }
 
+    #[must_use = "this `RequestCancellation` should be alive, because when it drops request cancels."]
     pub fn send_request<T: 'static + Fn(Result<Response>) + Sync + Send>(
         &mut self,
         request: Request,
         callback: T,
-    ) {
+    ) -> RequestCancellation {
+        //cancellation: RequestCancellation,
+
+        let (cancellation_signal_sender, cancellation_signal) = oneshot::channel();
+
         self.send_input_command(InputCommand::Request {
+            cancellation_signal,
             request,
             callback: Box::new(callback),
         });
+
+        RequestCancellation(cancellation_signal_sender)
     }
 
     fn send_input_command(&mut self, input_command: InputCommand) {
@@ -218,8 +252,12 @@ impl Queue {
             input_command_sender
                 .send(input_command)
                 .map(|_| {})
-                .map_err(|_| {})
+                .map_err(|_| unreachable!())
         }));
+    }
+
+    pub fn cancel_request(&mut self, cancellation: RequestCancellation) {
+        cancellation.0.send(()).unwrap();
     }
 
     fn try_recv_queue(&mut self) -> Result<()> {

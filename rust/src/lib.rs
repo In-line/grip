@@ -34,8 +34,6 @@ extern crate crossbeam_channel;
 extern crate futures;
 extern crate hyper;
 
-extern crate either;
-
 #[macro_use]
 extern crate log;
 
@@ -59,6 +57,9 @@ mod errors {
         errors {
             FFIError(t: String) {
                 display("FFI Error: {}", t)
+            }
+            RequestCancelled(a: ()) {
+                display("Request was cancelled")
             }
         }
 
