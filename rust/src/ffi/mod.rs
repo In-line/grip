@@ -215,6 +215,9 @@ pub unsafe extern "C" fn grip_request(
             .chain_err(|| ffi_error(format!("Invalid body handle: {}", body_handle)))
     );
 
+    // TODO: Handle cancellation in AMXX.
+    // TODO: Get body in the AMXX.
+    // TODO: Get error in AMXX
     get_module_mut().global_queue.send_request(
         RequestBuilder::default()
             .http_type(request_type)

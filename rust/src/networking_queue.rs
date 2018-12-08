@@ -102,11 +102,6 @@ impl Drop for Queue {
     }
 }
 
-enum State {
-    Successful((Request, Vec<u8>)),
-    Error(Error),
-    Canceled,
-}
 
 impl Queue {
     pub fn new(number_of_dns_threads: usize) -> Self {
@@ -150,6 +145,11 @@ impl Queue {
                                     InputCommand::Quit => unreachable!(),
                                     InputCommand::Request { request, callback, cancellation_signal } => {
 
+                                        enum State {
+                                            Successful((Request, Vec<u8>)),
+                                            Error(Error),
+                                            Canceled,
+                                        }
 
                                         executor.spawn(
                                             client.request(match request.http_type {
