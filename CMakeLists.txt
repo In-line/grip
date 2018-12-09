@@ -27,7 +27,7 @@ add_subdirectory(rust)
 file(GLOB_RECURSE SOURCE_FILES ${SRC_DIR}/*.h ${SRC_DIR}/*.cpp ${AMXXSDK}/sdk/*.cpp)
 #${API_INCLUDE_PATH}/*.h ${API_INCLUDE_PATH}/*.cpp
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} )
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-rust ssl crypto)
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-rust pthread)
 
 set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto -fPIC")
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections")

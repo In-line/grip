@@ -26,7 +26,7 @@
  *   to add multiple entries.
  */
 #define MODULE_NAME "gRIP"
-#define MODULE_VERSION "0.01 Alpha"
+#define MODULE_VERSION "0.0.1 Alpha"
 #define MODULE_AUTHOR "Inline"
 #define MODULE_URL "NotSure"
 #define MODULE_LOGTAG "gRIP"
