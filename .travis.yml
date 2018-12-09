@@ -32,6 +32,7 @@ before_script:
 - mkdir -p $TRAVIS_BUILD_DIR/build/release
 - mkdir -p $TRAVIS_BUILD_DIR/build/test
 - cmake --version
+- find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAME_CARGO_ADDITIONAL_ENV="OPENSSL_STATIC=1 OPENSSL_OPENSSL_LIB_DIR=/usr/lib32 OPENSSL_INCLUDE_DIR=/usr/include/openssl" -DCMAKE_BUILD_TYPE=Debug
