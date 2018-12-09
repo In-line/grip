@@ -32,17 +32,22 @@ before_script:
 - mkdir -p $TRAVIS_BUILD_DIR/build/release
 - mkdir -p $TRAVIS_BUILD_DIR/build/test
 - cmake --version
+# - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
 - ninja -v
+- sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+
 - cd $TRAVIS_BUILD_DIR/build/release
 - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
 - ninja -v
+- sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+
 - cd $TRAVIS_BUILD_DIR/rust
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target
-  $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target $TARGET
+
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
@@ -50,7 +55,7 @@ before_deploy:
 - cp $TRAVIS_BUILD_DIR/build/release/*.so $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - cp $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
 - cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
-- tar zcvf grip-${TRAVIS_TAG}-${TARGET}.tar.gz $TRAVIS_BUILD_DIR/deploy
+- tar -czf grip-${TRAVIS_TAG}-${TARGET}.tar.gz -C $TRAVIS_BUILD_DIR/deploy/addons
 deploy:
   provider: releases
   api_key:
