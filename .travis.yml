@@ -42,3 +42,10 @@ script:
   - cd - && mkdir build_test && cd ../rust
   - CARGO_TARGET_DIR=./build/build_test cargo test --target $TARGET
   - CARGO_TARGET_DIR=./build/build_test cargo test --release --target $TARGET
+
+cache: cargo
+  directories:
+    - ./build/build_test
+before_cache:
+# Travis can't cache files that are not readable by "others"
+- chmod -R a+r $HOME/.cargoit s
