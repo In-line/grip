@@ -36,12 +36,12 @@ script:
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAME_CARGO_ADDITIONAL_ENV="OPENSSL_STATIC=1 OPENSSL_OPENSSL_LIB_DIR=/usr/lib32 OPENSSL_INCLUDE_DIR=/usr/include/openssl" -DCMAKE_BUILD_TYPE=Debug
 - ninja -v
-- ./$TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+- sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/build/release
 - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAME_CARGO_ADDITIONAL_ENV="OPENSSL_STATIC=1 OPENSSL_OPENSSL_LIB_DIR=/usr/lib32 OPENSSL_INCLUDE_DIR=/usr/include/openssl" -DCMAKE_BUILD_TYPE=Release
 - ninja -v
-- ./$TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+- sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/rust
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
