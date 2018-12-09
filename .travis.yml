@@ -55,7 +55,7 @@ before_deploy:
 - cp $TRAVIS_BUILD_DIR/build/release/*.so $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - cp $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
 - cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
-- tar -czf grip-${TRAVIS_TAG}-${TARGET}.tar.gz -C $TRAVIS_BUILD_DIR/deploy/addons
+- tar czf grip-${TRAVIS_TAG}-${TARGET}.tar.gz -C $TRAVIS_BUILD_DIR/deploy/addons
 deploy:
   provider: releases
   api_key:
