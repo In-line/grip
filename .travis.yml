@@ -27,26 +27,31 @@ addons:
     - ninja-build
 install:
   - rustup target add $TARGET
-script: 
+before_script:
+  - mkdir -p $TRAVIS_BUILD_DIR/build/debug
+  - mkdir -p $TRAVIS_BUILD_DIR/build/release
+  - mkdir -p $TRAVIS_BUILD_DIR/build/test
   - cmake --version
-  - mkdir -p build && cd build
+script: 
 
-  - mkdir -p build_debug && cd build_debug
-  - cmake ../../ -G Ninja -DCMAKE_BUILD_TYPE=Debug
+  - cd $TRAVIS_BUILD_DIR/build/debug
+  - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
+  - cd $TRAVIS_BUILD_DIR/rust && CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo build && cd -
   - ninja
   
-  - cd - && mkdir -p build_release && cd build_release
-  - cmake ../../ -G Ninja   -DCMAKE_BUILD_TYPE=Release
+  - cd $TRAVIS_BUILD_DIR/build/release
+  - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
+  - cd $TRAVIS_BUILD_DIR/rust && CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo build && cd -
   - ninja
 
-  - cd - && mkdir -p build_test && cd ../rust
-  - CARGO_TARGET_DIR=./build/build_test cargo test --target $TARGET
-  - CARGO_TARGET_DIR=./build/build_test cargo test --release --target $TARGET
+  - cd $TRAVIS_BUILD_DIR/rust
+  - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
+  - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target $TARGET
 
 cache:
   cargo: true
   directories:
-    - ./build/build_test
+    - ./build/
 before_cache:
 # Travis can't cache files that are not readable by "others"
 - chmod -R a+r $HOME/.cargo
