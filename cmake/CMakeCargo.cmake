@@ -60,7 +60,7 @@ function(cargo_build)
 
     if(CMAME_CARGO_ADDITIONAL_ENV)
         message("Passed cargo arguments: ${CMAME_CARGO_ADDITIONAL_ENV}")
-    elseif()
+    endif()
 
     set(CARGO_ENV_COMMAND ${CMAKE_COMMAND} -E env ${CMAME_CARGO_ADDITIONAL_ENV} PKG_CONFIG_ALLOW_CROSS=1 "CARGO_TARGET_DIR=${CARGO_TARGET_DIR}")
 
