@@ -29,17 +29,17 @@ install:
   - rustup target add $TARGET
 script: 
   - cmake --version
-  - mkdir build && cd build
+  - mkdir -p build && cd build
 
-  - mkdir build_debug && cd build_debug
+  - mkdir -p build_debug && cd build_debug
   - cmake ../../ -G Ninja -DCMAKE_BUILD_TYPE=Debug
   - ninja
   
-  - cd - && mkdir build_release && cd build_release
+  - cd - && mkdir -p build_release && cd build_release
   - cmake ../../ -G Ninja   -DCMAKE_BUILD_TYPE=Release
   - ninja
 
-  - cd - && mkdir build_test && cd ../rust
+  - cd - && mkdir -p build_test && cd ../rust
   - CARGO_TARGET_DIR=./build/build_test cargo test --target $TARGET
   - CARGO_TARGET_DIR=./build/build_test cargo test --release --target $TARGET
 
