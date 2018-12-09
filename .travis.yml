@@ -24,6 +24,7 @@ addons:
     - linux-libc-dev
     - gcc-multilib
     - g++-multilib
+    - ninja
 install:
   - rustup target add $TARGET
 script: 
@@ -31,12 +32,12 @@ script:
   - mkdir build && cd build
 
   - mkdir build_debug && cd build_debug
-  - cmake ../../ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug
-  - make -j$((2 * `getconf _NPROCESSORS_ONLN))`
+  - cmake ../../ -G Ninja -DCMAKE_BUILD_TYPE=Debug
+  - ninja
   
   - cd - && mkdir build_release && cd build_release
-  - cmake ../../ -G "Unix Makefiles"  -DCMAKE_BUILD_TYPE=Release
-  - make -j$((2 * `getconf _NPROCESSORS_ONLN`))
+  - cmake ../../ -G Ninja   -DCMAKE_BUILD_TYPE=Release
+  - ninja
 
   - cd - && mkdir build_test && cd ../rust
   - CARGO_TARGET_DIR=./build/build_test cargo test --target $TARGET
