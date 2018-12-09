@@ -1,0 +1,56 @@
+language: rust
+compiler:
+  - clang
+  - gcc
+rust:
+  - stable
+  - beta
+  - nightly
+env: 
+  - PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu 
+os:
+  - linux
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+addons:
+  apt:
+    packages:
+    - libssl-dev:i386
+    - lib32stdc++6
+    - lib32z1-dev
+    - libc6-dev-i386
+    - linux-libc-dev
+    - gcc-multilib
+    - g++-multilib
+    - ninja-build
+install:
+  - rustup target add $TARGET
+before_script:
+  - mkdir -p $TRAVIS_BUILD_DIR/build/debug
+  - mkdir -p $TRAVIS_BUILD_DIR/build/release
+  - mkdir -p $TRAVIS_BUILD_DIR/build/test
+  - cmake --version
+script: 
+
+  - cd $TRAVIS_BUILD_DIR/build/debug
+  - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
+  - ninja -v
+  
+  - cd $TRAVIS_BUILD_DIR/build/release
+  - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
+  - ninja -v
+
+  - cd $TRAVIS_BUILD_DIR/rust
+  - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
+  - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target $TARGET
+
+cache:
+  cargo: true
+  directories:
+    - $TRAVIS_BUILD_DIR/build
+before_cache:
+# Travis can't cache files that are not readable by "others"
+- chmod -R a+r $HOME/.cargo
+- chmod -R a+r $TRAVIS_BUILD_DIR/build
