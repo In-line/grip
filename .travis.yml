@@ -1,0 +1,29 @@
+language: rust
+sudo: true
+rust:
+  - stable
+  - beta
+  - nightly
+env: 
+  - TARGET=i686-unknown-linux-gnu
+  - PKG_CONFIG_ALLOW_CROSS=1
+os:
+  - linux
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+addons:
+  apt:
+    packages:
+    - libssl-dev:i386
+    - lib32stdc++6
+    - lib32z1-dev
+    - libc6-dev-i386
+    - linux-libc-dev
+    - gcc-multilib
+    - g++-multilib
+install:
+  - rustup target add i686-unknown-linux-gnu
+script: 
+  - cmake . && make -j2
