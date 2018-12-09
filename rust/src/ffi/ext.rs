@@ -10,7 +10,8 @@ pub trait ResultFFIExt<T> {
 impl<T> ResultFFIExt<T> for Result<T> {
     unsafe fn handle_ffi_error(self, amx: *const c_void) -> std::result::Result<T, Cell> {
         self.map_err(|err| {
-            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+            use error_chain::ChainedError;
+            (get_module().error_logger)(amx, format!("{}\0", err.display_chain()).as_ptr() as *const c_char);
             INVALID_CELL
         })
     }
