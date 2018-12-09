@@ -13,7 +13,7 @@ panic = "abort"
 [dependencies]
 bytes = "0.4.11"
 crossbeam-channel = "0.3.3"
-hyper-tls = "0.3.1"
+hyper-tls = {version = "0.3.1", features = ["vendored"] }
 futures = "0.1.25"
 hyper = "0.12.17"
 derive_more = "0.13.0"

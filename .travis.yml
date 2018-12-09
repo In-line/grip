@@ -35,12 +35,12 @@ before_script:
 # - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/build/debug
-- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAME_CARGO_ADDITIONAL_ENV="OPENSSL_STATIC=1 OPENSSL_LIB_DIR=/usr/lib/i386-linux-gnu/ OPENSSL_INCLUDE_DIR=/usr/local/include" -DCMAKE_BUILD_TYPE=Debug
+- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
 - ninja -v
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/build/release
-- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAME_CARGO_ADDITIONAL_ENV="OPENSSL_STATIC=1 OPENSSL_LIB_DIR=/usr/lib/i386-linux-gnu/ OPENSSL_INCLUDE_DIR=/usr/local/include" -DCMAKE_BUILD_TYPE=Release
+- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
 - ninja -v
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
