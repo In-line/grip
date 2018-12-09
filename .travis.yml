@@ -57,12 +57,11 @@ deploy:
     secure: jyfb737S81v1tv1s2N7G6vbP72hiIJDP2RW02xX7YVvMR0PmXRmMM/Z4HYdRFxCzrErAF9MGqHG4akkzOZGz/KplOFYRLu54NXlgV+2mEjeJgEpPbMWcSBcqrQbow9ols6nLdMgGHKxIs/L4sY0wgG5m+EFWTVooARJgxD7Faw3RmhnoanSQTyRcnJd5Zu6f38YG2v6VNxfYgNNpr6KPzUajVd/n7s4DgTm/an+eIOK+FafBqByxB4nWWEMw0JCdL+jEBcch/ZXhk4bqM0r+uA/8qQee7HvH2RTXRPI1Ayn/wMr8vkOCIlWuhhLZlTuBlZLDg0Yu7/EAvPugL8jY73qpo50z2AyA53RetGc/FCD6A3XHNqhid/XaYuDLRBB/z133LA28H0K+KONavvxHGqGw+CFPo782R+Z2Rk6MjSfoHxPbvInMWskkckYHM8py87DDA9els3dfeMEqaVBHo08gnDpzD4vkqCt0FHOsxGnrEWXRIP7b8BEWBOdjhq916QO33ZWOm6Z8p1TjxbdWQYfR++GsF0YPpvDcTeCfWY+kqT0y6wzrutfUfQNZBklQxpxdFIirLr6F29fvx4OnVyjNClIgDN94rLSRQ+W/vyOppi6lpC1aq66VUwPCv8cudnK9mqNXtWlAXfjc8PzMF6FpENDE17HTkxvqhFUVaf8=
   file: grip-${TRAVIS_TAG}-${TARGET}.tar.gz
   skip_cleanup: true
-   on:
-     repo: In-line/grip
+  on:
+    repo: In-line/grip
 # NOTE make sure you only release *once* per target
-     condition: $TRAVIS_RUST_VERSION = stable
-
-tags: true
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
 cache:
   cargo: true
   directories:
