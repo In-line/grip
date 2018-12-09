@@ -24,7 +24,7 @@ addons:
     - linux-libc-dev
     - gcc-multilib
     - g++-multilib
-    - ninja
+    - ninja-build
 install:
   - rustup target add $TARGET
 script: 
