@@ -318,7 +318,7 @@ mod tests {
 
         let control_variable = Arc::new(Mutex::new(false));
         let control_variable_c = Arc::clone(&control_variable);
-        queue.send_request(
+        let _handle  = queue.send_request(
             RequestBuilder::default()
                 .http_type(RequestType::Get)
                 .body(vec![])
