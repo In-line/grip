@@ -218,6 +218,8 @@ pub unsafe extern "C" fn grip_request(
     // TODO: Handle cancellation in AMXX.
     // TODO: Get body in the AMXX.
     // TODO: Get error in AMXX
+
+    // TODO: grip_cancel_request, grip_is_request_cancelled, grip_get_body_state (Error, Success, Canceled), grip_get_error_description etc
     get_module_mut().global_queue.send_request(
         RequestBuilder::default()
             .http_type(request_type)
