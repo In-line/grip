@@ -1,18 +1,18 @@
 language: rust
 compiler:
-  - clang
-  - gcc
+- clang
+- gcc
 rust:
-  - stable
-  - beta
-  - nightly
-env: 
-  - PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu 
+- stable
+- beta
+- nightly
+env:
+- PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu
 os:
-  - linux
+- linux
 matrix:
   allow_failures:
-    - rust: nightly
+  - rust: nightly
   fast_finish: true
 addons:
   apt:
@@ -26,56 +26,51 @@ addons:
     - g++-multilib
     - ninja-build
 install:
-  - rustup target add $TARGET
+- rustup target add $TARGET
 before_script:
-  - mkdir -p $TRAVIS_BUILD_DIR/build/debug
-  - mkdir -p $TRAVIS_BUILD_DIR/build/release
-  - mkdir -p $TRAVIS_BUILD_DIR/build/test
-  - cmake --version
-script: 
-  - cd $TRAVIS_BUILD_DIR/build/debug
-  - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
-  - ninja -v
-  
-  - cd $TRAVIS_BUILD_DIR/build/release
-  - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
-  - ninja -v
-
-  - cd $TRAVIS_BUILD_DIR/rust
-  - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
-  - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target $TARGET
-
+- mkdir -p $TRAVIS_BUILD_DIR/build/debug
+- mkdir -p $TRAVIS_BUILD_DIR/build/release
+- mkdir -p $TRAVIS_BUILD_DIR/build/test
+- cmake --version
+script:
+- cd $TRAVIS_BUILD_DIR/build/debug
+- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
+- ninja -v
+- cd $TRAVIS_BUILD_DIR/build/release
+- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
+- ninja -v
+- cd $TRAVIS_BUILD_DIR/rust
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target
+  $TARGET
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
-
 - cp $TRAVIS_BUILD_DIR/build/release/*.so $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - cp $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
 - cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
-
 - tar zcvf grip-${TRAVIS_TAG}-${TARGET}.tar.gz $TRAVIS_BUILD_DIR/deploy
-
 deploy:
   provider: releases
   api_key:
-    secure: yC9g7o1SJupIWRnXS1ODPVI2oQrpe7BtOycscF3h6zX6JG2x7PJSIsZ4u/WYcvZOWVdbUp3comADugo+DRgrvjVRQGd6FmNpAM7CL+q12bmN3GFx7CUeVrRICvXkI/msoJaej3C9LihjXMcnDlT/aClvcFZNnhwY1oQH1WxkK92MrOiuAfumxlRPP0/ekQLgWN8ohii884OB0cKlelgXEJwj48pLf2b+vteTRGUAAifQj/YrfrlTQ2wAeG6wCzWM9B2BcwCGgyCGGokYPD6QZI75XKhY3C2cdJ9SbrNuFJktm5xvCLfPRPAaxBwWVZzZdeeRxYUxzSGuBrc6j4t4UmSLpvPMZyOygtMx5DpbwKPjNrw2K5NScotJFeUu1ORswN/0psvAwmR5HbA5IUAR5yX87k/v7ea1aEHGZ2i+YVnKwYhI+JDGl4YCjzftRxpS+7ftlbSSa4N4tEbCTd/vBlSZ7rH2cTITMV0aBmqMfH+12RTTIaLv8Zt/wbux62bZrARDI+85BrPJG8AvHGM/FqPgzSBpsWYe6OFZnfoGwaB/GRAH2yUP+3g01sW8p9HyvQc0hCi4l5FpVQCcfhB5DAaMVWnyoM8RAFAFsjFg/aioJ+5fME8YS7ExbWnVchAC9lqNsURakW22VXbj/P296JTvBrm7eWrX6XMuBK4i3a4=
-  file_glob: true
+    secure: jyfb737S81v1tv1s2N7G6vbP72hiIJDP2RW02xX7YVvMR0PmXRmMM/Z4HYdRFxCzrErAF9MGqHG4akkzOZGz/KplOFYRLu54NXlgV+2mEjeJgEpPbMWcSBcqrQbow9ols6nLdMgGHKxIs/L4sY0wgG5m+EFWTVooARJgxD7Faw3RmhnoanSQTyRcnJd5Zu6f38YG2v6VNxfYgNNpr6KPzUajVd/n7s4DgTm/an+eIOK+FafBqByxB4nWWEMw0JCdL+jEBcch/ZXhk4bqM0r+uA/8qQee7HvH2RTXRPI1Ayn/wMr8vkOCIlWuhhLZlTuBlZLDg0Yu7/EAvPugL8jY73qpo50z2AyA53RetGc/FCD6A3XHNqhid/XaYuDLRBB/z133LA28H0K+KONavvxHGqGw+CFPo782R+Z2Rk6MjSfoHxPbvInMWskkckYHM8py87DDA9els3dfeMEqaVBHo08gnDpzD4vkqCt0FHOsxGnrEWXRIP7b8BEWBOdjhq916QO33ZWOm6Z8p1TjxbdWQYfR++GsF0YPpvDcTeCfWY+kqT0y6wzrutfUfQNZBklQxpxdFIirLr6F29fvx4OnVyjNClIgDN94rLSRQ+W/vyOppi6lpC1aq66VUwPCv8cudnK9mqNXtWlAXfjc8PzMF6FpENDE17HTkxvqhFUVaf8=
   file: grip-${TRAVIS_TAG}-${TARGET}.tar.gz
-  # don't delete the artifacts from previous phases
   skip_cleanup: true
-  # deploy when a new tag is pushed
-  on:
-    # channel to use to produce the release artifacts
-    # NOTE make sure you only release *once* per target
-    condition: $TRAVIS_RUST_VERSION = stable
-tags: true
+   on:
+     repo: In-line/grip
+# NOTE make sure you only release *once* per target
+     condition: $TRAVIS_RUST_VERSION = stable
 
+tags: true
 cache:
   cargo: true
   directories:
-    - $TRAVIS_BUILD_DIR/build
+  - "$TRAVIS_BUILD_DIR/build/release/rust"
+  - "$TRAVIS_BUILD_DIR/build/debug/rust"
+  - "$TRAVIS_BUILD_DIR/build/test"
 before_cache:
-# Travis can't cache files that are not readable by "others"
 - chmod -R a+r $HOME/.cargo
-- chmod -R a+r $TRAVIS_BUILD_DIR/build
+- chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
+- chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
+- chmod -R a+r $TRAVIS_BUILD_DIR/build/test
