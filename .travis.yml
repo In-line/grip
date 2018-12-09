@@ -33,7 +33,6 @@ before_script:
   - mkdir -p $TRAVIS_BUILD_DIR/build/test
   - cmake --version
 script: 
-
   - cd $TRAVIS_BUILD_DIR/build/debug
   - cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
   - ninja -v
@@ -45,6 +44,32 @@ script:
   - cd $TRAVIS_BUILD_DIR/rust
   - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --target $TARGET
   - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/build/test cargo test --release --target $TARGET
+
+before_deploy:
+- mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
+- mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
+- mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
+
+- cp $TRAVIS_BUILD_DIR/build/release/*.so $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
+- cp $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
+- cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
+
+- tar zcvf grip-${TRAVIS_TAG}-${TARGET}.tar.gz $TRAVIS_BUILD_DIR/deploy
+
+deploy:
+  provider: releases
+  api_key:
+    secure: yC9g7o1SJupIWRnXS1ODPVI2oQrpe7BtOycscF3h6zX6JG2x7PJSIsZ4u/WYcvZOWVdbUp3comADugo+DRgrvjVRQGd6FmNpAM7CL+q12bmN3GFx7CUeVrRICvXkI/msoJaej3C9LihjXMcnDlT/aClvcFZNnhwY1oQH1WxkK92MrOiuAfumxlRPP0/ekQLgWN8ohii884OB0cKlelgXEJwj48pLf2b+vteTRGUAAifQj/YrfrlTQ2wAeG6wCzWM9B2BcwCGgyCGGokYPD6QZI75XKhY3C2cdJ9SbrNuFJktm5xvCLfPRPAaxBwWVZzZdeeRxYUxzSGuBrc6j4t4UmSLpvPMZyOygtMx5DpbwKPjNrw2K5NScotJFeUu1ORswN/0psvAwmR5HbA5IUAR5yX87k/v7ea1aEHGZ2i+YVnKwYhI+JDGl4YCjzftRxpS+7ftlbSSa4N4tEbCTd/vBlSZ7rH2cTITMV0aBmqMfH+12RTTIaLv8Zt/wbux62bZrARDI+85BrPJG8AvHGM/FqPgzSBpsWYe6OFZnfoGwaB/GRAH2yUP+3g01sW8p9HyvQc0hCi4l5FpVQCcfhB5DAaMVWnyoM8RAFAFsjFg/aioJ+5fME8YS7ExbWnVchAC9lqNsURakW22VXbj/P296JTvBrm7eWrX6XMuBK4i3a4=
+  file_glob: true
+  file: grip-${TRAVIS_TAG}-${TARGET}.tar.gz
+  # don't delete the artifacts from previous phases
+  skip_cleanup: true
+  # deploy when a new tag is pushed
+  on:
+    # channel to use to produce the release artifacts
+    # NOTE make sure you only release *once* per target
+    condition: $TRAVIS_RUST_VERSION = stable
+tags: true
 
 cache:
   cargo: true
