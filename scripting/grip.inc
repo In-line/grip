@@ -16,8 +16,8 @@ enum GripRequestType {
 	GripRequestTypeDelete = 3
 }
 
-enum GripRequest {
-	Invalid_GripRequest = 0,
+enum GripRequestCancellation {
+	Invalid_GripRequestCancellation = 0,
 }
 
 enum GripRequestOptionsHandle {
@@ -29,13 +29,42 @@ enum GripBodyHandle {
 	Invalid_GripBodyHandle = 0,
 }
 
+enum GripResponseState {
+	GripResponseStateCancelled = 1,
+	GripResponseStateError = 2,
+	GripResponseStateSuccessful = 3,
+}
 
 /**
- * Creates new body handle from string
+ * Get's state of the response. 
+ *
+ * @note 			This has nothing to do with HTTP status codes.
  *
  * @param str		Zero terminated string from which body should be created
  *  
- * @noreturn
+ * @return			Returns current response state.
+ */
+native GripResponseState:grip_get_response_state();
+
+/**
+ * Returns whether request exists/active. 
+ *
+ * @note 			This has nothing to do with HTTP status codes.
+ *
+ * @param str		Zero terminated string from which body should be created
+ *  
+ * @return			Returns current response state.
+ */
+native grip_is_request_active(GripRequestCancellation:request);
+
+/**
+ * Creates new body handle from string
+ * 
+ * @note 			Body should be destroyed with the relevant call.
+ *
+ * @param str		Zero terminated string from which body should be created
+ *  
+ * @return			Newly crated body handle
  */
 native GripBodyHandle:grip_body_from_string(str[]);
 
@@ -51,16 +80,25 @@ native grip_destroy_body(GripBodyHandle:body);
 /**
  * Starts sending of the request  
  * @note	The handle should look like:
- * 		public RequestHandler(GripResponseHandle:handle, const userData[], const userDataSize);
+ * 		public RequestHandler(const userData);
  *
  *
  * @param uri		Request URI. Supports TLS.
  * @param type		Request type which should be sended.
- * @param body		Reqeust body, can be either JSON or plaintext.
+ * @param body		Reqeust body, can be either JSON or plaintext 
  * @param handler	A callback which will be called when request finishes execution
+ * @param options	// TODO: Options?
+ * @param userData 	User data (can be datapack or anything)
  *  
- * @return		Request handle
+ * @return			Cancellation handle.
  */
-native GripRequest:grip_request(const uri[], GripBodyHandle:body, GripRequestType:type, const handler[], GripRequestOptionsHandle:options = Invalid_GripRequestOptionsHandle, const userData[] = "", const userDataSize);
+native GripRequestCancellation:grip_request(const uri[], GripBodyHandle:body, GripRequestType:type, const handler[], GripRequestOptionsHandle:options = Invalid_GripRequestOptionsHandle, const userData = 0);
 
-
+/**
+ * Cancel sending of the request and receiving of response.  
+ *
+ * @param cancellation	Cancellation handle of the request.
+ *  
+ * @return				Request handle
+ */
+native grip_cancel_request(GripRequestCancellation:cancellation);

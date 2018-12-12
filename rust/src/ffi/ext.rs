@@ -12,7 +12,10 @@ impl<T> ResultFFIExt<T> for Result<T> {
         self.map_err(|err| {
             use error_chain::ChainedError;
             // TODO: More fancy and better formatted error message
-            (get_module().error_logger)(amx, format!("{}\0", err.display_chain()).as_ptr() as *const c_char);
+            (get_module().error_logger)(
+                amx,
+                format!("{}\0", err.display_chain()).as_ptr() as *const c_char,
+            );
             INVALID_CELL
         })
     }

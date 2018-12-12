@@ -17,8 +17,11 @@ extern "C" {
     cell grip_body_from_string(const void* amx, const char* str);
     cell grip_destroy_body(const void* amx, cell body);
     
-// void handler(cell forward_handle, cell response_handle, const cell *user_data, cell user_data_size);
-    typedef void (*GripHandler)(cell, cell, const cell*, cell);
-    cell grip_request(const void* amx, cell forward_id, const char *uri, cell request_type, cell body_handle, GripHandler handler,  const cell *user_data, cell user_data_size);
+    typedef void (*GripHandler)(cell, cell, cell);
+    cell grip_request(const void* amx, cell forward_id, const char *uri, cell body_handle, cell request_type, GripHandler handler, cell user_data);
+
+    cell grip_cancel_request(const void* amx, cell cancellation_id);
+    cell grip_get_response_state(const void* amx);
+    cell grip_is_request_active(cell request_id);
 }
 #endif //RESTRY_FFI_H

@@ -10,10 +10,14 @@ crate-type = ["staticlib"]
 lto = true
 panic = "abort"
 
+[features]
+vendored = ["hyper-tls/vendored"]
+default = ["vendored"] # TODO: Conditional dynamic linking.
+
 [dependencies]
 bytes = "0.4.11"
 crossbeam-channel = "0.3.3"
-hyper-tls = {version = "0.3.1", features = ["vendored"] }
+hyper-tls = "0.3.1"
 futures = "0.1.25"
 hyper = "0.12.17"
 derive_more = "0.13.0"

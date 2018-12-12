@@ -50,6 +50,11 @@ impl<T> CellMap<T> {
         }
     }
 
+    /// Returns ID which will be used next time.
+    pub fn peek_id(&self) -> isize {
+        self.counter
+    }
+
     /// Inserts desired item and returns generated id which is always greater than 1
     pub fn insert_with_unique_id(&mut self, item: T) -> isize {
         assert!(self.counter >= 1);
@@ -70,5 +75,9 @@ impl<T> CellMap<T> {
 
     pub fn get_mut_with_id(&mut self, id: isize) -> Option<&mut T> {
         self.inner.get_mut(&id)
+    }
+
+    pub fn clear(&mut self) {
+        self.inner.clear();
     }
 }

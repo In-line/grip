@@ -102,7 +102,6 @@ impl Drop for Queue {
     }
 }
 
-
 impl Queue {
     pub fn new(number_of_dns_threads: usize) -> Self {
         let mut runtime = tokio::runtime::Runtime::new().unwrap();
@@ -233,8 +232,6 @@ impl Queue {
         request: Request,
         callback: T,
     ) -> RequestCancellation {
-        //cancellation: RequestCancellation,
-
         let (cancellation_signal_sender, cancellation_signal) = oneshot::channel();
 
         self.send_input_command(InputCommand::Request {
@@ -254,10 +251,6 @@ impl Queue {
                 .map(|_| {})
                 .map_err(|_| unreachable!())
         }));
-    }
-
-    pub fn cancel_request(&mut self, cancellation: RequestCancellation) {
-        cancellation.0.send(()).unwrap();
     }
 
     fn try_recv_queue(&mut self) -> Result<()> {
@@ -318,7 +311,7 @@ mod tests {
 
         let control_variable = Arc::new(Mutex::new(false));
         let control_variable_c = Arc::clone(&control_variable);
-        let _handle  = queue.send_request(
+        let _handle = queue.send_request(
             RequestBuilder::default()
                 .http_type(RequestType::Get)
                 .body(vec![])
