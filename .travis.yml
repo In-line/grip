@@ -45,8 +45,8 @@ script:
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/rust
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --release --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --release --target $TARGET
 
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules

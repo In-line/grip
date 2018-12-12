@@ -54,7 +54,7 @@ function(cargo_build)
     endif()
 
 
-    list(APPEND CARGO_ARGS "--color=always")
+    list(APPEND CARGO_ARGS "--verbose")
 
     file(GLOB_RECURSE LIB_SOURCES "*.rs")
 
