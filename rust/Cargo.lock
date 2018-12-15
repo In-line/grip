@@ -230,7 +230,7 @@ dependencies = [
 
 [[package]]
 name = "grip-rust"
-version = "0.0.1-alpha"
+version = "0.0.2-alpha"
 dependencies = [
  "bytes 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "clone_all 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
