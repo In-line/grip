@@ -298,11 +298,12 @@ pub unsafe extern "C" fn grip_get_error_description(
     ) {
         try_and_log_ffi!(
             amx,
-            match e.kind() {
-                ErrorKind::RequestCancelled(()) => Err(ErrorKind::RequestCancelled(()).into()),
-                _ => Ok(()),
+        match e.kind() {
+            ErrorKind::RequestCancelled(()) => {
+                Err(ErrorKind::RequestCancelled(()).into())
             }
-        );
+            _ => Ok(()),
+        });
 
         use error_chain::ChainedError;
         libc::strncpy(
@@ -320,8 +321,55 @@ pub unsafe extern "C" fn grip_get_error_description(
                 },
             ),
         );
+        
+        *buffer.offset(size) = '\0' as i8;
     } else {
         try_and_log_ffi!(amx, Err(ffi_error("No error at this point.")));
+    }
+
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_get_response_body_string(
+    amx: *const c_void,
+    buffer: *mut c_char,
+    size: Cell,
+) -> Cell {
+    if let Ok(response) = try_and_log_ffi!(
+        amx,
+        get_module()
+            .current_response
+            .as_ref()
+            .chain_err(|| ffi_error("No active response at this time"))
+    ) {
+        libc::strncpy(
+            buffer,
+            format!(
+                "{}\0",
+                try_and_log_ffi!(
+                    amx,
+                    std::str::from_utf8(&response.body[..])
+                        .chain_err(|| ffi_error("Unable to parse UTF-8"))
+                )
+            )
+            .as_ptr() as *const c_char,
+            try_and_log_ffi!(
+                amx,
+                if size >= 0 {
+                    Ok(size as usize)
+                } else {
+                    Err(ffi_error(format!(
+                        "Size {} should be greater or equal to zero.",
+                        size
+                    )))
+                },
+            ),
+        );
+
+        *buffer.offset(size) = '\0' as i8;
+    } else {
+        try_and_log_ffi!(amx, Err(ffi_error("Error ocurred at this point.")));
     }
 
     1

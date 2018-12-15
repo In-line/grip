@@ -106,9 +106,23 @@ native grip_cancel_request(GripRequestCancellation:cancellation);
 /**
  * Get current error description. Implementation defined.  
  *
+ * @note There are certain AMXX limitations to maximum string sizes.  
+ *
  * @param buffer	    Output buffer to which description should be written
  * @param buffer_size	Maximum length of the buffer.
  *  
  * @noreturn
  */
 native grip_get_error_description(buffer[], buffer_size);
+
+/**
+ * Get current response body as string.
+ *
+ * @note There are certain AMXX limitations to maximum string sizes.  
+ *
+ * @param buffer	    Output buffer to which body should be written
+ * @param buffer_size	Maximum length of the buffer.
+ *  
+ * @noreturn
+ */
+native grip_get_response_body_string(buffer[], buffer_size);

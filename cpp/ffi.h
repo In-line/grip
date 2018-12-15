@@ -24,6 +24,7 @@ extern "C" {
     cell grip_get_response_state(const void* amx);
     cell grip_is_request_active(cell request_id);
 
-    cell grip_get_error_description(const void* amx, char *buffer, cell buffer_length);
+    cell grip_get_error_description(const void* amx, char *buffer, cell buffer_size);
+    cell grip_get_response_body_string(const void* amx, char *buffer, cell buffer_size);
 }
 #endif //RESTRY_FFI_H
