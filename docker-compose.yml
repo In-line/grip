@@ -1,0 +1,6 @@
+hlds:
+  build: docker
+  volumes:
+    - ./target/i686-unknown-linux-gnu/debug:/opt/hlds/cstrike/addons/metarust
+  ports:
+  - 27015:27015
