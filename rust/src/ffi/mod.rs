@@ -139,7 +139,7 @@ pub unsafe extern "C" fn grip_destroy_body(amx: *const c_void, body: Cell) -> Ce
             .chain_err(|| ffi_error(format!("Invalid body handle {}", body)))
     );
 
-    return 1;
+    1
 }
 
 #[no_mangle]
@@ -151,7 +151,7 @@ pub unsafe extern "C" fn grip_body_from_string(amx: *const c_void, str: *const c
         ))
         .to_bytes()
         .iter()
-        .map(|i| *i)
+        .cloned()
         .collect(),
     )
 }
