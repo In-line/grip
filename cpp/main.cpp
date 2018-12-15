@@ -34,7 +34,6 @@
 #include "ffi.h"
 
 #include <unistd.h>
-#include <iostream>
 
 cell dummy;
 
@@ -99,14 +98,26 @@ cell AMX_NATIVE_CALL grip_is_request_active_amxx(AMX *, cell *params) {
 	return grip_is_request_active(params[arg_request_id]);
 }
 
+cell AMX_NATIVE_CALL grip_get_error_description_amxx(AMX *amx, cell *params) {
+  enum { arg_count, arg_buffer, arg_buffer_length};
+
+  char buffer[params[arg_buffer_length]];
+  cell ret = grip_get_error_description(amx, &buffer[0], params[arg_buffer_length]);
+
+  MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_length]);
+
+  return ret;
+}
+
 AMX_NATIVE_INFO grip_exports[] = {
-		{"grip_request", grip_request_amxx},
-        {"grip_destroy_body", grip_destroy_body_amxx},
-		{"grip_body_from_string", grip_body_from_string_amxx},
-		{"grip_cancel_request", grip_cancel_request_amxx},
-        {"grip_get_response_state", grip_get_response_state_amxx},
-		{"grip_is_request_active", grip_is_request_active_amxx},
-		{nullptr, nullptr}
+	{"grip_request", grip_request_amxx},
+    {"grip_destroy_body", grip_destroy_body_amxx},
+    {"grip_body_from_string", grip_body_from_string_amxx},
+    {"grip_cancel_request", grip_cancel_request_amxx},
+    {"grip_get_response_state", grip_get_response_state_amxx},
+    {"grip_is_request_active", grip_is_request_active_amxx},
+    {"grip_get_error_description", grip_get_error_description_amxx},
+    {nullptr, nullptr}
 };
 
 void OnAmxxAttach()

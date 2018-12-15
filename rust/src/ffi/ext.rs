@@ -2,9 +2,6 @@ use ffi::*;
 
 pub trait ResultFFIExt<T> {
     unsafe fn handle_ffi_error(self, amx: *const c_void) -> std::result::Result<T, Cell>;
-    //    unsafe fn ok_and_log_ffi(self, amx: *const c_void) -> Option<T> {
-    //        self.handle_ffi_error(amx).ok()
-    //    }
 }
 
 impl<T> ResultFFIExt<T> for Result<T> {
@@ -38,7 +35,7 @@ macro_rules! try_and_log_ffi {
         }
     };
     ($amx:expr, $expr:expr,) => {
-        try_ffi!($amx, $expr)
+        try_and_log_ffi!($amx, $expr)
     };
 }
 

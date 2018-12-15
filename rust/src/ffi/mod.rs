@@ -166,11 +166,6 @@ pub unsafe extern "C" fn grip_request(
     handler: Option<extern "C" fn(forward_handle: Cell, user_data: Cell) -> c_void>,
     user_data: Cell,
 ) -> Cell {
-    (get_module().error_logger)(
-        amx,
-        format!("Got user data data {}\0", user_data).as_ptr() as *const c_char,
-    );
-
     let request_type = try_and_log_ffi!(
         amx,
         match request_type {
@@ -286,6 +281,50 @@ pub unsafe extern "C" fn grip_is_request_active(request_id: Cell) -> Cell {
     } else {
         0
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_get_error_description(
+    amx: *const c_void,
+    buffer: *mut c_char,
+    size: Cell,
+) -> Cell {
+    if let Err(e) = try_and_log_ffi!(
+        amx,
+        get_module()
+            .current_response
+            .as_ref()
+            .chain_err(|| ffi_error("No active response at this time"))
+    ) {
+        try_and_log_ffi!(
+            amx,
+            match e.kind() {
+                ErrorKind::RequestCancelled(()) => Err(ErrorKind::RequestCancelled(()).into()),
+                _ => Ok(()),
+            }
+        );
+
+        use error_chain::ChainedError;
+        libc::strncpy(
+            buffer,
+            format!("{}\0", e.display_chain()).as_ptr() as *const c_char,
+            try_and_log_ffi!(
+                amx,
+                if size >= 0 {
+                    Ok(size as usize)
+                } else {
+                    Err(ffi_error(format!(
+                        "Size {} should be greater or equal to zero.",
+                        size
+                    )))
+                },
+            ),
+        );
+    } else {
+        try_and_log_ffi!(amx, Err(ffi_error("No error at this point.")));
+    }
+
+    1
 }
 
 #[no_mangle]

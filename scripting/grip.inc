@@ -102,3 +102,13 @@ native GripRequestCancellation:grip_request(const uri[], GripBodyHandle:body, Gr
  * @return				Request handle
  */
 native grip_cancel_request(GripRequestCancellation:cancellation);
+
+/**
+ * Get current error description. Implementation defined.  
+ *
+ * @param buffer	    Output buffer to which description should be written
+ * @param buffer_size	Maximum length of the buffer.
+ *  
+ * @noreturn
+ */
+native grip_get_error_description(buffer[], buffer_size);
