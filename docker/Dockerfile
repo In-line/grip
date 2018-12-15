@@ -14,7 +14,15 @@ RUN ./steamcmd.sh +login anonymous +force_install_dir /opt/hlds +app_update 90 v
 ENV METAMOD_P_URL https://github.com/jkivilin/metamod-p/releases/download/1.21p38_beta1/metamod_i686_linux.win32.tar.xz
 WORKDIR /opt/hlds/cstrike/addons/metamod
 RUN curl -sSL $METAMOD_P_URL | tar xvfJ -
-ADD plugins.ini .
+ADD metamod/plugins.ini .
+
+ENV AMXMODX_URL https://www.amxmodx.org/amxxdrop/1.9/amxmodx-1.9.0-git5234-base-linux.tar.gz
+WORKDIR /opt/hlds/cstrike/
+RUN curl -sSL $AMXMODX_URL | tar xvfz -
+ADD amxmodx/plugins.ini .
+
+WORKDIR /opt/hlds/cstrike/addons/amxmodx/modules
+ADD grip_amxx_i386.so .
 
 WORKDIR /opt/hlds
 RUN sed -i -- 's/gamedll_linux "dlls\/cs\.so"/gamedll_linux "addons\/metamod\/metamod.so"/g' cstrike/liblist.gam
