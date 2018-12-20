@@ -2,6 +2,7 @@
 name = "grip-rust"
 version = "0.0.2-alpha"
 authors = ["alik"]
+edition = "2018"
 
 [lib]
 crate-type = ["staticlib"]

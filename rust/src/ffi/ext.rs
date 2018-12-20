@@ -1,4 +1,4 @@
-use ffi::*;
+use crate::ffi::*;
 
 pub trait ResultFFIExt<T> {
     unsafe fn handle_ffi_error(self, amx: *const c_void) -> std::result::Result<T, Cell>;
@@ -30,8 +30,8 @@ impl<T> ResultFFIExt<T> for Option<T> {
 macro_rules! try_and_log_ffi {
     ($amx:expr, $expr:expr) => {
         match $expr.handle_ffi_error($amx) {
-            $crate::std::result::Result::Ok(val) => val,
-            $crate::std::result::Result::Err(err) => return err,
+            std::result::Result::Ok(val) => val,
+            std::result::Result::Err(err) => return err,
         }
     };
     ($amx:expr, $expr:expr,) => {
