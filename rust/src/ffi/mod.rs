@@ -6,7 +6,7 @@ use self::ini::Ini;
 #[macro_use]
 mod ext;
 
-use ffi::ext::*;
+use crate::ffi::ext::*;
 
 use self::libc::{c_char, c_void};
 
@@ -17,10 +17,10 @@ use crate::errors::*;
 type Cell = isize;
 
 static INVALID_CELL: Cell = 0;
-use networking_queue::{Queue, RequestBuilder, RequestCancellation, RequestType, Response};
+use crate::networking_queue::{Queue, RequestBuilder, RequestCancellation, RequestType, Response};
 use std::prelude::v1::Vec;
 
-use cell_map::CellMap;
+use crate::cell_map::CellMap;
 
 struct ModuleStorage {
     pub global_queue: Queue,
