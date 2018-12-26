@@ -161,8 +161,8 @@ pub unsafe extern "C" fn grip_request(
     amx: *const c_void,
     forward_id: Cell,
     uri: *const c_char,
-    request_type: Cell,
     body_handle: Cell,
+    request_type: Cell,
     handler: Option<extern "C" fn(forward_handle: Cell, user_data: Cell) -> c_void>,
     user_data: Cell,
 ) -> Cell {
