@@ -29,6 +29,10 @@ enum GripBodyHandle {
 	Invalid_GripBodyHandle = 0,
 }
 
+enum GripJSONValue {
+    Invalid_GripJSONValue = 0,
+}
+
 enum GripResponseState {
 	GripResponseStateCancelled = 1,
 	GripResponseStateError = 2,
@@ -38,7 +42,7 @@ enum GripResponseState {
 /**
  * Get's state of the response. 
  *
- * @note 			This has nothing to do with HTTP status codes.
+ * @note    		This has nothing to do with HTTP status codes.
  *
  * @param str		Zero terminated string from which body should be created
  *  
@@ -126,3 +130,23 @@ native grip_get_error_description(buffer[], buffer_size);
  * @noreturn
  */
 native grip_get_response_body_string(buffer[], buffer_size);
+
+/**
+ * Parse current response body as JSON.
+ *
+ * @param error_buffer	        Output buffer to which possible error should be written
+ * @param error_buffer_size	    Maximum length of the buffer.
+ *
+ *
+ * @return                      JSON Value handle. If error occurred, returns invalid handle.
+ */
+native GripJSONValue:grip_parse_response_body_as_json(error_buffer[], error_buffer_size);
+
+/**
+ * Parse current response body as JSON.
+ *
+ * @param json_value	JSON Value to be destroyed.
+ *
+ * @noreturn
+ */
+native grip_destroy_json_value(json_value);

@@ -52,6 +52,8 @@ extern crate clone_all;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate serde_json;
+
 mod errors {
     error_chain! {
         errors {
@@ -66,6 +68,7 @@ mod errors {
         foreign_links {
             CrossBeamError(::crossbeam_channel::TryRecvError);
             HTTPError(::hyper::Error);
+            JSONError(::serde_json::Error);
         }
     }
 

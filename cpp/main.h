@@ -32,6 +32,4 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "amxxmodule.h"
-
 #endif // MAIN_H

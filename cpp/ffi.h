@@ -26,5 +26,9 @@ extern "C" {
 
     cell grip_get_error_description(const void* amx, char *buffer, cell buffer_size);
     cell grip_get_response_body_string(const void* amx, char *buffer, cell buffer_size);
+
+    cell grip_parse_response_body_as_json(const void* amx, char *error_buffer, cell error_buffer_size);
+
+    cell grip_destroy_json_value(const void* amx, cell json_value);
 }
 #endif //RESTRY_FFI_H

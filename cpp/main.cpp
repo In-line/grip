@@ -29,7 +29,7 @@
  *
  */
 
-
+#include "amxxmodule.h"
 #include "main.h"
 #include "ffi.h"
 
@@ -121,6 +121,23 @@ cell AMX_NATIVE_CALL grip_get_response_body_string_amxx(AMX *amx, cell *params) 
   return ret;
 }
 
+cell AMX_NATIVE_CALL grip_parse_response_body_as_json_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_buffer, arg_buffer_size};
+
+	char buffer[params[arg_buffer_size]];
+
+	cell ret = grip_parse_response_body_as_json(amx, &buffer[0], params[arg_buffer_size]);
+
+	MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+
+	return ret;
+}
+
+cell AMX_NATIVE_CALL grip_destroy_json_value_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_json_value};
+	return grip_destroy_json_value(amx, params[arg_json_value]);
+}
+
 AMX_NATIVE_INFO grip_exports[] = {
 	  {"grip_request", grip_request_amxx},
     {"grip_destroy_body", grip_destroy_body_amxx},
@@ -130,6 +147,8 @@ AMX_NATIVE_INFO grip_exports[] = {
     {"grip_is_request_active", grip_is_request_active_amxx},
     {"grip_get_error_description", grip_get_error_description_amxx},
     {"grip_get_response_body_string", grip_get_response_body_string_amxx},
+    {"grip_parse_response_body_as_json", grip_parse_response_body_as_json_amxx},
+    {"grip_destroy_json_value", grip_destroy_json_value_amxx},
     {nullptr, nullptr}
 };
 

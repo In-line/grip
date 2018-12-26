@@ -27,6 +27,7 @@ struct ModuleStorage {
     pub current_response: Option<Result<Response>>,
     pub bodies_handles: CellMap<Vec<u8>>,
     pub cancellations_handles: CellMap<RequestCancellation>,
+    pub json_handles: CellMap<serde_json::Value>,
     pub error_logger: extern "C" fn(*const c_void, *const c_char),
     pub callbacks_per_frame: usize,
     pub microseconds_delay_between_attempts: usize,
@@ -86,6 +87,7 @@ pub unsafe extern "C" fn grip_init(
         cancellations_handles: CellMap::new(),
         current_response: None,
         bodies_handles: CellMap::new(),
+        json_handles: CellMap::new(),
         error_logger,
         callbacks_per_frame: {
             queue_section
@@ -298,12 +300,11 @@ pub unsafe extern "C" fn grip_get_error_description(
     ) {
         try_and_log_ffi!(
             amx,
-        match e.kind() {
-            ErrorKind::RequestCancelled(()) => {
-                Err(ErrorKind::RequestCancelled(()).into())
+            match e.kind() {
+                ErrorKind::RequestCancelled(()) => Err(ErrorKind::RequestCancelled(()).into()),
+                _ => Ok(()),
             }
-            _ => Ok(()),
-        });
+        );
 
         use error_chain::ChainedError;
         libc::strncpy(
@@ -321,7 +322,7 @@ pub unsafe extern "C" fn grip_get_error_description(
                 },
             ),
         );
-        
+
         *buffer.offset(size) = '\0' as i8;
     } else {
         try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")));
@@ -330,6 +331,7 @@ pub unsafe extern "C" fn grip_get_error_description(
     1
 }
 
+// TODO: Remove copy paste
 #[no_mangle]
 pub unsafe extern "C" fn grip_get_response_body_string(
     amx: *const c_void,
@@ -376,8 +378,76 @@ pub unsafe extern "C" fn grip_get_response_body_string(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn grip_parse_response_body_as_json(
+    amx: *const c_void,
+    error_buffer: *mut c_char,
+    error_buffer_size: Cell,
+) -> Cell {
+    if let Ok(response) = try_and_log_ffi!(
+        amx,
+        get_module()
+            .current_response
+            .as_ref()
+            .chain_err(|| ffi_error("No active response at this time"))
+    ) {
+        let value: Result<serde_json::Value> =
+            serde_json::from_slice(&response.body[..]).map_err(|e| ErrorKind::JSONError(e).into());
+
+        match value {
+            Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+            Err(error) => {
+                use error_chain::ChainedError;
+                libc::strncpy(
+                    error_buffer,
+                    format!(
+                        "{}\0",
+                        error.display_chain()
+                    )
+                    .as_ptr() as *const c_char,
+                    try_and_log_ffi!(
+                        amx,
+                        if error_buffer_size >= 0 {
+                            Ok(error_buffer_size as usize)
+                        } else {
+                            Err(ffi_error(format!(
+                                "Size {} should be greater or equal to zero.",
+                                error_buffer_size
+                            )))
+                        },
+                    ),
+                );
+
+                0
+            }
+        }
+    } else {
+        try_and_log_ffi!(amx, Err(ffi_error("Error occurred for this response.")));
+        0
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_destroy_json_value(
+    amx: *const c_void,
+    json_value: Cell
+) -> Cell {
+    try_and_log_ffi!(
+        amx,
+        get_module_mut()
+            .json_handles
+            .remove_with_id(json_value)
+            .chain_err(|| ffi_error(format!("Invalid json value handle {}", json_value)))
+    );
+
+    1
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn grip_process_request() {
-    let multiplier = std::cmp::min(get_module().global_queue.number_of_pending_requests() / 500, 1);
+    let multiplier = std::cmp::min(
+        get_module().global_queue.number_of_pending_requests() / 500,
+        1,
+    );
     if multiplier > 1 {
         println!("[gRIP] Warning: More than 500 requests are pending.. Fastening execution {} times to compensate that", multiplier);
     }

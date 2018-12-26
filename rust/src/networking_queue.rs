@@ -216,7 +216,7 @@ impl Queue {
             input_command_sender,
             response_receiver,
             last_time_executed_with_limit: None,
-            number_of_pending_requests: 0
+            number_of_pending_requests: 0,
         }
     }
 
@@ -252,7 +252,7 @@ impl Queue {
             input_command_sender
                 .send(input_command)
                 .map(|_| {})
-                .map_err(number_of_pending_requests|_| unreachable!())
+                .map_err(|_| unreachable!())
         }));
     }
 
