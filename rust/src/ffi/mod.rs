@@ -324,7 +324,7 @@ pub unsafe extern "C" fn grip_get_error_description(
         
         *buffer.offset(size) = '\0' as i8;
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("No error at this point.")));
+        try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")));
     }
 
     1
@@ -369,7 +369,7 @@ pub unsafe extern "C" fn grip_get_response_body_string(
 
         *buffer.offset(size) = '\0' as i8;
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("Error ocurred at this point.")));
+        try_and_log_ffi!(amx, Err(ffi_error("Error occurred for this response.")));
     }
 
     1
@@ -377,8 +377,13 @@ pub unsafe extern "C" fn grip_get_response_body_string(
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_process_request() {
+    let multiplier = std::cmp::min(get_module().global_queue.number_of_pending_requests() / 500, 1);
+    if multiplier > 1 {
+        println!("[gRIP] Warning: More than 500 requests are pending.. Fastening execution {} times to compensate that", multiplier);
+    }
+
     get_module_mut().global_queue.execute_queue_with_limit(
-        get_module().callbacks_per_frame,
+        get_module().callbacks_per_frame * multiplier,
         std::time::Duration::from_micros(get_module().microseconds_delay_between_attempts as u64),
     );
 }

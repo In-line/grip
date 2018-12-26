@@ -94,6 +94,7 @@ pub struct Queue {
     input_command_sender: futures::sync::mpsc::UnboundedSender<InputCommand>,
     response_receiver: crossbeam_channel::Receiver<OutputCommand>,
     last_time_executed_with_limit: Option<Instant>,
+    number_of_pending_requests: usize,
 }
 
 impl Drop for Queue {
@@ -215,6 +216,7 @@ impl Queue {
             input_command_sender,
             response_receiver,
             last_time_executed_with_limit: None,
+            number_of_pending_requests: 0
         }
     }
 
@@ -245,11 +247,12 @@ impl Queue {
 
     fn send_input_command(&mut self, input_command: InputCommand) {
         let input_command_sender = self.input_command_sender.clone();
+        self.number_of_pending_requests += 1;
         self.executor.spawn(lazy(move || {
             input_command_sender
                 .send(input_command)
                 .map(|_| {})
-                .map_err(|_| unreachable!())
+                .map_err(number_of_pending_requests|_| unreachable!())
         }));
     }
 
@@ -262,6 +265,8 @@ impl Queue {
                 (callback)(Err(error));
             }
         }
+
+        self.number_of_pending_requests -= 1;
 
         Ok(())
     }
@@ -296,6 +301,10 @@ impl Queue {
             self.try_recv_queue().ok();
             thread::sleep(one_step_timeout);
         }
+    }
+
+    pub fn number_of_pending_requests(&self) -> usize {
+        self.number_of_pending_requests
     }
 }
 
