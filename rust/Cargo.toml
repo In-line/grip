@@ -17,7 +17,7 @@ default = ["vendored"] # TODO: Conditional dynamic linking.
 
 [dependencies]
 bytes = "0.4.11"
-crossbeam-channel = "0.3.4"
+crossbeam-channel = "0.3.6"
 hyper-tls = "0.3.1"
 futures = "0.1.25"
 hyper = "0.12.19"
