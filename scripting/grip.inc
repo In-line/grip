@@ -163,7 +163,6 @@ native grip_destroy_json_value(GripJSONValue:json_value);
  */
 native GripRequestOptions:grip_create_default_options(Float:timeout = -1);
 
-
 /**
  * Destroy this options
  *
@@ -203,6 +202,7 @@ stock grip_create_create_options(const headers[][2][], const headers_count, Floa
 	
 	return options;
 }
+
 /* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
 *{\\ rtf1\\ ansi\\ ansicpg1252\\ uc1\\ deff0\\ deflang1033\\ deflangfe1033{\\ fonttbl{\\ f0 Tahoma;}}\n{\\ colortbl;}\n{\\ *\\ generator Wine Riched20 2.0;}\n\\ pard\\ sl-240\\ slmult1 \\ lang1033\\ fs16\\ f0 \\ par\n}
 */

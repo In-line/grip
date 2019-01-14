@@ -147,7 +147,7 @@ cell AMX_NATIVE_CALL grip_destroy_options_amxx(AMX *amx, cell *params) {
 
 	return grip_destroy_options(amx, params[arg_options_handle]);
 }
-//     cell grip_options_add_header(const void* amx, cell options_handle, const char* header_name, const char* header_value);
+
 cell AMX_NATIVE_CALL grip_options_add_header_amxx(AMX *amx, cell *params) {
 	enum { arg_count, arg_options_handle, arg_header_name, arg_header_value};
 
