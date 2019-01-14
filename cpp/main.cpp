@@ -79,9 +79,7 @@ cell AMX_NATIVE_CALL grip_request_amxx(AMX *amx, cell *params) {
 		return 0;
 	}
 
-	cell options = params[arg_options]; // TODO: Handle options.
-
-	return grip_request(amx, handler_forward, uri, params[arg_body_handle], params[arg_type], request_handler, params[arg_user_data]);
+	return grip_request(amx, handler_forward, uri, params[arg_body_handle], params[arg_type], request_handler, params[arg_options], params[arg_user_data]);
 }
 
 cell AMX_NATIVE_CALL grip_cancel_request_amxx(AMX *amx, cell *params) {
@@ -138,8 +136,28 @@ cell AMX_NATIVE_CALL grip_destroy_json_value_amxx(AMX *amx, cell *params) {
 	return grip_destroy_json_value(amx, params[arg_json_value]);
 }
 
+cell AMX_NATIVE_CALL grip_create_default_options_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_timeout};
+
+	return grip_create_default_options(amx, amx_ctof(params[arg_timeout]));
+}
+
+cell AMX_NATIVE_CALL grip_destroy_options_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_options_handle};
+
+	return grip_destroy_options(amx, params[arg_options_handle]);
+}
+//     cell grip_options_add_header(const void* amx, cell options_handle, const char* header_name, const char* header_value);
+cell AMX_NATIVE_CALL grip_options_add_header_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_options_handle, arg_header_name, arg_header_value};
+
+	return grip_options_add_header(amx, params[arg_options_handle],
+			MF_GetAmxString(amx, params[arg_header_name], 0, &dummy),
+			MF_GetAmxString(amx, params[arg_header_name], 1, &dummy));
+}
+
 AMX_NATIVE_INFO grip_exports[] = {
-	  {"grip_request", grip_request_amxx},
+	{"grip_request", grip_request_amxx},
     {"grip_destroy_body", grip_destroy_body_amxx},
     {"grip_body_from_string", grip_body_from_string_amxx},
     {"grip_cancel_request", grip_cancel_request_amxx},
@@ -149,6 +167,9 @@ AMX_NATIVE_INFO grip_exports[] = {
     {"grip_get_response_body_string", grip_get_response_body_string_amxx},
     {"grip_parse_response_body_as_json", grip_parse_response_body_as_json_amxx},
     {"grip_destroy_json_value", grip_destroy_json_value_amxx},
+	{"grip_create_default_options", grip_create_default_options_amxx},
+	{"grip_destroy_options", grip_destroy_options_amxx},
+	{"grip_options_add_header", grip_options_add_header_amxx},
     {nullptr, nullptr}
 };
 

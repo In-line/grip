@@ -40,6 +40,9 @@ use std::time::{Duration, Instant};
 
 use crate::errors::*;
 
+mod ext;
+use self::ext::*;
+
 #[derive(Clone, Debug)]
 pub enum RequestType {
     Get,
@@ -51,11 +54,18 @@ pub enum RequestType {
 #[derive(Debug)]
 pub struct RequestCancellation(oneshot::Sender<()>);
 
+#[derive(Constructor, Clone, Debug, Default)]
+pub struct RequestOptions {
+    pub headers: hyper::HeaderMap,
+    pub timeout: Option<Duration>,
+}
+
 #[derive(Builder, Clone, Constructor, Debug)]
 pub struct Request {
     pub http_type: RequestType,
     pub uri: hyper::Uri,
     pub body: Vec<u8>,
+    pub options: RequestOptions,
 }
 
 #[derive(Constructor, Builder)]
@@ -107,6 +117,7 @@ impl Queue {
     pub fn new(number_of_dns_threads: usize) -> Self {
         let mut runtime = tokio::runtime::Runtime::new().unwrap();
         let executor = runtime.executor();
+
         let (input_command_sender, input_command_receiver) = futures::sync::mpsc::unbounded();
         let (response_sender, response_receiver) = crossbeam_channel::unbounded();
 
@@ -138,9 +149,6 @@ impl Queue {
                                 })
                             }).for_each(move |cmd| {
                                 clone_all!(response_sender);
-
-
-
                                 match cmd {
                                     InputCommand::Quit => unreachable!(),
                                     InputCommand::Request { request, callback, cancellation_signal } => {
@@ -152,13 +160,17 @@ impl Queue {
                                         }
 
                                         executor.spawn(
+                                            // Request construction.
                                             client.request(match request.http_type {
                                                 RequestType::Post => hyper::Request::post(request.uri.clone()),
                                                 RequestType::Get => hyper::Request::get(request.uri.clone()),
                                                 RequestType::Delete => hyper::Request::delete(request.uri.clone()),
                                                 RequestType::Put => hyper::Request::put(request.uri.clone()),
-                                            }.body(hyper::Body::from(request.body.clone())).unwrap()) // TODO: Optimize clone away
+                                            }
+                                                .body(hyper::Body::from(request.body.clone())).unwrap()
+                                                .extend_headers(request.options.headers.clone())) // TODO: Optimize clone away
                                                 .and_then(move |res| res.into_body().concat2())
+                                                // Cancelling / Error handling.
                                                 .map(|body| {
                                                     use bytes::buf::FromBuf;
                                                     State::Successful((request, Vec::from_buf(body.into_bytes())))
@@ -174,6 +186,7 @@ impl Queue {
                                                 .map(|either| {
                                                     either.split().0
                                                 })
+                                                // Sending output command.
                                                 .and_then(move |state| {
                                                     match state {
                                                         State::Successful((request, vec)) => {

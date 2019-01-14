@@ -54,6 +54,8 @@ extern crate lazy_static;
 
 extern crate serde_json;
 
+extern crate float_cmp;
+
 mod errors {
     error_chain! {
         errors {
