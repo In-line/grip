@@ -22,7 +22,7 @@ hyper-tls = "0.3.1"
 futures = "0.1.25"
 hyper = "0.12.20"
 derive_more = "0.13.0"
-libc = "0.2.46"
+libc = "0.2.47"
 tokio = "0.1.14"
 derive_builder = "0.7.0"
 error-chain = { version = "0.12.0", default-features = false }
