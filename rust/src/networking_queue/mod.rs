@@ -323,7 +323,7 @@ impl Queue {
 
 mod tests {
     #[test]
-    fn test() {
+    fn test_basic_request() {
         use super::*;
         use std::sync::{Arc, Mutex};
 
@@ -337,6 +337,7 @@ mod tests {
             RequestBuilder::default()
                 .http_type(RequestType::Get)
                 .body(vec![])
+                .options(RequestOptions::default())
                 .uri("https://docs.rs/".parse().unwrap())
                 .build()
                 .unwrap(),
@@ -347,6 +348,51 @@ mod tests {
         );
 
         assert_eq!(*control_variable.lock().unwrap(), false);
+
+        queue.execute_query_with_timeout(Duration::from_secs(5), Duration::from_millis(100));
+
+        assert_eq!(*control_variable.lock().unwrap(), true);
+    }
+
+    #[test]
+    fn test_cancelling() {
+        use super::*;
+        use std::sync::{Arc, Mutex};
+
+        let mut queue = Queue::new(4);
+
+        use std::default::Default;
+
+        let control_variable = Arc::new(Mutex::new(false));
+        let control_variable_c = Arc::clone(&control_variable);
+        let handle = queue.send_request(
+            RequestBuilder::default()
+                .http_type(RequestType::Get)
+                .body(vec![])
+                .options(RequestOptions::default())
+                .uri("https://docs.rs/".parse().unwrap())
+                .build()
+                .unwrap(),
+            move |req| {
+                *control_variable_c.lock().unwrap() = true;
+
+                match req {
+                    Ok(_) => {
+                        unreachable!();
+                    },
+                    Err(e) => {
+                        match e.kind() {
+                            ErrorKind::RequestCancelled(()) => {}
+                            _ => unreachable!()
+                        }
+                    }
+                };
+            },
+        );
+
+        assert_eq!(*control_variable.lock().unwrap(), false);
+
+        drop(handle);
 
         queue.execute_query_with_timeout(Duration::from_secs(5), Duration::from_millis(100));
 
