@@ -187,7 +187,7 @@ native grip_options_add_header(GripRequestOptions:options, const headerName[], c
  *
  * @note 		Options should be destroyed with the relevant call.
  *
- * @param headers	Array of heaer pairs.
+ * @param headers	Array of header pairs.
  * @param headers_count	Count of the header pairs.
  * @param timeout	timeout -1 to disable, >0 to enable timeout.
  *
