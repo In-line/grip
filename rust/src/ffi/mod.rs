@@ -17,7 +17,9 @@ use crate::errors::*;
 type Cell = isize;
 
 static INVALID_CELL: Cell = 0;
-use crate::networking_queue::{Queue, RequestBuilder, RequestCancellation, RequestType, Response};
+use crate::networking_queue::{
+    Queue, RequestBuilder, RequestCancellation, RequestOptions, RequestType, Response,
+};
 use std::prelude::v1::Vec;
 
 use crate::cell_map::CellMap;
@@ -28,6 +30,7 @@ struct ModuleStorage {
     pub bodies_handles: CellMap<Vec<u8>>,
     pub cancellations_handles: CellMap<RequestCancellation>,
     pub json_handles: CellMap<serde_json::Value>,
+    pub options_handles: CellMap<RequestOptions>,
     pub error_logger: extern "C" fn(*const c_void, *const c_char),
     pub callbacks_per_frame: usize,
     pub microseconds_delay_between_attempts: usize,
@@ -40,19 +43,15 @@ pub unsafe extern "C" fn grip_init(
     error_logger: extern "C" fn(*const c_void, *const c_char),
     config_file_path: *const c_char,
 ) {
-    let ini = Ini::load_from_file(
-        CStr::from_ptr(config_file_path as *const i8)
-            .to_str()
-            .unwrap(),
-    )
-    .map_err(|e| {
-        println!(
-            "Error: Can't parse/open grip config. Examine carefully ini parser log message\n{}",
+    let ini = Ini::load_from_file(CStr::from_ptr(config_file_path).to_str().unwrap())
+        .map_err(|e| {
+            println!(
+                "Error: Can't parse/open grip config. Examine carefully ini parser log message\n{}",
+                e
+            );
             e
-        );
-        e
-    })
-    .unwrap();
+        })
+        .unwrap();
 
     let dns_section = ini
         .section(Some("dns".to_owned()))
@@ -88,6 +87,7 @@ pub unsafe extern "C" fn grip_init(
         current_response: None,
         bodies_handles: CellMap::new(),
         json_handles: CellMap::new(),
+        options_handles: CellMap::new(),
         error_logger,
         callbacks_per_frame: {
             queue_section
@@ -166,6 +166,7 @@ pub unsafe extern "C" fn grip_request(
     body_handle: Cell,
     request_type: Cell,
     handler: Option<extern "C" fn(forward_handle: Cell, user_data: Cell) -> c_void>,
+    options_handle: Cell,
     user_data: Cell,
 ) -> Cell {
     let request_type = try_and_log_ffi!(
@@ -205,8 +206,24 @@ pub unsafe extern "C" fn grip_request(
             .chain_err(|| ffi_error(format!("Invalid body handle: {}", body_handle)))
     );
 
-    // TODO: Get body in the AMXX.
-    // TODO: grip_get_error_description etc
+    let options = try_and_log_ffi!(
+        amx,
+        get_module()
+            .options_handles
+            .get_with_id(options_handle)
+            .or_else(|| if options_handle == -1 {
+                lazy_static! {
+                    static ref empty_options: RequestOptions =
+                        RequestOptions::new(hyper::HeaderMap::new(), None);
+                }
+                Some(&empty_options)
+            } else {
+                None
+            })
+            .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle)))
+    );
+
+    // TODO: JSON, Headers, Timeout.
 
     let next_cancellation_id = get_module().cancellations_handles.peek_id();
     let cancellation = get_module_mut().global_queue.send_request(
@@ -218,6 +235,7 @@ pub unsafe extern "C" fn grip_request(
                 uri.parse()
                     .chain_err(|| ffi_error(format!("URI parsing error: {}", uri)))
             ))
+            .options(options.clone())
             .build()
             .unwrap(),
         move |response| {
@@ -399,11 +417,7 @@ pub unsafe extern "C" fn grip_parse_response_body_as_json(
                 use error_chain::ChainedError;
                 libc::strncpy(
                     error_buffer,
-                    format!(
-                        "{}\0",
-                        error.display_chain()
-                    )
-                    .as_ptr() as *const c_char,
+                    format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
                     try_and_log_ffi!(
                         amx,
                         if error_buffer_size >= 0 {
@@ -427,10 +441,7 @@ pub unsafe extern "C" fn grip_parse_response_body_as_json(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn grip_destroy_json_value(
-    amx: *const c_void,
-    json_value: Cell
-) -> Cell {
+pub unsafe extern "C" fn grip_destroy_json_value(amx: *const c_void, json_value: Cell) -> Cell {
     try_and_log_ffi!(
         amx,
         get_module_mut()
@@ -438,6 +449,82 @@ pub unsafe extern "C" fn grip_destroy_json_value(
             .remove_with_id(json_value)
             .chain_err(|| ffi_error(format!("Invalid json value handle {}", json_value)))
     );
+
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_create_default_options(amx: *const c_void, timeout: f64) -> Cell {
+    use float_cmp::ApproxEq;
+
+    get_module_mut()
+        .options_handles
+        .insert_with_unique_id(RequestOptions::new(
+            hyper::HeaderMap::default(),
+            try_and_log_ffi!(
+                amx,
+                if timeout.approx_eq(&-1.0, std::f64::EPSILON, 2) {
+                    Ok(None)
+                } else if timeout >= 0.0 {
+                    Ok(Some(std::time::Duration::from_millis(
+                        (timeout * 1000.0) as u64,
+                    )))
+                } else {
+                    Err(ffi_error(format!("Invalid timeout: {}", timeout)))
+                }
+            ),
+        ))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_destroy_options(amx: *const c_void, options_handle: Cell) -> Cell {
+    try_and_log_ffi!(
+        amx,
+        get_module_mut()
+            .options_handles
+            .remove_with_id(options_handle)
+            .chain_err(|| ffi_error(format!("Invalid options handle {}", options_handle)))
+    );
+
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_options_add_header(
+    amx: *const c_void,
+    options_handle: Cell,
+    header_name: *const c_char,
+    header_value: *const c_char,
+) -> Cell {
+    let option = try_and_log_ffi!(
+        amx,
+        get_module_mut()
+            .options_handles
+            .get_mut_with_id(options_handle)
+            .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle))),
+    );
+
+    let header_name = try_and_log_ffi!(
+        amx,
+        CStr::from_ptr(header_name)
+            .to_str()
+            .chain_err(|| ffi_error("Invalid header name. Can't create UTF-8 string"))
+    );
+
+    let header_value = try_and_log_ffi!(
+        amx,
+        CStr::from_ptr(header_value)
+            .to_str()
+            .chain_err(|| ffi_error("Invalid header value. Can't create UTF-8 string"))
+    );
+
+    let header_value = try_and_log_ffi!(
+        amx,
+        hyper::header::HeaderValue::from_str(header_value)
+        .chain_err(|| ffi_error(format!("Header value contains invalid byte sequences or was rejected by Hyper HTTP implementation: {}", header_value)))
+    );
+
+    option.headers.insert(header_name, header_value);
 
     1
 }

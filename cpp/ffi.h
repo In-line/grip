@@ -18,7 +18,7 @@ extern "C" {
     cell grip_destroy_body(const void* amx, cell body);
 
     typedef void (*GripHandler)(cell, cell, cell);
-    cell grip_request(const void* amx, cell forward_id, const char *uri, cell body_handle, cell request_type, GripHandler handler, cell user_data);
+    cell grip_request(const void* amx, cell forward_id, const char *uri, cell body_handle, cell request_type, GripHandler handler, cell options_handle, cell user_data);
 
     cell grip_cancel_request(const void* amx, cell cancellation_id);
     cell grip_get_response_state(const void* amx);
@@ -30,5 +30,11 @@ extern "C" {
     cell grip_parse_response_body_as_json(const void* amx, char *error_buffer, cell error_buffer_size);
 
     cell grip_destroy_json_value(const void* amx, cell json_value);
+
+    cell grip_create_default_options(const void *amx, double timeout);
+
+    cell grip_destroy_options(const void* amx, cell options_handle);
+
+    cell grip_options_add_header(const void* amx, cell options_handle, const char* header_name, const char* header_value);
 }
 #endif //RESTRY_FFI_H
