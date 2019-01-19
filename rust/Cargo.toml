@@ -1,6 +1,6 @@
 [package]
 name = "grip-rust"
-version = "0.0.2-alpha"
+version = "0.0.3-alpha"
 authors = ["alik"]
 edition = "2018"
 
