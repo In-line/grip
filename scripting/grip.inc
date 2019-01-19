@@ -196,13 +196,9 @@ native grip_options_add_header(GripRequestOptions:options, const headerName[], c
 stock grip_create_create_options(const headers[][2][], const headers_count, Float:timeout = -1) {
 	new GripRequestOptions:options = grip_create_default_options(timeout);
 	
-	for(int i = 0; i < headers_count) {
+	for(int i = 0; i < headers_count; ++i) {
 		grip_options_add_header(options, headers[i][0], headers[i][1]);
 	}
 	
 	return options;
 }
-
-/* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
-*{\\ rtf1\\ ansi\\ ansicpg1252\\ uc1\\ deff0\\ deflang1033\\ deflangfe1033{\\ fonttbl{\\ f0 Tahoma;}}\n{\\ colortbl;}\n{\\ *\\ generator Wine Riched20 2.0;}\n\\ pard\\ sl-240\\ slmult1 \\ lang1033\\ fs16\\ f0 \\ par\n}
-*/
