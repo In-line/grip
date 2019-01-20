@@ -174,7 +174,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_create_default_options", grip_create_default_options_amxx},
 	{"grip_destroy_options", grip_destroy_options_amxx},
 	{"grip_options_add_header", grip_options_add_header_amxx},
-	{"grip_get_response_status_code", grip_get_response_status_code_amxx}
+	{"grip_get_response_status_code", grip_get_response_status_code_amxx},
     {nullptr, nullptr}
 };
 
