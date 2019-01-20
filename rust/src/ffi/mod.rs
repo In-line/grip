@@ -213,7 +213,7 @@ pub unsafe extern "C" fn grip_request(
             .get_with_id(options_handle)
             .or_else(|| if options_handle == -1 {
                 lazy_static! {
-                    static ref EMPTY_OPTIONS = RequestOptions::default();
+                    static ref EMPTY_OPTIONS: RequestOptions = RequestOptions::default();
                 }
                 Some(&EMPTY_OPTIONS)
             } else {
