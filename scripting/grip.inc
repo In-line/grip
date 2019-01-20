@@ -38,6 +38,7 @@ enum GripResponseState {
 	GripResponseStateCancelled = 1,
 	GripResponseStateError = 2,
 	GripResponseStateSuccessful = 3,
+	GripResponseStateTimeout = 4,
 }
 
 /**

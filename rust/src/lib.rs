@@ -62,8 +62,11 @@ mod errors {
             FFIError(t: String) {
                 display("FFI Error: {}", t)
             }
-            RequestCancelled(a: ()) {
+            RequestCancelled {
                 display("Request was cancelled")
+            }
+            RequestTimeout {
+                display("Request timeout")
             }
         }
 

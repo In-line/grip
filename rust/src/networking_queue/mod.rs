@@ -43,6 +43,8 @@ use crate::errors::*;
 mod ext;
 use self::ext::*;
 
+use tokio::prelude::FutureExt;
+
 #[derive(Clone, Debug)]
 pub enum RequestType {
     Get,
@@ -54,9 +56,12 @@ pub enum RequestType {
 #[derive(Debug)]
 pub struct RequestCancellation(oneshot::Sender<()>);
 
-#[derive(Constructor, Clone, Debug, Default)]
+#[derive(Constructor, Builder, Clone, Debug, Default)]
 pub struct RequestOptions {
+    #[builder(default)]
     pub headers: hyper::HeaderMap,
+
+    #[builder(default)]
     pub timeout: Option<Duration>,
 }
 
@@ -64,7 +69,11 @@ pub struct RequestOptions {
 pub struct Request {
     pub http_type: RequestType,
     pub uri: hyper::Uri,
+
+    #[builder(default)]
     pub body: Vec<u8>,
+
+    #[builder(default)]
     pub options: RequestOptions,
 }
 
@@ -154,10 +163,12 @@ impl Queue {
                                     InputCommand::Request { request, callback, cancellation_signal } => {
 
                                         enum State {
-                                            Successful((Request, Vec<u8>)),
+                                            Successful(Vec<u8>),
                                             Error(Error),
                                             Canceled,
+                                            Timeout
                                         }
+
 
                                         executor.spawn(
                                             // Request construction.
@@ -173,7 +184,7 @@ impl Queue {
                                                 // Cancelling / Error handling.
                                                 .map(|body| {
                                                     use bytes::buf::FromBuf;
-                                                    State::Successful((request, Vec::from_buf(body.into_bytes())))
+                                                    State::Successful(Vec::from_buf(body.into_bytes()))
                                                 })
                                                 .or_else(|e| {
                                                     future::ok(State::Error(ErrorKind::HTTPError(e).into()))
@@ -186,10 +197,15 @@ impl Queue {
                                                 .map(|either| {
                                                     either.split().0
                                                 })
+                                                // Timeout.
+                                                .timeout(request.options.timeout.clone()
+                                                    .unwrap_or_else(|| Duration::new(std::u16::MAX as u64, 0)))
+                                                .or_else(|_| future::ok(State::Timeout))
+                                                .map_err(|_:tokio::timer::Error| unreachable!())
                                                 // Sending output command.
                                                 .and_then(move |state| {
                                                     match state {
-                                                        State::Successful((request, vec)) => {
+                                                        State::Successful(vec) => {
                                                             response_sender.send(OutputCommand::Response {
                                                                 response: Response::new(
                                                                     request,
@@ -206,9 +222,15 @@ impl Queue {
                                                         },
                                                         State::Canceled => {
                                                             response_sender.send(OutputCommand::Error {
-                                                                error: ErrorKind::RequestCancelled(()).into(),
+                                                                error: ErrorKind::RequestCancelled.into(),
                                                                 callback,
                                                             }).unwrap();
+                                                        }
+                                                        State::Timeout => {
+                                                            response_sender.send(OutputCommand::Error {
+                                                                error: ErrorKind::RequestTimeout.into(),
+                                                                callback,
+                                                            }).unwrap()
                                                         }
                                                     }
                                                     future::ok(())
@@ -336,8 +358,6 @@ mod tests {
         let _handle = queue.send_request(
             RequestBuilder::default()
                 .http_type(RequestType::Get)
-                .body(vec![])
-                .options(RequestOptions::default())
                 .uri("https://docs.rs/".parse().unwrap())
                 .build()
                 .unwrap(),
@@ -368,8 +388,6 @@ mod tests {
         let handle = queue.send_request(
             RequestBuilder::default()
                 .http_type(RequestType::Get)
-                .body(vec![])
-                .options(RequestOptions::default())
                 .uri("https://docs.rs/".parse().unwrap())
                 .build()
                 .unwrap(),
@@ -379,13 +397,11 @@ mod tests {
                 match req {
                     Ok(_) => {
                         unreachable!();
-                    },
-                    Err(e) => {
-                        match e.kind() {
-                            ErrorKind::RequestCancelled(()) => {}
-                            _ => unreachable!()
-                        }
                     }
+                    Err(e) => match e.kind() {
+                        ErrorKind::RequestCancelled => {}
+                        _ => unreachable!(),
+                    },
                 };
             },
         );
@@ -393,6 +409,51 @@ mod tests {
         assert_eq!(*control_variable.lock().unwrap(), false);
 
         drop(handle);
+
+        queue.execute_query_with_timeout(Duration::from_secs(5), Duration::from_millis(100));
+
+        assert_eq!(*control_variable.lock().unwrap(), true);
+    }
+
+    #[test]
+    fn test_timeout() {
+        use super::*;
+        use std::sync::{Arc, Mutex};
+
+        let mut queue = Queue::new(4);
+
+        use std::default::Default;
+
+        let control_variable = Arc::new(Mutex::new(false));
+        let control_variable_c = Arc::clone(&control_variable);
+        let _handle = queue.send_request(
+            RequestBuilder::default()
+                .http_type(RequestType::Get)
+                .options(
+                    RequestOptionsBuilder::default()
+                        .timeout(Some(Duration::new(0, 0)))
+                        .build()
+                        .unwrap(),
+                )
+                .uri("https://docs.rs/".parse().unwrap())
+                .build()
+                .unwrap(),
+            move |req| {
+                *control_variable_c.lock().unwrap() = true;
+
+                match req {
+                    Ok(_) => {
+                        unreachable!();
+                    }
+                    Err(e) => match e.kind() {
+                        ErrorKind::RequestTimeout => {}
+                        _ => unreachable!(),
+                    },
+                };
+            },
+        );
+
+        assert_eq!(*control_variable.lock().unwrap(), false);
 
         queue.execute_query_with_timeout(Duration::from_secs(5), Duration::from_millis(100));
 
