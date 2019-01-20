@@ -198,7 +198,8 @@ impl Queue {
                                                     either.split().0
                                                 })
                                                 // Timeout.
-                                                .timeout(request.options.timeout.clone().unwrap_or_else(|| Duration::new(std::u16::MAX as u64, 0)))
+                                                .timeout(request.options.timeout.clone()
+                                                    .unwrap_or_else(|| Duration::new(std::u16::MAX as u64, 0)))
                                                 .or_else(|_| future::ok(State::Timeout))
                                                 .map_err(|_:tokio::timer::Error| unreachable!())
                                                 // Sending output command.
@@ -396,13 +397,11 @@ mod tests {
                 match req {
                     Ok(_) => {
                         unreachable!();
-                    },
-                    Err(e) => {
-                        match e.kind() {
-                            ErrorKind::RequestCancelled(()) => {}
-                            _ => unreachable!()
-                        }
                     }
+                    Err(e) => match e.kind() {
+                        ErrorKind::RequestCancelled(()) => {}
+                        _ => unreachable!(),
+                    },
                 };
             },
         );
@@ -415,7 +414,6 @@ mod tests {
 
         assert_eq!(*control_variable.lock().unwrap(), true);
     }
-
 
     #[test]
     fn test_timeout() {
@@ -431,7 +429,12 @@ mod tests {
         let _handle = queue.send_request(
             RequestBuilder::default()
                 .http_type(RequestType::Get)
-                .options(RequestOptionsBuilder::default().timeout(Some(Duration::new(0, 0))).build().unwrap())
+                .options(
+                    RequestOptionsBuilder::default()
+                        .timeout(Some(Duration::new(0, 0)))
+                        .build()
+                        .unwrap(),
+                )
                 .uri("https://docs.rs/".parse().unwrap())
                 .build()
                 .unwrap(),
@@ -441,19 +444,16 @@ mod tests {
                 match req {
                     Ok(_) => {
                         unreachable!();
-                    },
-                    Err(e) => {
-                        match e.kind() {
-                            ErrorKind::RequestTimeout(()) => {}
-                            _ => unreachable!()
-                        }
                     }
+                    Err(e) => match e.kind() {
+                        ErrorKind::RequestTimeout(()) => {}
+                        _ => unreachable!(),
+                    },
                 };
             },
         );
 
         assert_eq!(*control_variable.lock().unwrap(), false);
-
 
         queue.execute_query_with_timeout(Duration::from_secs(5), Duration::from_millis(100));
 

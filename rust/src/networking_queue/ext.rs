@@ -1,4 +1,3 @@
-
 pub trait RequestExt {
     fn extend_headers(self, headers: hyper::HeaderMap) -> Self;
 }
