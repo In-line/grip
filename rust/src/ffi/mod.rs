@@ -197,9 +197,9 @@ pub unsafe extern "C" fn grip_request(
             .get_with_id(body_handle)
             .or_else(|| if body_handle == -1 {
                 lazy_static! {
-                    static ref empty_vec: Vec<u8> = vec![];
+                    static ref EMPTY_VEC: Vec<u8> = vec![];
                 }
-                Some(&empty_vec)
+                Some(&EMPTY_VEC)
             } else {
                 None
             })
@@ -213,10 +213,9 @@ pub unsafe extern "C" fn grip_request(
             .get_with_id(options_handle)
             .or_else(|| if options_handle == -1 {
                 lazy_static! {
-                    static ref empty_options: RequestOptions =
-                        RequestOptions::new(hyper::HeaderMap::new(), None);
+                    static ref EMPTY_OPTIONS = RequestOptions::default();
                 }
-                Some(&empty_options)
+                Some(&EMPTY_OPTIONS)
             } else {
                 None
             })
