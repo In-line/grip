@@ -69,7 +69,7 @@ enum GripHTTPStatus {
     GripHTTPStatusForbidden = 403,
     GripHTTPStatusNotFound = 404,
     GripHTTPStatusMethodNotAllowed = 405,
-    GripHTTPStatusNotAcceptable - 406,
+    GripHTTPStatusNotAcceptable = 406,
     GripHTTPStatusProxyAuthenticationRequired = 407,
     GripHTTPStatusRequestTimeout = 408,
     GripHTTPStatusConflict = 409,
@@ -119,7 +119,7 @@ native GripResponseState:grip_get_response_state();
  *
  * @return			Returns current response state.
  */
-native {GripHTTPStatus, _}:grip_get_response_status_code();
+native any:grip_get_response_status_code();
 
 /**
  * Returns whether request exists/active. 
