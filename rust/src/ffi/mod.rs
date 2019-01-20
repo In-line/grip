@@ -396,6 +396,24 @@ pub unsafe extern "C" fn grip_get_response_body_string(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn grip_get_response_status_code(
+    amx: *const c_void,
+) -> Cell {
+    if let Ok(response) = try_and_log_ffi!(
+        amx,
+        get_module()
+            .current_response
+            .as_ref()
+            .chain_err(|| ffi_error("No active response at this time"))
+    ) {
+        response.status_code.as_u16() as Cell
+    } else {
+        try_and_log_ffi!(amx, Err(ffi_error("Error/Cancellation/Timeout occurred for this response.")));
+        -1
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn grip_parse_response_body_as_json(
     amx: *const c_void,
     error_buffer: *mut c_char,

@@ -36,5 +36,7 @@ extern "C" {
     cell grip_destroy_options(const void* amx, cell options_handle);
 
     cell grip_options_add_header(const void* amx, cell options_handle, const char* header_name, const char* header_value);
+
+    cell grip_get_response_status_code(const void* amx);
 }
 #endif //RESTRY_FFI_H

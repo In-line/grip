@@ -41,23 +41,92 @@ enum GripResponseState {
 	GripResponseStateTimeout = 4,
 }
 
+enum GripHTTPStatus {
+    GripHTTPStatusContinue = 100,
+    GripHTTPStatusSwitchingProtocols = 101,
+    GripHTTPStatusProcessing = 102,
+    GripHTTPStatusOk = 200,
+    GripHTTPStatusCreated = 201,
+    GripHTTPStatusAccepted = 202,
+    GripHTTPStatusNonAuthoritativeInformation = 203,
+    GripHTTPStatusNoContent = 204,
+    GripHTTPStatusResetContent = 205,
+    GripHTTPStatusPartialContent = 206,
+    GripHTTPStatusMultiStatus = 207,
+    GripHTTPStatusAlreadyReported = 208,
+    GripHTTPStatusImUsed = 226,
+    GripHTTPStatusMultipleChoices = 300,
+    GripHTTPStatusMovedPermanently = 301,
+    GripHTTPStatusFound = 302,
+    GripHTTPStatusSeeOther = 303,
+    GripHTTPStatusNotModified = 304,
+    GripHTTPStatusUseProxy = 305,
+    GripHTTPStatusTemporaryRedirect = 307,
+    GripHTTPStatusPermanentRedirect = 308,
+    GripHTTPStatusBadRequest = 400,
+    GripHTTPStatusUnauthorized = 401,
+    GripHTTPStatusPaymentRequired = 402,
+    GripHTTPStatusForbidden = 403,
+    GripHTTPStatusNotFound = 404,
+    GripHTTPStatusMethodNotAllowed = 405,
+    GripHTTPStatusNotAcceptable - 406,
+    GripHTTPStatusProxyAuthenticationRequired = 407,
+    GripHTTPStatusRequestTimeout = 408,
+    GripHTTPStatusConflict = 409,
+    GripHTTPStatusGone = 410,
+    GripHTTPStatusLengthRequired = 411,
+    GripHTTPStatusPreconditionFailed = 412,
+    GripHTTPStatusPayloadTooLarge = 413,
+    GripHTTPStatusUriTooLong = 414,
+    GripHTTPStatusUnsupportedMediaType = 415,
+    GripHTTPStatusRangeNotSatisfiable = 416,
+    GripHTTPStatusExpectationFailed = 417,
+    GripHTTPStatusImATeapot = 418,
+    GripHTTPStatusMisdirectedRequest = 421,
+    GripHTTPStatusUnprocessableEntity = 422,
+    GripHTTPStatusLocked = 423,
+    GripHTTPStatusFailedDependency = 424,
+    GripHTTPStatusUpgradeRequired = 426,
+    GripHTTPStatusPreconditionRequired = 428,
+    GripHTTPStatusTooManyRequests = 429,
+    GripHTTPStatusRequestHeaderFieldsTooLarge = 431,
+    GripHTTPStatusUnavailableForLegalReasons = 451,
+    GripHTTPStatusInternalServerError = 500,
+    GripHTTPStatusNotImplemented = 501,
+    GripHTTPStatusBadGateway = 502,
+    GripHTTPStatusServiceUnavailable = 503,
+    GripHTTPStatusGatewayTimeout = 504,
+    GripHTTPStatusHttpVersionNotSupported = 505,
+    GripHTTPStatusVariantAlsoNegotiates = 506,
+    GripHTTPStatusInsufficientStorage = 507,
+    GripHTTPStatusLoopDetected = 508,
+    GripHTTPStatusNotExtended = 510,
+    GripHTTPStatusNetworkAuthenticationRequired = 511,
+};
+
 /**
- * Get's state of the response. 
+ * Gets state of the response.
  *
  * @note    		This has nothing to do with HTTP status codes.
  *
- * @param str		Zero terminated string from which body should be created
- *  
  * @return			Returns current response state.
  */
 native GripResponseState:grip_get_response_state();
+
+
+/**
+ * Gets HTTP status code of the response.
+ *
+ * @return			Returns current response state.
+ */
+native {GripHTTPStatus, _}:grip_get_response_status_code();
 
 /**
  * Returns whether request exists/active. 
  *
  * @note 			This has nothing to do with HTTP status codes.
  *
- * @param str		Zero terminated string from which body should be created
+ * @param request	Request handle.
  *  
  * @return			Returns current response state.
  */
@@ -203,3 +272,4 @@ stock grip_create_create_options(const headers[][2][], const headers_count, Floa
 	
 	return options;
 }
+

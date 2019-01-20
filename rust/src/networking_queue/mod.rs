@@ -81,6 +81,7 @@ pub struct Request {
 pub struct Response {
     pub base_request: Request,
     pub body: Vec<u8>,
+    pub status_code: hyper::StatusCode,
 }
 
 // TODO: Replace with trait alias, when they became stable
@@ -163,7 +164,7 @@ impl Queue {
                                     InputCommand::Request { request, callback, cancellation_signal } => {
 
                                         enum State {
-                                            Successful(Vec<u8>),
+                                            Successful(Vec<u8>, hyper::StatusCode),
                                             Error(Error),
                                             Canceled,
                                             Timeout
@@ -180,11 +181,14 @@ impl Queue {
                                             }
                                                 .body(hyper::Body::from(request.body.clone())).unwrap()
                                                 .extend_headers(request.options.headers.clone())) // TODO: Optimize clone away
-                                                .and_then(move |res| res.into_body().concat2())
+                                                .and_then(move |res| {
+                                                    let status = res.status();
+                                                    res.into_body().concat2().map(move |body| (status, body))
+                                                })
                                                 // Cancelling / Error handling.
-                                                .map(|body| {
+                                                .map(|(status_code, body)| {
                                                     use bytes::buf::FromBuf;
-                                                    State::Successful(Vec::from_buf(body.into_bytes()))
+                                                    State::Successful(Vec::from_buf(body.into_bytes()), status_code)
                                                 })
                                                 .or_else(|e| {
                                                     future::ok(State::Error(ErrorKind::HTTPError(e).into()))
@@ -205,11 +209,12 @@ impl Queue {
                                                 // Sending output command.
                                                 .and_then(move |state| {
                                                     match state {
-                                                        State::Successful(vec) => {
+                                                        State::Successful(vec, status_code) => {
                                                             response_sender.send(OutputCommand::Response {
                                                                 response: Response::new(
                                                                     request,
                                                                     vec,
+                                                                    status_code
                                                                 ),
                                                                 callback
                                                             }).unwrap()

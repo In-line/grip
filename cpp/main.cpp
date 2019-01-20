@@ -91,6 +91,10 @@ cell AMX_NATIVE_CALL grip_get_response_state_amxx(AMX *amx, cell*) {
     return grip_get_response_state(amx);
 }
 
+cell AMX_NATIVE_CALL grip_get_response_status_code_amxx(AMX *amx, cell *) {
+	return grip_get_response_status_code(amx);
+}
+
 cell AMX_NATIVE_CALL grip_is_request_active_amxx(AMX *, cell *params) {
 	enum { arg_count, arg_request_id };
 	return grip_is_request_active(params[arg_request_id]);
@@ -170,6 +174,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_create_default_options", grip_create_default_options_amxx},
 	{"grip_destroy_options", grip_destroy_options_amxx},
 	{"grip_options_add_header", grip_options_add_header_amxx},
+	{"grip_get_response_status_code", grip_get_response_status_code_amxx}
     {nullptr, nullptr}
 };
 
