@@ -43,6 +43,8 @@ use crate::errors::*;
 mod ext;
 use self::ext::*;
 
+use tokio::util::future::FutureExt;
+
 #[derive(Clone, Debug)]
 pub enum RequestType {
     Get,
@@ -159,6 +161,7 @@ impl Queue {
                                             Canceled,
                                         }
 
+
                                         executor.spawn(
                                             // Request construction.
                                             client.request(match request.http_type {
@@ -186,6 +189,7 @@ impl Queue {
                                                 .map(|either| {
                                                     either.split().0
                                                 })
+                                                .timeout(Duration::from_millis(1))
                                                 // Sending output command.
                                                 .and_then(move |state| {
                                                     match state {
