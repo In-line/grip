@@ -222,13 +222,13 @@ impl Queue {
                                                         },
                                                         State::Canceled => {
                                                             response_sender.send(OutputCommand::Error {
-                                                                error: ErrorKind::RequestCancelled(()).into(),
+                                                                error: ErrorKind::RequestCancelled.into(),
                                                                 callback,
                                                             }).unwrap();
                                                         }
                                                         State::Timeout => {
                                                             response_sender.send(OutputCommand::Error {
-                                                                error: ErrorKind::RequestTimeout(()).into(),
+                                                                error: ErrorKind::RequestTimeout.into(),
                                                                 callback,
                                                             }).unwrap()
                                                         }
@@ -399,7 +399,7 @@ mod tests {
                         unreachable!();
                     }
                     Err(e) => match e.kind() {
-                        ErrorKind::RequestCancelled(()) => {}
+                        ErrorKind::RequestCancelled => {}
                         _ => unreachable!(),
                     },
                 };
@@ -446,7 +446,7 @@ mod tests {
                         unreachable!();
                     }
                     Err(e) => match e.kind() {
-                        ErrorKind::RequestTimeout(()) => {}
+                        ErrorKind::RequestTimeout => {}
                         _ => unreachable!(),
                     },
                 };

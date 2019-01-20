@@ -283,7 +283,8 @@ pub unsafe extern "C" fn grip_get_response_state(amx: *const c_void) -> Cell {
             .chain_err(|| ffi_error("Response state can only be received in the request callback"))
     ) {
         Err(e) => match e.kind() {
-            crate::errors::ErrorKind::RequestCancelled(_) => 1,
+            crate::errors::ErrorKind::RequestCancelled => 1,
+            crate::errors::ErrorKind::RequestTimeout => 4,
             _ => 2,
         },
         Ok(_) => 3,
@@ -319,7 +320,7 @@ pub unsafe extern "C" fn grip_get_error_description(
         try_and_log_ffi!(
             amx,
             match e.kind() {
-                ErrorKind::RequestCancelled(()) => Err(ErrorKind::RequestCancelled(()).into()),
+                ErrorKind::RequestCancelled => Err(ErrorKind::RequestCancelled.into()),
                 _ => Ok(()),
             }
         );
@@ -389,7 +390,7 @@ pub unsafe extern "C" fn grip_get_response_body_string(
 
         *buffer.offset(size) = '\0' as i8;
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("Error occurred for this response.")));
+        try_and_log_ffi!(amx, Err(ffi_error("Error/Cancellation/Timeout occurred for this response.")));
     }
 
     1
@@ -435,7 +436,7 @@ pub unsafe extern "C" fn grip_parse_response_body_as_json(
             }
         }
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("Error occurred for this response.")));
+        try_and_log_ffi!(amx, Err(ffi_error("Error/Cancellation/Timeout occurred for this response.")));
         0
     }
 }
