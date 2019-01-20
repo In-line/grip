@@ -153,7 +153,7 @@ cell AMX_NATIVE_CALL grip_options_add_header_amxx(AMX *amx, cell *params) {
 
 	return grip_options_add_header(amx, params[arg_options_handle],
 			MF_GetAmxString(amx, params[arg_header_name], 0, &dummy),
-			MF_GetAmxString(amx, params[arg_header_name], 1, &dummy));
+			MF_GetAmxString(amx, params[arg_header_value], 1, &dummy));
 }
 
 AMX_NATIVE_INFO grip_exports[] = {
