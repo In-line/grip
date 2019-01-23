@@ -1,0 +1,4 @@
+hlds:
+  build: docker
+  ports:
+  - 27015:27015

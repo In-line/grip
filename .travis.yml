@@ -1,6 +1,8 @@
 language: rust
+dist: xenial
+services:
+- docker
 compiler:
-- clang
 - gcc
 rust:
 - stable
@@ -47,6 +49,8 @@ script:
 - cd $TRAVIS_BUILD_DIR/rust
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --target $TARGET
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --release --target $TARGET
+
+- docker-compose up
 
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
