@@ -26,7 +26,8 @@ addons:
     - gcc-multilib
     - g++-multilib
     - ninja-build
-    - llvm-toolchain-7
+    - clang-7
+    - lld-7
     sources:
       - ubuntu-toolchain-r-test
       - llvm-toolchain-xenial-7
