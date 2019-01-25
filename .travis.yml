@@ -45,12 +45,12 @@ script:
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release cargo test --verbose --release --target $TARGET
 
 - cd $TRAVIS_BUILD_DIR/build/debug
-- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DCMAKE_LINKER=/usr/bin/ld.lld-7
+- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
 - make -j4
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/build/release
-- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_LINKER=/usr/bin/ld.lld-7
+- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
 - make -j4
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 before_deploy:
