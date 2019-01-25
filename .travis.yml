@@ -35,14 +35,14 @@ install:
 - rustup target add $TARGET
 before_script:
 - $CXX --version
-- mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust
-- mkdir -p $TRAVIS_BUILD_DIR/build/release/rust
+- mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug
+- mkdir -p $TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release
 - cmake  --version
 # - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/rust
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --release --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug cargo test --verbose --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release cargo test --verbose --release --target $TARGET
 
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DCMAKE_LINKER=/usr/bin/ld.lld-7
