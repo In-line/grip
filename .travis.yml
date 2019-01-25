@@ -46,12 +46,12 @@ script:
 
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
-- make -j4
+- make -j1
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/build/release
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
-- make -j4
+- make -j1
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
