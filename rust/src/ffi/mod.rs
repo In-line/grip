@@ -53,14 +53,6 @@ pub unsafe extern "C" fn grip_init(
         })
         .unwrap();
 
-    let dns_section = ini
-        .section(Some("dns".to_owned()))
-        .or_else(|| {
-            println!("Missing [dns] section in the grip.ini config");
-            None
-        })
-        .unwrap();
-
     let queue_section = ini
         .section(Some("queue".to_owned()))
         .or_else(|| {
@@ -70,19 +62,7 @@ pub unsafe extern "C" fn grip_init(
         .unwrap();
 
     MODULE = Some(ModuleStorage {
-        global_queue: Queue::new(
-            dns_section
-                .get("number-of-dns-threads")
-                .or_else(|| {
-                    println!(
-                        "Error: Missing \"dns.number-of-dns-threads\" key in the grip.ini config"
-                    );
-                    None
-                })
-                .unwrap()
-                .parse()
-                .unwrap(),
-        ),
+        global_queue: Queue::new(),
         cancellations_handles: CellMap::new(),
         current_response: None,
         bodies_handles: CellMap::new(),
@@ -478,7 +458,7 @@ pub unsafe extern "C" fn grip_create_default_options(amx: *const c_void, timeout
     get_module_mut()
         .options_handles
         .insert_with_unique_id(RequestOptions::new(
-            hyper::HeaderMap::default(),
+            reqwest::header::HeaderMap::default(),
             try_and_log_ffi!(
                 amx,
                 if timeout.approx_eq(&-1.0, std::f64::EPSILON, 2) {
@@ -538,7 +518,7 @@ pub unsafe extern "C" fn grip_options_add_header(
 
     let header_value = try_and_log_ffi!(
         amx,
-        hyper::header::HeaderValue::from_str(header_value)
+        reqwest::header::HeaderValue::from_str(header_value)
         .chain_err(|| ffi_error(format!("Header value contains invalid byte sequences or was rejected by Hyper HTTP implementation: {}", header_value)))
     );
 

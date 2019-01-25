@@ -1,19 +1,20 @@
+dist: xenial
 language: rust
 compiler:
 - clang
-- gcc
 rust:
 - stable
 - beta
 - nightly
 env:
-- PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu
+- PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu CXX=/usr/bin/clang++-7 CC=/usr/bin/clang-7
 os:
 - linux
 matrix:
   allow_failures:
   - rust: nightly
   fast_finish: true
+
 addons:
   apt:
     packages:
@@ -25,29 +26,33 @@ addons:
     - gcc-multilib
     - g++-multilib
     - ninja-build
+    - clang-7
+    - lld-7
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-xenial-7
 install:
 - rustup target add $TARGET
 before_script:
-- mkdir -p $TRAVIS_BUILD_DIR/build/debug
-- mkdir -p $TRAVIS_BUILD_DIR/build/release
-- mkdir -p $TRAVIS_BUILD_DIR/build/test
-- cmake --version
+- $CXX --version
+- mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug
+- mkdir -p $TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release
+- cmake  --version
 # - find / -name "libssl.a" 2>/dev/null
 script:
+- cd $TRAVIS_BUILD_DIR/rust
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET cargo test --verbose --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET cargo test --verbose --release --target $TARGET
+
 - cd $TRAVIS_BUILD_DIR/build/debug
-- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
-- ninja -v
+- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
+- make -j4
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/build/release
-- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
-- ninja -v
+- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
+- make -j4
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
-
-- cd $TRAVIS_BUILD_DIR/rust
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --release --target $TARGET
-
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
@@ -73,9 +78,7 @@ cache:
   directories:
   - "$TRAVIS_BUILD_DIR/build/release/rust"
   - "$TRAVIS_BUILD_DIR/build/debug/rust"
-  - "$TRAVIS_BUILD_DIR/build/test"
 before_cache:
 - chmod -R a+r $HOME/.cargo
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
-- chmod -R a+r $TRAVIS_BUILD_DIR/build/test
