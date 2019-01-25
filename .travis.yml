@@ -1,19 +1,20 @@
+dist: xenial
 language: rust
 compiler:
 - clang
-- gcc
 rust:
 - stable
 - beta
 - nightly
 env:
-- PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu
+- PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu CXX=/usr/bin/clang++ CC=/usr/bin/clang
 os:
 - linux
 matrix:
   allow_failures:
   - rust: nightly
   fast_finish: true
+
 addons:
   apt:
     packages:
@@ -25,9 +26,14 @@ addons:
     - gcc-multilib
     - g++-multilib
     - ninja-build
+    - clang-8
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-xenial-8
 install:
 - rustup target add $TARGET
 before_script:
+- $CXX --version
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug
 - mkdir -p $TRAVIS_BUILD_DIR/build/release
 - mkdir -p $TRAVIS_BUILD_DIR/build/test
