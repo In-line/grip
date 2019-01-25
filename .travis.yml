@@ -35,26 +35,24 @@ install:
 - rustup target add $TARGET
 before_script:
 - $CXX --version
-- mkdir -p $TRAVIS_BUILD_DIR/build/debug
-- mkdir -p $TRAVIS_BUILD_DIR/build/release
-- mkdir -p $TRAVIS_BUILD_DIR/build/test
+- mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust
+- mkdir -p $TRAVIS_BUILD_DIR/build/release/rust
 - cmake  --version -DCMAKE_LINKER=/usr/bin/ld.lld
 # - find / -name "libssl.a" 2>/dev/null
 script:
+- cd $TRAVIS_BUILD_DIR/rust
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --release --target $TARGET
+
 - cd $TRAVIS_BUILD_DIR/build/debug
-- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Debug
-- ninja -v
+- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
+- make -j4
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
 - cd $TRAVIS_BUILD_DIR/build/release
-- cmake $TRAVIS_BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
-- ninja -v
+- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
+- make -j4
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
-
-- cd $TRAVIS_BUILD_DIR/rust
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/test cargo test --verbose --release --target $TARGET
-
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
@@ -80,9 +78,7 @@ cache:
   directories:
   - "$TRAVIS_BUILD_DIR/build/release/rust"
   - "$TRAVIS_BUILD_DIR/build/debug/rust"
-  - "$TRAVIS_BUILD_DIR/build/test"
 before_cache:
 - chmod -R a+r $HOME/.cargo
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
-- chmod -R a+r $TRAVIS_BUILD_DIR/build/test
