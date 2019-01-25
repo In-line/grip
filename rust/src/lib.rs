@@ -32,7 +32,8 @@
 extern crate bytes;
 extern crate crossbeam_channel;
 extern crate futures;
-extern crate hyper;
+extern crate reqwest;
+extern crate tokio;
 
 #[macro_use]
 extern crate log;
@@ -72,7 +73,7 @@ mod errors {
 
         foreign_links {
             CrossBeamError(::crossbeam_channel::TryRecvError);
-            HTTPError(::hyper::Error);
+            HTTPError(::reqwest::Error);
             JSONError(::serde_json::Error);
         }
     }
@@ -83,14 +84,5 @@ mod errors {
 }
 
 pub mod cell_map;
-pub mod client;
 pub mod ffi;
 pub mod networking_queue;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

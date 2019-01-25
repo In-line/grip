@@ -34,16 +34,14 @@ use std::thread;
 use futures::future;
 use futures::prelude::*;
 use futures::sync::oneshot;
-use hyper::rt::*;
 use std::mem;
 use std::time::{Duration, Instant};
 
 use crate::errors::*;
 
-mod ext;
-use self::ext::*;
-
 use tokio::prelude::FutureExt;
+
+use reqwest::r#async as reqwest_async;
 
 #[derive(Clone, Debug)]
 pub enum RequestType {
@@ -59,7 +57,7 @@ pub struct RequestCancellation(oneshot::Sender<()>);
 #[derive(Constructor, Builder, Clone, Debug, Default)]
 pub struct RequestOptions {
     #[builder(default)]
-    pub headers: hyper::HeaderMap,
+    pub headers: reqwest::header::HeaderMap,
 
     #[builder(default)]
     pub timeout: Option<Duration>,
@@ -68,7 +66,7 @@ pub struct RequestOptions {
 #[derive(Builder, Clone, Constructor, Debug)]
 pub struct Request {
     pub http_type: RequestType,
-    pub uri: hyper::Uri,
+    pub uri: reqwest::Url,
 
     #[builder(default)]
     pub body: Vec<u8>,
@@ -81,7 +79,7 @@ pub struct Request {
 pub struct Response {
     pub base_request: Request,
     pub body: Vec<u8>,
-    pub status_code: hyper::StatusCode,
+    pub status_code: reqwest::StatusCode,
 }
 
 // TODO: Replace with trait alias, when they became stable
@@ -124,21 +122,14 @@ impl Drop for Queue {
 }
 
 impl Queue {
-    pub fn new(number_of_dns_threads: usize) -> Self {
+    pub fn new() -> Self {
         let mut runtime = tokio::runtime::Runtime::new().unwrap();
         let executor = runtime.executor();
 
         let (input_command_sender, input_command_receiver) = futures::sync::mpsc::unbounded();
         let (response_sender, response_receiver) = crossbeam_channel::unbounded();
 
-        let client = {
-            let https = hyper_tls::HttpsConnector::new(number_of_dns_threads);
-            crate::client::Client::new(
-                hyper::Client::builder()
-                    .executor(executor.clone())
-                    .build::<_, hyper::Body>(https.unwrap()),
-            )
-        };
+        let client = reqwest_async::Client::new();
 
         let working_thread = {
             let executor = executor.clone();
@@ -146,7 +137,7 @@ impl Queue {
             thread::spawn(move || {
                 clone_all!(response_sender);
                 runtime
-                    .block_on(lazy(move || {
+                    .block_on(future::lazy(move || {
                         clone_all!(response_sender);
                         input_command_receiver
                             .take_while(|cmd| {
@@ -164,7 +155,7 @@ impl Queue {
                                     InputCommand::Request { request, callback, cancellation_signal } => {
 
                                         enum State {
-                                            Successful(Vec<u8>, hyper::StatusCode),
+                                            Successful(Vec<u8>, reqwest::StatusCode),
                                             Error(Error),
                                             Canceled,
                                             Timeout
@@ -173,22 +164,22 @@ impl Queue {
 
                                         executor.spawn(
                                             // Request construction.
-                                            client.request(match request.http_type {
-                                                RequestType::Post => hyper::Request::post(request.uri.clone()),
-                                                RequestType::Get => hyper::Request::get(request.uri.clone()),
-                                                RequestType::Delete => hyper::Request::delete(request.uri.clone()),
-                                                RequestType::Put => hyper::Request::put(request.uri.clone()),
+                                            match request.http_type {
+                                                RequestType::Post => client.post(request.uri.clone()),
+                                                RequestType::Get => client.get(request.uri.clone()),
+                                                RequestType::Delete => client.delete(request.uri.clone()),
+                                                RequestType::Put => client.put(request.uri.clone()),
                                             }
-                                                .body(hyper::Body::from(request.body.clone())).unwrap()
-                                                .extend_headers(request.options.headers.clone())) // TODO: Optimize clone away
+                                                .body(reqwest_async::Body::from(request.body.clone()))
+                                                .headers(request.options.headers.clone()) // TODO: Optimize clone away
+                                                .send()
                                                 .and_then(move |res| {
                                                     let status = res.status();
                                                     res.into_body().concat2().map(move |body| (status, body))
                                                 })
                                                 // Cancelling / Error handling.
                                                 .map(|(status_code, body)| {
-                                                    use bytes::buf::FromBuf;
-                                                    State::Successful(Vec::from_buf(body.into_bytes()), status_code)
+                                                    State::Successful(body.to_vec(), status_code)
                                                 })
                                                 .or_else(|e| {
                                                     future::ok(State::Error(ErrorKind::HTTPError(e).into()))
@@ -288,7 +279,7 @@ impl Queue {
     fn send_input_command(&mut self, input_command: InputCommand) {
         let input_command_sender = self.input_command_sender.clone();
         self.number_of_pending_requests += 1;
-        self.executor.spawn(lazy(move || {
+        self.executor.spawn(futures::lazy(move || {
             input_command_sender
                 .send(input_command)
                 .map(|_| {})
@@ -354,7 +345,7 @@ mod tests {
         use super::*;
         use std::sync::{Arc, Mutex};
 
-        let mut queue = Queue::new(4);
+        let mut queue = Queue::new();
 
         use std::default::Default;
 
@@ -384,7 +375,7 @@ mod tests {
         use super::*;
         use std::sync::{Arc, Mutex};
 
-        let mut queue = Queue::new(4);
+        let mut queue = Queue::new();
 
         use std::default::Default;
 
@@ -425,7 +416,7 @@ mod tests {
         use super::*;
         use std::sync::{Arc, Mutex};
 
-        let mut queue = Queue::new(4);
+        let mut queue = Queue::new();
 
         use std::default::Default;
 
