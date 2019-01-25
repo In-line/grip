@@ -27,7 +27,7 @@ addons:
     - g++-multilib
     - ninja-build
     - clang-7
-    - binutils-gold
+    - lld
     sources:
       - ubuntu-toolchain-r-test
       - llvm-toolchain-xenial-7
@@ -38,7 +38,7 @@ before_script:
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug
 - mkdir -p $TRAVIS_BUILD_DIR/build/release
 - mkdir -p $TRAVIS_BUILD_DIR/build/test
-- cmake --version
+- cmake  --version -DCMAKE_LINKER=/usr/bin/ld.lld
 # - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/build/debug
