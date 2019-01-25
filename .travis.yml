@@ -26,8 +26,7 @@ addons:
     - gcc-multilib
     - g++-multilib
     - ninja-build
-    - clang-7
-    - lld
+    - llvm-toolchain-7
     sources:
       - ubuntu-toolchain-r-test
       - llvm-toolchain-xenial-7
@@ -37,7 +36,7 @@ before_script:
 - $CXX --version
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust
 - mkdir -p $TRAVIS_BUILD_DIR/build/release/rust
-- cmake  --version -DCMAKE_LINKER=/usr/bin/ld.lld
+- cmake  --version -DCMAKE_LINKER=/usr/bin/ld.lld-7
 # - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/rust
