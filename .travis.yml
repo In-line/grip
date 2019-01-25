@@ -29,7 +29,7 @@ addons:
     - clang-7
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-xenial-8
+      - llvm-toolchain-xenial-7
 install:
 - rustup target add $TARGET
 before_script:
