@@ -27,6 +27,7 @@ addons:
     - g++-multilib
     - ninja-build
     - clang-7
+    - binutils-gold
     sources:
       - ubuntu-toolchain-r-test
       - llvm-toolchain-xenial-7
