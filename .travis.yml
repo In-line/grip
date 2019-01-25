@@ -41,8 +41,8 @@ before_script:
 # - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/rust
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug cargo test --verbose --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release cargo test --verbose --release --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET cargo test --verbose --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET cargo test --verbose --release --target $TARGET
 
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
