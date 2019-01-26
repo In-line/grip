@@ -3,11 +3,6 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
-if(WIN32)
-	set(CMAKE_CXX_STANDARD_REQUIRED OFF)
-else()
-	set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -35,22 +30,20 @@ file(GLOB_RECURSE SOURCE_FILES ${SRC_DIR}/*.h ${SRC_DIR}/*.cpp ${AMXXSDK}/sdk/*.
 #${API_INCLUDE_PATH}/*.h ${API_INCLUDE_PATH}/*.cpp
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} )
-if(WIN32)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_rust Ws2_32 gcc Userenv Mswsock user32 Psapi Ncrypt Crypt32 Secur32 pthread) # TODO: Conditional dynamic linking of OpenSSL. (ssl crypto)
-set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto=thin -fPIC -D_WIN32 -fpermissive")
+
+set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto -fPIC -fpermissive")
+set(PORTABLE_LINK_FLAGS "${FLAGS} -static-libgcc -static-libstdc++ -s  -Wl,--gc-sections -Wl,--version-script=${CMAKE_SOURCE_DIR}/version_script.lds")
+
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections")
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${FLAGS} -static-libgcc -static-libstdc++ -s -Wl,--version-script=${CMAKE_SOURCE_DIR}/version_script.lds -Wl,--gc-sections -Wl,-L@CMakeFiles/../rust/i686-pc-windows-gnu/debug ")
-
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
-set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.dll")
 
+if(WIN32)
+	target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_rust Ws2_32 gcc Userenv Mswsock user32 Psapi Ncrypt Crypt32 Secur32 pthread)
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${PORTABLE_LINK_FLAGS} -Wl,-L@CMakeFiles/../rust/i686-pc-windows-gnu/debug")
+	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.dll")
 else()
 	target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-rust pthread) # TODO: Conditional dynamic linking of OpenSSL. (ssl crypto)
-	set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto=thin -fPIC")
-	set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections")
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${FLAGS} -fuse-ld=lld -static-libgcc -static-libstdc++ -s -Wl,--version-script=${CMAKE_SOURCE_DIR}/version_script.lds -Wl,--gc-sections")
-
-	set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${PORTABLE_LINK_FLAGS}")
 	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.so")
 endif()
 
