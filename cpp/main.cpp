@@ -29,9 +29,12 @@
  *
  */
 
-#include "amxxmodule.h"
+
+#include "fix_minmax.h"
 #include "main.h"
 #include "ffi.h"
+
+#include "amxxmodule.h"
 
 #include <unistd.h>
 
@@ -180,19 +183,24 @@ AMX_NATIVE_INFO grip_exports[] = {
 
 void OnAmxxAttach()
 {
-	char configFilePath[MAX_PATH];
-	MF_BuildPathnameR(configFilePath, sizeof(configFilePath), "%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs"));
-
-	grip_init(log_error, configFilePath);
 	MF_AddNatives(grip_exports);
-}
-
-void OnAmxxDetach()
-{
-	grip_deinit();
 }
 
 void StartFrame() {
 	grip_process_request();
-	SET_META_RESULT(MRES_IGNORED);
+	RETURN_META(MRES_IGNORED);
+}
+
+void ServerActivate(edict_t *, int , int ) {
+	char configFilePath[MAX_PATH];
+	MF_BuildPathnameR(configFilePath, sizeof(configFilePath), "%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs"));
+
+	grip_init(log_error, configFilePath);
+
+	RETURN_META(MRES_IGNORED);
+}
+
+void ServerDeactivate() {
+	grip_deinit();
+	RETURN_META(MRES_IGNORED);
 }

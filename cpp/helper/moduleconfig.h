@@ -33,7 +33,7 @@
 #define MODULE_LIBRARY "grip"
 #define MODULE_LIBCLASS ""
 // If you want the module not to be reloaded on mapchange, remove / comment out the next line
-//#define MODULE_RELOAD_ON_MAPCHANGE
+// #define MODULE_RELOAD_ON_MAPCHANGE
 
 #ifdef __DATE__
 #define MODULE_DATE __DATE__
@@ -77,7 +77,7 @@
 #define FN_AMXX_ATTACH OnAmxxAttach
 
 /** AMXX Detach (unload) */
-#define FN_AMXX_DETACH OnAmxxDetach
+//#define FN_AMXX_DETACH OnAmxxDetach
 
 /** All plugins loaded
  * Do forward functions init here (MF_RegisterForward)
@@ -130,11 +130,11 @@
 // #define FN_ClientPutInServer			ClientPutInServer			/* pfnClientPutInServer()		(wd) Client is entering the game */
 // #define FN_ClientCommand				ClientCommand				/* pfnClientCommand()			(wd) Player has sent a command (typed or from a bind) */
 // #define FN_ClientUserInfoChanged		ClientUserInfoChanged		/* pfnClientUserInfoChanged()	(wd) Client has updated their setinfo structure */
-// #define FN_ServerActivate			ServerActivate				/* pfnServerActivate()			(wd) Server is starting a new map */
-// #define FN_ServerDeactivate			ServerDeactivate			/* pfnServerDeactivate()		(wd) Server is leaving the map (shutdown or changelevel); SDK2 */
+#define FN_ServerActivate			ServerActivate				/* pfnServerActivate()			(wd) Server is starting a new map */
+ #define FN_ServerDeactivate			ServerDeactivate			/* pfnServerDeactivate()		(wd) Server is leaving the map (shutdown or changelevel); SDK2 */
 // #define FN_PlayerPreThink			PlayerPreThink				/* pfnPlayerPreThink() */
 // #define FN_PlayerPostThink			PlayerPostThink				/* pfnPlayerPostThink() */
-   #define FN_StartFrame				StartFrame					/* pfnStartFrame() */
+ #define FN_StartFrame				StartFrame					/* pfnStartFrame() */
 // #define FN_ParmsNewLevel				ParmsNewLevel				/* pfnParmsNewLevel() */
 // #define FN_ParmsChangeLevel			ParmsChangeLevel			/* pfnParmsChangeLevel() */
 // #define FN_GetGameDescription		GetGameDescription			/* pfnGetGameDescription()		Returns string describing current .dll.  E.g. "TeamFotrress 2" "Half-Life" */

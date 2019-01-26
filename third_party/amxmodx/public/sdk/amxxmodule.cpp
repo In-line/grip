@@ -23,7 +23,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "fix_minmax.h"
 #include "amxxmodule.h"
+
 
 /************* METAMOD SUPPORT *************/
 #ifdef USE_METAMOD
