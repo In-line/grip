@@ -132,9 +132,7 @@ pub unsafe extern "C" fn grip_body_from_string(amx: *const c_void, str: *const c
             handle_null_ptr(str).chain_err(|| ffi_error("Invalid URI."))
         ))
         .to_bytes()
-        .iter()
-        .cloned()
-        .collect(),
+        .to_vec(),
     )
 }
 
