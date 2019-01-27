@@ -3,4 +3,4 @@
 	url = https://github.com/alliedmodders/metamod-hl1.git
 [submodule "third_party/hlsdk"]
 	path = third_party/hlsdk
-	url = https://github.com/alliedmodders/hlsdk.git
+	url = https://github.com/In-line/hlsdk.git
