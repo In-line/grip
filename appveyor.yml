@@ -1,0 +1,68 @@
+version: 0.0.0.0.{build}
+branches:
+  only:
+  - travis_test
+clone_folder: C:\build
+init:
+- ps: "$url = \"https://static.rust-lang.org/rustup/dist/i686-pc-windows-gnu/rustup-init.exe\" \n$output = \"C:\\temp\\rustup-init.exe\"\nmkdir \"C:\\temp\\\"\nInvoke-WebRequest -Uri $url -OutFile $output"
+clone_script:
+- cmd: git clone --recursive --branch=travis_test https://github.com/AleXr64/grip.git C:\build
+environment:
+  BUILD_ROOT: C:\build
+  PATH: '%PATH%;%USERPROFILE%\.cargo\bin'
+install:
+- cmd: >-
+    C:\temp\rustup-init.exe -y
+
+    setx /M path "%path%;%USERPROFILE%\.cargo\bin"
+
+    rustup target add i686-pc-windows-gnu
+build_script:
+- cmd: >-
+    set PATH=C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\CMake\bin;C:\Program Files\LLVM\bin;C:\Program Files (x86)\Yarn\bin\;C:\Users\appveyor\AppData\Roaming\npm;C:\Program Files\PowerShell\6\;C:\ProgramData\chocolatey\bin;C:\Program Files (x86)\nodejs\;C:\Users\appveyor\.dotnet\tools;C:\Users\appveyor\AppData\Local\Yarn\bin;C:\Users\appveyor\AppData\Roaming\npm;C:\Program Files\AppVeyor\BuildAgent\;C:\Users\appveyor\.cargo\bin;C:/mingw-w64/i686-6.3.0-posix-dwarf-rt_v5-rev1/mingw32/bin
+
+    rustup target list
+
+    mkdir %BUILD_ROOT%\build\debug\rust
+
+    mkdir %BUILD_ROOT%\build\release\rust
+
+    cd build\Release
+
+    cmake %BUILD_ROOT% -DCMAKE_BUILD_TYPE=Release -DWIN32=true -DCMAKE_TOOLCHAIN_FILE=%BUILD_ROOT%/mingw-w64-x86_64.cmake -G "MinGW Makefiles"
+
+    cd rust
+
+    mingw32-make
+
+    cd ../
+
+    mingw32-make
+test_script:
+- cmd: CARGO_TARGET_DIR=%BUILD_DIR%/build/release/rust/i686-pc-windows-gnu cargo test --verbose --release --target i686-pc-windows-gnu
+before_deploy:
+- cmd: >-
+    mkdir %BUILD_DIR%/deploy/addons/amxmodx/modules
+
+    mkdir %BUILD_DIR%/deploy/addons/amxmodx/configs
+
+    mkdir %BUILD_DIR%/deploy/addons/amxmodx/scripting
+
+    copy %BUILD_DIR%/build/release/*.so %BUILD_DIR%/deploy/addons/amxmodx/modules
+
+    copy %BUILD_DIR%/configs/* %BUILD_DIR%/deploy/addons/amxmodx/configs
+
+    copy %BUILD_DIR%/scripting/* %BUILD_DIR%/deploy/addons/amxmodx/scripting
+
+    cd %BUILD_DIR%/deploy
+
+    7z.exe a grip-amxx_win addons
+deploy:
+- provider: GitHub
+  tag: Tag name ?
+  release: Release name
+  description: Test Release description
+  auth_token:
+    secure: 4uYyk4p3vMNLTGm8ahlvBDFmnLTLCct1gmKw7H1zNUacm0LnP/o/txgh2gOlqex0
+  on:
+    branch: winbuild
