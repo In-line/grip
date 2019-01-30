@@ -266,7 +266,7 @@ native grip_options_add_header(GripRequestOptions:options, const headerName[], c
 stock grip_create_create_options(const headers[][2][], const headers_count, Float:timeout = -1.0) {
 	new GripRequestOptions:options = grip_create_default_options(timeout);
 	
-	for(int i = 0; i < headers_count; ++i) {
+	for(new i = 0; i < headers_count; ++i) {
 		grip_options_add_header(options, headers[i][0], headers[i][1]);
 	}
 	
