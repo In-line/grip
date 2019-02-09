@@ -719,3 +719,13 @@ pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> 
         Value::Bool(_) => 6,
     }
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_object() -> Cell {
+    get_module_mut().json_handles.insert_with_unique_id(serde_json::Value::Object(serde_json::map::Map::default()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_array() -> Cell {
+    get_module_mut().json_handles.insert_with_unique_id(serde_json::Value::Array(Vec::default()))
+}

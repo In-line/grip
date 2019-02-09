@@ -199,6 +199,14 @@ cell AMX_NATIVE_CALL grip_json_get_type_amxx(AMX *amx, cell *params) {
 	return grip_json_get_type(amx, params[arg_value]);
 }
 
+cell AMX_NATIVE_CALL grip_json_init_object_amxx(AMX *, cell *) {
+	return grip_json_init_object();
+}
+
+cell AMX_NATIVE_CALL grip_json_init_array_amxx(AMX *, cell *) {
+	return grip_json_init_array();
+}
+
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
     {"grip_destroy_body", grip_destroy_body_amxx},
@@ -218,6 +226,8 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_parse_file", grip_json_parse_file_amxx},
 	{"grip_json_equals", grip_json_equals_amxx},
 	{"grip_json_get_type", grip_json_get_type_amxx},
+	{"grip_json_init_object", grip_json_init_object_amxx},
+	{"grip_json_init_array", grip_json_init_array_amxx},
     {nullptr, nullptr}
 };
 

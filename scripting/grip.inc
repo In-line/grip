@@ -259,7 +259,7 @@ native grip_get_response_body_string(buffer[], buffer_size);
  *
  * @noreturn
  */
-native grip_destroy_json_value(GripJSONValue:json_value);
+native grip_destroy_json_value(GripJSONValue:grip_json_value);
 
 /**
  * Create options with empty headers and some timeout.
@@ -380,7 +380,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  * @error                   If a schema handle or value handle is invalid
  */
 //TODO: Very Low priority
-//native bool:json_validate(const JSON:schema, const JSON:value);
+//native bool:json_validate(const GripJSONValue:schema, const GripJSONValue:value);
 
 /**
  * Gets value's parent handle.
@@ -391,8 +391,8 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  *
  * @return                Parent's handle
  */
-//TODO: Middle priority
-//native JSON:json_get_parent(const JSON:value);
+//TODO: Low priority
+//native GripJSONValue:grip_json_get_parent(const GripJSONValue:value);
 
 /**
  * Gets JSON type of passed value.
@@ -402,27 +402,25 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  * @return                  JSON type (GripJSONType constants)
  * @error                   If a value handle is invalid
  */
-native GripJSONType:grip_json_get_type(const JSON:value);
+native GripJSONType:grip_json_get_type(const GripJSONValue:value);
 
 /**
  * Inits an empty object.
  *
  * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
-//TODO: Middle priority
-//native JSON:json_init_object();
+native GripJSONValue:grip_json_init_object();
 
 /**
  * Inits an empty array.
  *
  * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
-//TODO: Middle priority
-//native JSON:json_init_array();
+native GripJSONValue:grip_json_init_array();
 
 /**
  * Inits string data.
@@ -431,10 +429,10 @@ native GripJSONType:grip_json_get_type(const JSON:value);
  *
  * @param value             String that the handle will be initialized with
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
 //TODO: Middle priority
-//native JSON:json_init_string(const value[]);
+//native GripJSONValue:grip_json_init_string(const value[]);
 
 /**
  * Inits a number.
@@ -443,10 +441,10 @@ native GripJSONType:grip_json_get_type(const JSON:value);
  *
  * @param value             Integer number that the handle will be initialized with
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
 //TODO: Middle priority
-//native JSON:json_init_number(value);
+//native GripJSONValue:grip_json_init_number(value);
 
 /**
  * Inits a real number.
@@ -455,11 +453,11 @@ native GripJSONType:grip_json_get_type(const JSON:value);
  *
  * @param value             Real number that the handle will be initialized with
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
 //TODO: Middle priority. json_init_float sounds better! Make 2 synonyms?
 #define json_init_real(%1) json_init_float(%1)
-//native JSON:json_init_float(Float:value);
+//native GripJSONValue:grip_json_init_float(Float:value);
 
 /**
  * Inits a boolean value.
@@ -468,20 +466,20 @@ native GripJSONType:grip_json_get_type(const JSON:value);
  *
  * @param value             Boolean value that the handle will be initialized with
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
  //TODO: Middle priority.
-native JSON:json_init_bool(bool:value);
+native GripJSONValue:grip_json_init_bool(bool:value);
 
 /**
  * Inits a null.
  *
  * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  */
 //TODO: Middle priority.
-//native JSON:json_init_null();
+//native GripJSONValue:grip_json_init_null();
 
 /**
  * Creates deep copy of passed value.
@@ -490,11 +488,11 @@ native JSON:json_init_bool(bool:value);
  *
  * @param value             JSON handle to be copied
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  * @error                   If passed value is not a valid handle
  */
 //TODO: Low priority.
-//native JSON:json_deep_copy(const JSON:value);
+//native GripJSONValue:grip_json_deep_copy(const GripJSONValue:value);
 
 /**
  * Gets string data.
@@ -507,7 +505,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed value is not a valid handle
  */
 //TODO: Middle priority
-//native json_get_string(const JSON:value, buffer[], maxlen);
+//native json_get_string(const GripJSONValue:value, buffer[], maxlen);
 
 /**
  * Gets a number.
@@ -518,7 +516,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed value is not a valid handle
  */
 //TODO: Middle priority
-//native json_get_number(const JSON:value);
+//native json_get_number(const GripJSONValue:value);
 
 /**
  * Gets a real number.
@@ -530,7 +528,7 @@ native JSON:json_init_bool(bool:value);
  */
 //TODO: Middle priority
 #define json_get_real(%1) json_get_float(%1)
-//native Float:json_get_real(const JSON:value);
+//native Float:json_get_real(const GripJSONValue:value);
 
 /**
  * Gets a boolean value.
@@ -541,7 +539,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed value is not a valid handle
  */
 //TODO: Middle priority
-//native bool:json_get_bool(const JSON:value);
+//native bool:json_get_bool(const GripJSONValue:value);
 
 /**
  * Gets a value from the array.
@@ -551,11 +549,11 @@ native JSON:json_init_bool(bool:value);
  * @param array             Array handle
  * @param index             Position in the array (starting from 0)
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
-//native JSON:json_array_get_value(const JSON:array, index);
+//native GripJSONValue:grip_json_array_get_value(const GripJSONValue:array, index);
 
 /**
  * Gets string data from the array.
@@ -569,7 +567,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
-//native json_array_get_string(const JSON:array, index, buffer[], maxlen);
+//native json_array_get_string(const GripJSONValue:array, index, buffer[], maxlen);
 
 /**
  * Gets a number from the array.
@@ -581,7 +579,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
-//native json_array_get_number(const JSON:array, index);
+//native json_array_get_number(const GripJSONValue:array, index);
 
 /**
  * Gets a real number from the array.
@@ -593,7 +591,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
-//native Float:json_array_get_real(const JSON:array, index);
+//native Float:json_array_get_real(const GripJSONValue:array, index);
 
 /**
  * Gets a boolean value from the array.
@@ -605,7 +603,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
-//native bool:json_array_get_bool(const JSON:array, index);
+//native bool:json_array_get_bool(const GripJSONValue:array, index);
 
 /**
  * Gets count of the elements in the array.
@@ -616,7 +614,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
-//native json_array_get_count(const JSON:array);
+//native json_array_get_count(const GripJSONValue:array);
 
 /**
  * Replaces an element in the array with value.
@@ -629,7 +627,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Low priority
-//native bool:json_array_replace_value(JSON:array, index, const JSON:value);
+//native bool:json_array_replace_value(JSON:array, index, const GripJSONValue:value);
 
 /**
  * Replaces an element in the array with string data.
@@ -705,7 +703,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid array
  */
 //TODO: Low priority
-//native bool:json_array_append_value(JSON:array, const JSON:value);
+//native bool:json_array_append_value(JSON:array, const GripJSONValue:value);
 
 /**
  * Appends string data in the array.
@@ -802,11 +800,11 @@ native JSON:json_init_bool(bool:value);
  * @param name              Key name
  * @param dot_not           True to use dot notation, false to not
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native JSON:json_object_get_value(const JSON:object, const name[], bool:dot_not = false);
+//native GripJSONValue:grip_json_object_get_value(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets string data from the object.
@@ -824,7 +822,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native json_object_get_string(const JSON:object, const name[], buffer[], maxlen, bool:dot_not = false);
+//native json_object_get_string(const GripJSONValue:object, const name[], buffer[], maxlen, bool:dot_not = false);
 
 /**
  * Gets a number from the object.
@@ -840,7 +838,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native json_object_get_number(const JSON:object, const name[], bool:dot_not = false);
+//native json_object_get_number(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets a real number from the object.
@@ -856,7 +854,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native Float:json_object_get_real(const JSON:object, const name[], bool:dot_not = false);
+//native Float:json_object_get_real(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets a boolean value from the object.
@@ -872,7 +870,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native bool:json_object_get_bool(const JSON:object, const name[], bool:dot_not = false);
+//native bool:json_object_get_bool(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets count of the keys in the object.
@@ -883,7 +881,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native json_object_get_count(const JSON:object);
+//native json_object_get_count(const GripJSONValue:object);
 
 /**
  * Gets name of the object's key.
@@ -897,7 +895,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native json_object_get_name(const JSON:object, index, buffer[], maxlen);
+//native json_object_get_name(const GripJSONValue:object, index, buffer[], maxlen);
 
 /**
  * Gets a value at the specified position from the object.
@@ -907,11 +905,11 @@ native JSON:json_init_bool(bool:value);
  * @param object            Object handle
  * @param index             Position from which get key name
  *
- * @return                  JSON handle, Invalid_JSON if error occurred
+ * @return                  JSON handle, GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native JSON:json_object_get_value_at(const JSON:object, index);
+//native GripJSONValue:grip_json_object_get_value_at(const GripJSONValue:object, index);
 
 /**
  * Checks if the object has a value with a specific name and type.
@@ -925,7 +923,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
-//native bool:json_object_has_value(const JSON:object, const name[], JSONType:type = JSONError, bool:dot_not = false);
+//native bool:json_object_has_value(const GripJSONValue:object, const name[], JSONType:type = JSONError, bool:dot_not = false);
 
 /**
  * Sets a value in the object.
@@ -943,7 +941,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid object
  */
 //TODO: Low priority
-//native bool:json_object_set_value(JSON:object, const name[], const JSON:value, bool:dot_not = false);
+//native bool:json_object_set_value(JSON:object, const name[], const GripJSONValue:value, bool:dot_not = false);
 
 /**
  * Sets string data in the object.
@@ -1072,7 +1070,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid value
  */
  // TODO: Very low priority
-//native json_serial_size(const JSON:value, bool:pretty = false, bool:null_byte = false);
+//native json_serial_size(const GripJSONValue:value, bool:pretty = false, bool:null_byte = false);
 
 /**
  * Copies serialized string to the buffer.
@@ -1086,7 +1084,7 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid value
  */
 // TODO: Low priority
-//native grip_json_serial_to_string(const JSON:value, buffer[], maxlen, bool:pretty = false);
+//native grip_json_serial_to_string(const GripJSONValue:value, buffer[], maxlen, bool:pretty = false);
 
 /**
  * Copies serialized string to the file.
@@ -1099,4 +1097,4 @@ native JSON:json_init_bool(bool:value);
  * @error                   If passed handle is not a valid value
  */
 // TODO: Low priority
-//native bool:grip_json_serial_to_file(const JSON:value, const file[], bool:pretty = false);
+//native bool:grip_json_serial_to_file(const GripJSONValue:value, const file[], bool:pretty = false);
