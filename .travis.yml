@@ -54,8 +54,10 @@ script:
 - cd $TRAVIS_BUILD_DIR/build/release
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
 - make -j1
-after_script:
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+
+after_script:
+- cd $TRAVIS_BUILD_DIR/rust
 - cargo sweep -t 30
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
