@@ -132,9 +132,7 @@ pub unsafe extern "C" fn grip_body_from_string(amx: *const c_void, str: *const c
             handle_null_ptr(str).chain_err(|| ffi_error("Invalid URI."))
         ))
         .to_bytes()
-        .iter()
-        .cloned()
-        .collect(),
+        .to_vec(),
     )
 }
 
@@ -369,16 +367,19 @@ pub unsafe extern "C" fn grip_get_response_body_string(
 
         *buffer.offset(size) = '\0' as i8;
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("Error/Cancellation/Timeout occurred for this response.")));
+        try_and_log_ffi!(
+            amx,
+            Err(ffi_error(
+                "Error/Cancellation/Timeout occurred for this response."
+            ))
+        );
     }
 
     1
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn grip_get_response_status_code(
-    amx: *const c_void,
-) -> Cell {
+pub unsafe extern "C" fn grip_get_response_status_code(amx: *const c_void) -> Cell {
     if let Ok(response) = try_and_log_ffi!(
         amx,
         get_module()
@@ -388,7 +389,12 @@ pub unsafe extern "C" fn grip_get_response_status_code(
     ) {
         response.status_code.as_u16() as Cell
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("Error/Cancellation/Timeout occurred for this response.")));
+        try_and_log_ffi!(
+            amx,
+            Err(ffi_error(
+                "Error/Cancellation/Timeout occurred for this response."
+            ))
+        );
         -1
     }
 }
@@ -433,7 +439,12 @@ pub unsafe extern "C" fn grip_parse_response_body_as_json(
             }
         }
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("Error/Cancellation/Timeout occurred for this response.")));
+        try_and_log_ffi!(
+            amx,
+            Err(ffi_error(
+                "Error/Cancellation/Timeout occurred for this response."
+            ))
+        );
         0
     }
 }

@@ -86,6 +86,7 @@ pub struct Response {
 // https://github.com/rust-lang/rust/issues/41517
 type ResponseCallBack = Fn(Result<Response>) + Sync + Send;
 
+#[allow(clippy::large_enum_variant)]
 enum InputCommand {
     Request {
         cancellation_signal: oneshot::Receiver<()>,
@@ -95,6 +96,7 @@ enum InputCommand {
     Quit,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum OutputCommand {
     Response {
         response: Response,
@@ -118,6 +120,12 @@ pub struct Queue {
 impl Drop for Queue {
     fn drop(&mut self) {
         self.stop();
+    }
+}
+
+impl Default for Queue {
+    fn default() -> Self {
+        Queue::new()
     }
 }
 
@@ -193,8 +201,8 @@ impl Queue {
                                                     either.split().0
                                                 })
                                                 // Timeout.
-                                                .timeout(request.options.timeout.clone()
-                                                    .unwrap_or_else(|| Duration::new(std::u16::MAX as u64, 0)))
+                                                .timeout(request.options.timeout
+                                                    .unwrap_or_else(|| Duration::new(u64::from(std::u16::MAX), 0)))
                                                 .or_else(|_| future::ok(State::Timeout))
                                                 .map_err(|_:tokio::timer::Error| unreachable!())
                                                 // Sending output command.
