@@ -2345,7 +2345,11 @@ C_DLLEXPORT __declspec(naked) void GiveFnptrsToDll( enginefuncs_t* pengfuncsFrom
 		push		esi
 		push		edi
 	}
-#else	// _MSC_VER
+#else// _MSC_VER
+#ifdef _WIN32
+C_DLLEXPORT void  GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
+{
+#else
 #ifdef __GNUC__
 // GCC can also work with this
 C_DLLEXPORT void __stdcall GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
@@ -2355,8 +2359,8 @@ C_DLLEXPORT void __stdcall GiveFnptrsToDll( enginefuncs_t* pengfuncsFromEngine, 
 #error There is no support (yet) for your compiler. Please use MSVC or GCC compilers or contact the AMX Mod X dev team.
 #endif	// __GNUC__
 #endif // _MSC_VER
-#endif // __linux__
-
+#endif // _WIN32
+#endif// __linux__
 	// ** Function core <--
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 	gpGlobals = pGlobals;

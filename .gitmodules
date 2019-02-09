@@ -4,3 +4,4 @@
 [submodule "third_party/hlsdk"]
 	path = third_party/hlsdk
 	url = https://github.com/In-line/hlsdk.git
+	branch = fix-windows-export
