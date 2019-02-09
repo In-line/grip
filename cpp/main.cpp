@@ -233,7 +233,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_get_type", grip_json_get_type_amxx},
 	{"grip_json_init_object", grip_json_init_object_amxx},
 	{"grip_json_init_array", grip_json_init_array_amxx},
-	{"grip_json_init_string", grip_json_init_string_amxx}
+	{"grip_json_init_string", grip_json_init_string_amxx},
     {nullptr, nullptr}
 };
 

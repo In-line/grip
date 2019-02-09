@@ -743,5 +743,5 @@ pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut 
             CStr::from_ptr(string)
                 .to_str()
                 .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
-        )))
+        ).to_owned()))
 }
