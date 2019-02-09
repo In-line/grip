@@ -722,10 +722,26 @@ pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> 
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_object() -> Cell {
-    get_module_mut().json_handles.insert_with_unique_id(serde_json::Value::Object(serde_json::map::Map::default()))
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::Object(serde_json::map::Map::default()))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_array() -> Cell {
-    get_module_mut().json_handles.insert_with_unique_id(serde_json::Value::Array(Vec::default()))
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::Array(Vec::default()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut c_char) -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::String(try_and_log_ffi!(
+            amx,
+            CStr::from_ptr(string)
+                .to_str()
+                .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+        )))
 }

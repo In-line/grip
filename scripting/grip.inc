@@ -409,7 +409,7 @@ native GripJSONType:grip_json_get_type(const GripJSONValue:value);
  *
  * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
 native GripJSONValue:grip_json_init_object();
 
@@ -418,7 +418,7 @@ native GripJSONValue:grip_json_init_object();
  *
  * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
 native GripJSONValue:grip_json_init_array();
 
@@ -429,10 +429,9 @@ native GripJSONValue:grip_json_init_array();
  *
  * @param value             String that the handle will be initialized with
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
-//TODO: Middle priority
-//native GripJSONValue:grip_json_init_string(const value[]);
+native GripJSONValue:grip_json_init_string(const value[]);
 
 /**
  * Inits a number.
@@ -441,7 +440,7 @@ native GripJSONValue:grip_json_init_array();
  *
  * @param value             Integer number that the handle will be initialized with
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
 //TODO: Middle priority
 //native GripJSONValue:grip_json_init_number(value);
@@ -453,7 +452,7 @@ native GripJSONValue:grip_json_init_array();
  *
  * @param value             Real number that the handle will be initialized with
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
 //TODO: Middle priority. json_init_float sounds better! Make 2 synonyms?
 #define json_init_real(%1) json_init_float(%1)
@@ -466,7 +465,7 @@ native GripJSONValue:grip_json_init_array();
  *
  * @param value             Boolean value that the handle will be initialized with
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
  //TODO: Middle priority.
 native GripJSONValue:grip_json_init_bool(bool:value);
@@ -476,7 +475,7 @@ native GripJSONValue:grip_json_init_bool(bool:value);
  *
  * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  */
 //TODO: Middle priority.
 //native GripJSONValue:grip_json_init_null();
@@ -488,7 +487,7 @@ native GripJSONValue:grip_json_init_bool(bool:value);
  *
  * @param value             JSON handle to be copied
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed value is not a valid handle
  */
 //TODO: Low priority.
@@ -549,7 +548,7 @@ native GripJSONValue:grip_json_init_bool(bool:value);
  * @param array             Array handle
  * @param index             Position in the array (starting from 0)
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid array
  */
 //TODO: Middle priority
@@ -800,7 +799,7 @@ native GripJSONValue:grip_json_init_bool(bool:value);
  * @param name              Key name
  * @param dot_not           True to use dot notation, false to not
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority
@@ -905,7 +904,7 @@ native GripJSONValue:grip_json_init_bool(bool:value);
  * @param object            Object handle
  * @param index             Position from which get key name
  *
- * @return                  JSON handle, GripJSONValue if error occurred
+ * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
 //TODO: Middle priority

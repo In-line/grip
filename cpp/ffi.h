@@ -48,5 +48,6 @@ extern "C" {
 
     cell grip_json_init_object();
     cell grip_json_init_array();
+    cell grip_json_init_string(const void *amx, const char* string);
 }
 #endif //RESTRY_FFI_H
