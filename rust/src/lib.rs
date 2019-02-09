@@ -57,6 +57,8 @@ extern crate serde_json;
 
 extern crate float_cmp;
 
+extern crate itertools;
+
 mod errors {
     error_chain! {
         errors {
