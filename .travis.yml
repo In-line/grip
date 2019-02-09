@@ -33,14 +33,16 @@ addons:
       - llvm-toolchain-xenial-7
 install:
 - rustup target add $TARGET
+- cargo install cargo-sweep || true
+- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (rustup component add clippy || true) fi
 before_script:
 - $CXX --version
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug
 - mkdir -p $TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release
 - cmake  --version
-# - find / -name "libssl.a" 2>/dev/null
 script:
 - cd $TRAVIS_BUILD_DIR/rust
+- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (cargo clippy --all -- -D clippy::all) fi
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET cargo test --verbose --target $TARGET
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET cargo test --verbose --release --target $TARGET
 
@@ -53,6 +55,7 @@ script:
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
 - make -j1
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
@@ -78,7 +81,12 @@ cache:
   directories:
   - "$TRAVIS_BUILD_DIR/build/release/rust"
   - "$TRAVIS_BUILD_DIR/build/debug/rust"
+
 before_cache:
 - chmod -R a+r $HOME/.cargo
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
+- cd $TRAVIS_BUILD_DIR/rust && cargo sweep --maxsize 1024 && cd -
+
+notifications:
+  email: false
