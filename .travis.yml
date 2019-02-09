@@ -34,7 +34,7 @@ addons:
 install:
 - rustup target add $TARGET
 - cargo install cargo-sweep || true
-- [ "$TRAVIS_RUST_VERSION" = stable ] && rustup component add clippy || true
+- if [ "$TRAVIS_RUST_VERSION" = stable ]; then rustup component add clippy || true fi
 before_script:
 - $CXX --version
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug
@@ -42,7 +42,7 @@ before_script:
 - cmake  --version
 script:
 - cd $TRAVIS_BUILD_DIR/rust
-- [ "$TRAVIS_RUST_VERSION" = stable ] && cargo clippy --all -- -D clippy::all
+- if [ "$TRAVIS_RUST_VERSION" = stable ]; then cargo clippy --all -- -D clippy::all fi
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET cargo test --verbose --target $TARGET
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET cargo test --verbose --release --target $TARGET
 
