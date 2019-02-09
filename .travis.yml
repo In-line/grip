@@ -86,7 +86,7 @@ before_cache:
 - chmod -R a+r $HOME/.cargo
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
-- cd $TRAVIS_BUILD_DIR/rust && cargo sweep -t 30 && cd -
+- cd $TRAVIS_BUILD_DIR/rust && cargo sweep --maxsize 1024 && cd -
 
 notifications:
   email: false
