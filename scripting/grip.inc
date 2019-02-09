@@ -322,7 +322,7 @@ stock grip_create_create_options(const headers[][2][], const headers_count, Floa
  *
  * @return                      JSON Value handle. If error occurred, returns invalid handle.
  */
-native GripJSONValue:grip_parse_response_body_as_json(error_buffer[], const error_buffer_size);
+native GripJSONValue:grip_json_parse_response_body(error_buffer[], const error_buffer_size);
 
 /**
  * Parses string that contains JSON.

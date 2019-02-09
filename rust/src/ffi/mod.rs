@@ -678,7 +678,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn grip_json_equals(amx: *const c_void, value1: Cell, value2: Cell) -> cell {
+pub unsafe extern "C" fn grip_json_equals(amx: *const c_void, value1: Cell, value2: Cell) -> Cell {
     let value1 = try_and_log_ffi!(
         amx,
         get_module()

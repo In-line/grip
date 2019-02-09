@@ -204,7 +204,7 @@ AMX_NATIVE_INFO grip_exports[] = {
     {"grip_is_request_active", grip_is_request_active_amxx},
     {"grip_get_error_description", grip_get_error_description_amxx},
     {"grip_get_response_body_string", grip_get_response_body_string_amxx},
-    {"grip_parse_response_body_as_json", grip_json_parse_response_body_amxx},
+    {"grip_json_parse_response_body", grip_json_parse_response_body_amxx},
     {"grip_destroy_json_value", grip_destroy_json_value_amxx},
 	{"grip_create_default_options", grip_create_default_options_amxx},
 	{"grip_destroy_options", grip_destroy_options_amxx},
