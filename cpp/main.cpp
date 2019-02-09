@@ -194,6 +194,10 @@ cell AMX_NATIVE_CALL grip_json_equals_amxx(AMX *amx, cell *params) {
 	return grip_json_equals(amx, params[arg_value1], params[arg_value2]);
 }
 
+cell AMX_NATIVE_CALL grip_json_get_type_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_value };
+	return grip_json_get_type(amx, params[arg_value]);
+}
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -213,6 +217,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_parse_string", grip_json_parse_string_amxx},
 	{"grip_json_parse_file", grip_json_parse_file_amxx},
 	{"grip_json_equals", grip_json_equals_amxx},
+	{"grip_json_get_type", grip_json_get_type_amxx},
     {nullptr, nullptr}
 };
 

@@ -44,7 +44,6 @@ use self::libc::{c_char, c_void};
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::Path;
 
 use crate::errors::*;
 
@@ -695,5 +694,28 @@ pub unsafe extern "C" fn grip_json_equals(amx: *const c_void, value1: Cell, valu
             .chain_err(|| ffi_error(format!("value2 {} handle is invalid", value2)))
     );
 
-    value2 == value1
+    if value2 == value1 {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> Cell {
+    use serde_json::Value;
+    match try_and_log_ffi!(
+        amx,
+        get_module()
+            .json_handles
+            .get_with_id(value)
+            .chain_err(|| ffi_error(format!("value {} handle is invalid", value)))
+    ) {
+        Value::Null => 1,
+        Value::String(_) => 2,
+        Value::Number(_) => 3,
+        Value::Object(_) => 4,
+        Value::Array(_) => 5,
+        Value::Bool(_) => 6,
+    }
 }

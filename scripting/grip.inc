@@ -76,7 +76,6 @@ enum GripJSONValue {
  */
 enum GripJSONType
 {
-	GripJSONError   = 0,
 	GripJSONNull    = 1,
 	GripJSONString  = 2,
 	GripJSONNumber  = 3,
@@ -380,13 +379,13 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  * @return                  True if passed value is valid, false otherwise
  * @error                   If a schema handle or value handle is invalid
  */
-//TODO: Low priority
+//TODO: Very Low priority
 //native bool:json_validate(const JSON:schema, const JSON:value);
 
 /**
  * Gets value's parent handle.
  *
- * @note                  Parent's handle needs to be freed using json_free() native.
+ * @note                  Parent's handle needs to be freed using grip_destroy_json_value() native.
  *
  * @param value           JSON handle
  *
@@ -400,16 +399,15 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  *
  * @param value             JSON handle
  *
- * @return                  JSON type (JSONType constants)
+ * @return                  JSON type (GripJSONType constants)
  * @error                   If a value handle is invalid
  */
-//TODO: High priority
-//native JSONType:json_get_type(const JSON:value);
+native GripJSONType:grip_json_get_type(const JSON:value);
 
 /**
  * Inits an empty object.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @return                  JSON handle, Invalid_JSON if error occurred
  */
@@ -419,7 +417,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
 /**
  * Inits an empty array.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @return                  JSON handle, Invalid_JSON if error occurred
  */
@@ -429,7 +427,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
 /**
  * Inits string data.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param value             String that the handle will be initialized with
  *
@@ -441,7 +439,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
 /**
  * Inits a number.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param value             Integer number that the handle will be initialized with
  *
@@ -453,7 +451,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
 /**
  * Inits a real number.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param value             Real number that the handle will be initialized with
  *
@@ -466,7 +464,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
 /**
  * Inits a boolean value.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param value             Boolean value that the handle will be initialized with
  *
@@ -478,7 +476,7 @@ native JSON:json_init_bool(bool:value);
 /**
  * Inits a null.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @return                  JSON handle, Invalid_JSON if error occurred
  */
@@ -488,7 +486,7 @@ native JSON:json_init_bool(bool:value);
 /**
  * Creates deep copy of passed value.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param value             JSON handle to be copied
  *
@@ -548,7 +546,7 @@ native JSON:json_init_bool(bool:value);
 /**
  * Gets a value from the array.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param array             Array handle
  * @param index             Position in the array (starting from 0)
@@ -796,7 +794,7 @@ native JSON:json_init_bool(bool:value);
 /**
  * Gets a value from the object.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  * @note                    If dot notation is used some values may be inaccessible
  *                          because valid names in JSON can contain dots.
  *
@@ -904,7 +902,7 @@ native JSON:json_init_bool(bool:value);
 /**
  * Gets a value at the specified position from the object.
  *
- * @note                    Needs to be freed using json_free() native.
+ * @note                    Needs to be freed using grip_destroy_json_value() native.
  *
  * @param object            Object handle
  * @param index             Position from which get key name

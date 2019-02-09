@@ -44,5 +44,6 @@ extern "C" {
     cell grip_json_parse_file(const void* amx, const char *file, char *error_buffer, cell error_buffer_size);
 
     cell grip_json_equals(const void* amx, cell value1, cell value2);
+    cell grip_json_get_type(const void* amx, cell value);
 }
 #endif //RESTRY_FFI_H
