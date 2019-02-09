@@ -14,13 +14,6 @@ matrix:
   allow_failures:
   - rust: nightly
   fast_finish: true
-  include:
-    - rust: stable # this is the default job
-      before_script:
-        - rustup component add clippy
-      script:
-        - cd $TRAVIS_BUILD_DIR/rust
-        - cargo clippy --all -- -D clippy::all
 
 addons:
   apt:
@@ -41,6 +34,7 @@ addons:
 install:
 - rustup target add $TARGET
 - cargo install cargo-sweep || true
+- ["$TRAVIS_RUST_VERSION" = stable ] && rustup component add clippy || true
 before_script:
 - $CXX --version
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug
@@ -48,6 +42,7 @@ before_script:
 - cmake  --version
 script:
 - cd $TRAVIS_BUILD_DIR/rust
+- ["$TRAVIS_RUST_VERSION" = stable ] && cargo clippy --all -- -D clippy::all
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET cargo test --verbose --target $TARGET
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET cargo test --verbose --release --target $TARGET
 
