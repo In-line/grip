@@ -56,9 +56,6 @@ script:
 - make -j1
 - sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
 
-after_script:
-- cd $TRAVIS_BUILD_DIR/rust
-- cargo sweep -t 30
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
@@ -84,9 +81,12 @@ cache:
   directories:
   - "$TRAVIS_BUILD_DIR/build/release/rust"
   - "$TRAVIS_BUILD_DIR/build/debug/rust"
+
 before_cache:
 - chmod -R a+r $HOME/.cargo
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
+- cd $TRAVIS_BUILD_DIR/rust && cargo sweep -t 30 && cd -
+
 notifications:
   email: false
