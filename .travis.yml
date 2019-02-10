@@ -87,8 +87,8 @@ before_cache:
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
 - cd $TRAVIS_BUILD_DIR/rust
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo sweep --maxsize 1024
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo sweep --maxsize 1024
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo sweep --maxsize 1536
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo sweep --maxsize 1536
 - cd -
 
 notifications:
