@@ -22,3 +22,15 @@ Why don't use modern programming language which is as fast as C++, but is safe, 
 Rust has many libraries dedicated to high-performance HTTP(s) requests, implemented (at the lowest level) using non-blocking sockets. It is extremely easy to write something in Rust, which is otherwise nearly impossible in C++. 
 
 Thus, I, with the team of dedicated supporters give a birth to a GRIP. It supports modern web standards, will eventually support JSON and many other things..
+
+## API 
+
+To familiarize yourself with the API you need little to no knowledge about it's inner structure. You should be familiar with Pawn scripting language in the context of the AMX Mod X and REST API.
+
+First of all, let's see whats the most important point. All the necessary optimizations are done under the hood, developer is exposed only to the high-level view of the things.
+
+You start a request with the corresponding arguments and just after that, function returns immediately. There is no blocking and no way to achieve it by design.
+
+Next I think it is important to describe idiomatic callback implementation. User is forced to provide completion handler, which is guaranteed to be called in the case of success, timeout, cancelation, etc.. Requests completion order is unspecified. On completion, response status should be checked. No function silently failes. it is strict API which forces users to consider all cases. All network requests are done simultaneously in the implementation specified order.
+
+JSON API tries to mimic corresponding `json.inc` file from AMX Mod X. Some things were removed/changed, because in my opinion they are bad design choices. Such dangerous components should rarely cause compilation errors in the plugin, but in the majority of the cases gRIP JSON API is drop-in replacemant of AMX Mod X `json.inc` .
