@@ -43,7 +43,7 @@ if(WIN32)
 	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.dll")
 else()
 	target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-rust pthread) # TODO: Conditional dynamic linking of OpenSSL. (ssl crypto)
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${PORTABLE_LINK_FLAGS} -fuse-ld=bfd")
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${PORTABLE_LINK_FLAGS} -fuse-ld=lld")
 	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.so")
 endif()
 
