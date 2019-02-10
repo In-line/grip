@@ -1,3 +1,34 @@
+/*
+ * gRIP
+ * Copyright (c) 2018 Alik Aslanyan <cplusplus256@gmail.com>
+ *
+ *
+ *    This program is free software; you can redistribute it and/or modify it
+ *    under the terms of the GNU General Public License as published by the
+ *    Free Software Foundation; either version 3 of the License, or (at
+ *    your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful, but
+ *    WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with this program; if not, write to the Free Software Foundation,
+ *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *    In addition, as a special exception, the author gives permission to
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    L.L.C ("Valve").  You must obey the GNU General Public License in all
+ *    respects for all of the code used other than the HL Engine and MODs
+ *    from Valve.  If you modify this file, you may extend this exception
+ *    to your version of the file, but you are not obligated to do so.  If
+ *    you do not wish to do so, delete this exception statement from your
+ *    version.
+ *
+ */
+
 extern crate ini;
 extern crate libc;
 
@@ -11,6 +42,8 @@ use crate::ffi::ext::*;
 use self::libc::{c_char, c_void};
 
 use std::ffi::CStr;
+use std::fs::File;
+use std::io::BufReader;
 
 use crate::errors::*;
 
@@ -281,6 +314,7 @@ pub unsafe extern "C" fn grip_is_request_active(request_id: Cell) -> Cell {
     }
 }
 
+// TODO: Remove copy-paste
 #[no_mangle]
 pub unsafe extern "C" fn grip_get_error_description(
     amx: *const c_void,
@@ -324,12 +358,12 @@ pub unsafe extern "C" fn grip_get_error_description(
         try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")));
     }
 
-    1
+    libc::strlen(buffer) as Cell
 }
 
 // TODO: Remove copy paste
 #[no_mangle]
-pub unsafe extern "C" fn grip_get_response_body_string(
+pub unsafe extern "C" fn grip_get_response_body_stringgrip_get_response_body_string(
     amx: *const c_void,
     buffer: *mut c_char,
     size: Cell,
@@ -375,7 +409,7 @@ pub unsafe extern "C" fn grip_get_response_body_string(
         );
     }
 
-    1
+    libc::strlen(buffer) as Cell
 }
 
 #[no_mangle]
@@ -396,56 +430,6 @@ pub unsafe extern "C" fn grip_get_response_status_code(amx: *const c_void) -> Ce
             ))
         );
         -1
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn grip_parse_response_body_as_json(
-    amx: *const c_void,
-    error_buffer: *mut c_char,
-    error_buffer_size: Cell,
-) -> Cell {
-    if let Ok(response) = try_and_log_ffi!(
-        amx,
-        get_module()
-            .current_response
-            .as_ref()
-            .chain_err(|| ffi_error("No active response at this time"))
-    ) {
-        let value: Result<serde_json::Value> =
-            serde_json::from_slice(&response.body[..]).map_err(|e| ErrorKind::JSONError(e).into());
-
-        match value {
-            Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
-            Err(error) => {
-                use error_chain::ChainedError;
-                libc::strncpy(
-                    error_buffer,
-                    format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
-                    try_and_log_ffi!(
-                        amx,
-                        if error_buffer_size >= 0 {
-                            Ok(error_buffer_size as usize)
-                        } else {
-                            Err(ffi_error(format!(
-                                "Size {} should be greater or equal to zero.",
-                                error_buffer_size
-                            )))
-                        },
-                    ),
-                );
-
-                0
-            }
-        }
-    } else {
-        try_and_log_ffi!(
-            amx,
-            Err(ffi_error(
-                "Error/Cancellation/Timeout occurred for this response."
-            ))
-        );
-        0
     }
 }
 
@@ -552,4 +536,289 @@ pub unsafe extern "C" fn grip_process_request() {
         get_module().callbacks_per_frame * multiplier,
         std::time::Duration::from_micros(get_module().microseconds_delay_between_attempts as u64),
     );
+}
+
+// TODO: Remove copy-paste
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_parse_response_body(
+    amx: *const c_void,
+    error_buffer: *mut c_char,
+    error_buffer_size: Cell,
+) -> Cell {
+    if let Ok(response) = try_and_log_ffi!(
+        amx,
+        get_module()
+            .current_response
+            .as_ref()
+            .chain_err(|| ffi_error("No active response at this time"))
+    ) {
+        let value: Result<serde_json::Value> =
+            serde_json::from_slice(&response.body[..]).map_err(|e| ErrorKind::JSONError(e).into());
+
+        match value {
+            Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+            Err(error) => {
+                use error_chain::ChainedError;
+                libc::strncpy(
+                    error_buffer,
+                    format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
+                    try_and_log_ffi!(
+                        amx,
+                        if error_buffer_size >= 0 {
+                            Ok(error_buffer_size as usize)
+                        } else {
+                            Err(ffi_error(format!(
+                                "Size {} should be greater or equal to zero.",
+                                error_buffer_size
+                            )))
+                        },
+                    ),
+                );
+
+                *error_buffer.offset(error_buffer_size) = '\0' as i8;
+                0
+            }
+        }
+    } else {
+        try_and_log_ffi!(
+            amx,
+            Err(ffi_error(
+                "Error/Cancellation/Timeout occurred for this response."
+            ))
+        );
+
+        0
+    }
+}
+
+// TODO: Remove copy-paste
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_parse_string(
+    amx: *const c_void,
+    string: *mut c_char,
+    error_buffer: *mut c_char,
+    error_buffer_size: Cell,
+) -> Cell {
+    let value: Result<serde_json::Value> = serde_json::from_str(try_and_log_ffi!(
+        amx,
+        CStr::from_ptr(string)
+            .to_str()
+            .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+    ))
+    .map_err(|e| ErrorKind::JSONError(e).into());
+
+    match value {
+        Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+        Err(error) => {
+            use error_chain::ChainedError;
+            libc::strncpy(
+                error_buffer,
+                format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
+                try_and_log_ffi!(
+                    amx,
+                    if error_buffer_size >= 0 {
+                        Ok(error_buffer_size as usize)
+                    } else {
+                        Err(ffi_error(format!(
+                            "Size {} should be greater or equal to zero.",
+                            error_buffer_size
+                        )))
+                    },
+                ),
+            );
+
+            *error_buffer.offset(error_buffer_size) = '\0' as i8;
+            0
+        }
+    }
+}
+
+// TODO: Remove copy-paste
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_parse_file(
+    amx: *const c_void,
+    file: *mut c_char,
+    error_buffer: *mut c_char,
+    error_buffer_size: Cell,
+) -> Cell {
+    let value: Result<serde_json::Value> =
+        serde_json::from_reader(BufReader::new(try_and_log_ffi!(
+            amx,
+            File::open(try_and_log_ffi!(
+                amx,
+                CStr::from_ptr(file)
+                    .to_str()
+                    .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+            ))
+            .chain_err(|| ffi_error("Can't open file."))
+        )))
+        .map_err(|e| ErrorKind::JSONError(e).into());
+
+    match value {
+        Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+        Err(error) => {
+            use error_chain::ChainedError;
+            libc::strncpy(
+                error_buffer,
+                format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
+                try_and_log_ffi!(
+                    amx,
+                    if error_buffer_size >= 0 {
+                        Ok(error_buffer_size as usize)
+                    } else {
+                        Err(ffi_error(format!(
+                            "Size {} should be greater or equal to zero.",
+                            error_buffer_size
+                        )))
+                    },
+                ),
+            );
+
+            *error_buffer.offset(error_buffer_size) = '\0' as i8;
+            0
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_equals(amx: *const c_void, value1: Cell, value2: Cell) -> Cell {
+    let value1 = try_and_log_ffi!(
+        amx,
+        get_module()
+            .json_handles
+            .get_with_id(value1)
+            .chain_err(|| ffi_error(format!("value1 handle {} is invalid", value1)))
+    );
+
+    let value2 = try_and_log_ffi!(
+        amx,
+        get_module()
+            .json_handles
+            .get_with_id(value2)
+            .chain_err(|| ffi_error(format!("value2 {} handle is invalid", value2)))
+    );
+
+    if value2 == value1 {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> Cell {
+    use serde_json::Value;
+    match try_and_log_ffi!(
+        amx,
+        get_module()
+            .json_handles
+            .get_with_id(value)
+            .chain_err(|| ffi_error(format!("value {} handle is invalid", value)))
+    ) {
+        Value::Null => 1,
+        Value::String(_) => 2,
+        Value::Number(_) => 3,
+        Value::Object(_) => 4,
+        Value::Array(_) => 5,
+        Value::Bool(_) => 6,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_object() -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::Object(serde_json::map::Map::default()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_array() -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::Array(Vec::default()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut c_char) -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::String(
+            try_and_log_ffi!(
+                amx,
+                CStr::from_ptr(string)
+                    .to_str()
+                    .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+            )
+            .to_owned(),
+        ))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_number(value: Cell) -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::Number(value.into()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_float(value: f64) -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(json!(value))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_bool(value: bool) -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(json!(value))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_init_null() -> Cell {
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(serde_json::Value::Null)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_get_string(
+    amx: *const c_void,
+    value: Cell,
+    buffer: *mut c_char,
+    buffer_size: Cell,
+) -> Cell {
+    match try_and_log_ffi!(
+        amx,
+        get_module_mut()
+            .json_handles
+            .get_mut_with_id(value)
+            .chain_err(|| ffi_error(format!("Invalid JSON value handle {}", value)))
+    ) {
+        serde_json::Value::String(s) => {
+            libc::strncpy(
+                buffer,
+                s.as_ptr() as *mut c_char,
+                try_and_log_ffi!(
+                    amx,
+                    if buffer_size >= 0 {
+                        Ok(buffer_size as usize)
+                    } else {
+                        Err(ffi_error(format!(
+                            "Size {} should be greater or equal to zero.",
+                            buffer_size
+                        )))
+                    },
+                ),
+            );
+
+            *buffer.offset(buffer_size) = '\0' as i8;
+
+            libc::strlen(buffer) as Cell
+        }
+        v => try_and_log_ffi!(
+            amx,
+            Err(ffi_error(format!("JSON Handle is not string. {:?}", v)))
+        ),
+    }
 }
