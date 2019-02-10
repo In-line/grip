@@ -42,7 +42,7 @@ before_script:
 - cmake  --version
 script:
 - cd $TRAVIS_BUILD_DIR/rust
-- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo clippy --all -- -D clippy::all) fi
+- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo clippy --target $TARGET --all -- -D clippy::all) fi
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --target $TARGET
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --release --target $TARGET
 
