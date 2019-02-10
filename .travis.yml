@@ -37,14 +37,14 @@ install:
 - if [ "$TRAVIS_RUST_VERSION" = stable ]; then (rustup component add clippy || true) fi
 before_script:
 - $CXX --version
-- mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust/$TARGET/debug
-- mkdir -p $TRAVIS_BUILD_DIR/build/release/rust/$TARGET/release
+- mkdir -p $TRAVIS_BUILD_DIR/build/release/rust
+- mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust
 - cmake  --version
 script:
 - cd $TRAVIS_BUILD_DIR/rust
-- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (cargo clippy --all -- -D clippy::all) fi
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust/$TARGET cargo test --verbose --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust/$TARGET cargo test --verbose --release --target $TARGET
+- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo clippy --target $TARGET --all -- -D clippy::all) fi
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --target $TARGET
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --release --target $TARGET
 
 - cd $TRAVIS_BUILD_DIR/build/debug
 - cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
@@ -86,7 +86,10 @@ before_cache:
 - chmod -R a+r $HOME/.cargo
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/release/rust
 - chmod -R a+r $TRAVIS_BUILD_DIR/build/debug/rust
-- cd $TRAVIS_BUILD_DIR/rust && cargo sweep --maxsize 1024 && cd -
+- cd $TRAVIS_BUILD_DIR/rust
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo sweep --maxsize 1024
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo sweep --maxsize 1024
+- cd -
 
 notifications:
   email: false

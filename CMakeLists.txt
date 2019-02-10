@@ -47,7 +47,7 @@ else()
 	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.so")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weverything -Wextra -Wzero-as-null-pointer-constant -Wunknown-pragmas")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wzero-as-null-pointer-constant -Wunknown-pragmas")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	 add_definitions(-D_DEBUG)
