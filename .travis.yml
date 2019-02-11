@@ -7,14 +7,17 @@ rust:
 - beta
 - nightly
 env:
-- PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu CXX=/usr/bin/clang++-7 CC=/usr/bin/clang-7
+  global:
+    - PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu CXX=/usr/bin/clang++-7 CC=/usr/bin/clang-7
+  matrix:
+    - RUN_CLIPPY=1 RUN_DEBUG_TEST=1 RUN_DEBUG_BUILD=1
+    - RUN_RELEASE_TEST=1 RUN_RELEASE_BUILD=1
 os:
 - linux
 matrix:
   allow_failures:
   - rust: nightly
   fast_finish: true
-
 addons:
   apt:
     packages:
@@ -41,20 +44,38 @@ before_script:
 - mkdir -p $TRAVIS_BUILD_DIR/build/debug/rust
 - cmake  --version
 script:
-- cd $TRAVIS_BUILD_DIR/rust
-- if [ "$TRAVIS_RUST_VERSION" = stable ]; then (CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo clippy --target $TARGET --all -- -D clippy::all) fi
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --target $TARGET
-- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --release --target $TARGET
+  - |
+      cd $TRAVIS_BUILD_DIR/rust
+      if [ "$TRAVIS_RUST_VERSION" = stable ] && [ -n "$RUN_CLIPPY" ]; then
+        (CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo clippy --target $TARGET --all -- -D clippy::all)
+      fi
 
-- cd $TRAVIS_BUILD_DIR/build/debug
-- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
-- make -j1
-- sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+      if [ -n "$RUN_DEBUG_TEST" ]; then
+        CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --target $TARGET
+      fi
 
-- cd $TRAVIS_BUILD_DIR/build/release
-- cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
-- make -j1
-- sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+      if [ -n "$RUN_RELEASE_TEST" ]; then
+        CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --release --target $TARGET
+      fi
+
+      if [ -n "$RUN_DEBUG_BUILD" ]; then
+        cd $TRAVIS_BUILD_DIR/build/debug
+        cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
+        make -j1
+        sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+      fi
+
+      if [ -n "$RUN_RELEASE_BUILD" ]; then
+        cd $TRAVIS_BUILD_DIR/build/release
+        cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
+        make -j1
+        sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
+      fi
+
+      if [ "$TRAVIS_RUST_VERSION" = stable ] && [ -n "RUN_RELEASE_BUILD" ]; then
+          DO_DEPLOY=1
+      fi
+
 
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
@@ -74,7 +95,7 @@ deploy:
   on:
     repo: In-line/grip
 # NOTE make sure you only release *once* per target
-    condition: $TRAVIS_RUST_VERSION = stable
+    condition: $DO_DEPLOY = 1
     tags: true
 cache:
   cargo: true
