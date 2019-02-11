@@ -50,14 +50,17 @@ script:
         (CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo clippy --target $TARGET --all -- -D clippy::all)
       fi
 
+  - |
       if [ -n "$RUN_DEBUG_TEST" ]; then
         CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo test --verbose --target $TARGET
       fi
 
+  - |
       if [ -n "$RUN_RELEASE_TEST" ]; then
         CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo test --verbose --release --target $TARGET
       fi
 
+  - |
       if [ -n "$RUN_DEBUG_BUILD" ]; then
         cd $TRAVIS_BUILD_DIR/build/debug
         cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
@@ -65,6 +68,7 @@ script:
         sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
       fi
 
+  - |
       if [ -n "$RUN_RELEASE_BUILD" ]; then
         cd $TRAVIS_BUILD_DIR/build/release
         cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
@@ -72,6 +76,7 @@ script:
         sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
       fi
 
+  - |
       if [ "$TRAVIS_RUST_VERSION" = stable ] && [ -n "RUN_RELEASE_BUILD" ]; then
           DO_DEPLOY=1
       fi
