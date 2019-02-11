@@ -46,10 +46,10 @@ use std::fs::File;
 use std::io::BufReader;
 
 use crate::errors::*;
+use lazy_static::*;
 
 type Cell = isize;
 
-static INVALID_CELL: Cell = 0;
 use crate::networking_queue::{
     Queue, RequestBuilder, RequestCancellation, RequestOptions, RequestType, Response,
 };
@@ -162,7 +162,7 @@ pub unsafe extern "C" fn grip_body_from_string(amx: *const c_void, str: *const c
     get_module_mut().bodies_handles.insert_with_unique_id(
         CStr::from_ptr(try_and_log_ffi!(
             amx,
-            handle_null_ptr(str).chain_err(|| ffi_error("Invalid URI."))
+            ptr_to_option(str).chain_err(|| ffi_error("Invalid URI."))
         ))
         .to_bytes()
         .to_vec(),
@@ -195,7 +195,7 @@ pub unsafe extern "C" fn grip_request(
         amx,
         CStr::from_ptr(try_and_log_ffi!(
             amx,
-            handle_null_ptr(uri).chain_err(|| ffi_error("Invalid URI."))
+            ptr_to_option(uri).chain_err(|| ffi_error("Invalid URI."))
         ))
         .to_str()
         .map_err(|_| ffi_error("URI is not UTF-8"))
@@ -233,7 +233,7 @@ pub unsafe extern "C" fn grip_request(
             .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle)))
     );
 
-    // TODO: JSON, Headers, Timeout.
+    // TODO: JSON
 
     let next_cancellation_id = get_module().cancellations_handles.peek_id();
     let cancellation = get_module_mut().global_queue.send_request(
@@ -314,7 +314,6 @@ pub unsafe extern "C" fn grip_is_request_active(request_id: Cell) -> Cell {
     }
 }
 
-// TODO: Remove copy-paste
 #[no_mangle]
 pub unsafe extern "C" fn grip_get_error_description(
     amx: *const c_void,
@@ -337,28 +336,10 @@ pub unsafe extern "C" fn grip_get_error_description(
         );
 
         use error_chain::ChainedError;
-        libc::strncpy(
-            buffer,
-            format!("{}\0", e.display_chain()).as_ptr() as *const c_char,
-            try_and_log_ffi!(
-                amx,
-                if size >= 0 {
-                    Ok(size as usize)
-                } else {
-                    Err(ffi_error(format!(
-                        "Size {} should be greater or equal to zero.",
-                        size
-                    )))
-                },
-            ),
-        );
-
-        *buffer.offset(size) = '\0' as i8;
+        copy_unsafe_string!(amx, buffer, e.display_chain(), size)
     } else {
-        try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")));
+        try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")))
     }
-
-    libc::strlen(buffer) as Cell
 }
 
 // TODO: Remove copy paste
@@ -375,41 +356,21 @@ pub unsafe extern "C" fn grip_get_response_body_stringgrip_get_response_body_str
             .as_ref()
             .chain_err(|| ffi_error("No active response at this time"))
     ) {
-        libc::strncpy(
+        copy_unsafe_string!(
+            amx,
             buffer,
-            format!(
-                "{}\0",
-                try_and_log_ffi!(
-                    amx,
-                    std::str::from_utf8(&response.body[..])
-                        .chain_err(|| ffi_error("Unable to parse UTF-8"))
-                )
-            )
-            .as_ptr() as *const c_char,
             try_and_log_ffi!(
                 amx,
-                if size >= 0 {
-                    Ok(size as usize)
-                } else {
-                    Err(ffi_error(format!(
-                        "Size {} should be greater or equal to zero.",
-                        size
-                    )))
-                },
+                std::str::from_utf8(&response.body[..])
+                    .chain_err(|| ffi_error("Unable to parse UTF-8"))
             ),
-        );
-
-        *buffer.offset(size) = '\0' as i8;
+            size
+        )
     } else {
-        try_and_log_ffi!(
-            amx,
-            Err(ffi_error(
-                "Error/Cancellation/Timeout occurred for this response."
-            ))
-        );
+        unconditionally_log_error!(amx, ffi_error(
+            "Error/Cancellation/Timeout occurred for this response."
+        ))
     }
-
-    libc::strlen(buffer) as Cell
 }
 
 #[no_mangle]
@@ -423,12 +384,9 @@ pub unsafe extern "C" fn grip_get_response_status_code(amx: *const c_void) -> Ce
     ) {
         response.status_code.as_u16() as Cell
     } else {
-        try_and_log_ffi!(
-            amx,
-            Err(ffi_error(
-                "Error/Cancellation/Timeout occurred for this response."
-            ))
-        );
+        unconditionally_log_error!(amx, ffi_error(
+            "Error/Cancellation/Timeout occurred for this response."
+        ));
         -1
     }
 }
@@ -494,7 +452,7 @@ pub unsafe extern "C" fn grip_options_add_header(
         get_module_mut()
             .options_handles
             .get_mut_with_id(options_handle)
-            .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle))),
+            .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle)))
     );
 
     let header_name = try_and_log_ffi!(
@@ -559,35 +517,14 @@ pub unsafe extern "C" fn grip_json_parse_response_body(
             Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
             Err(error) => {
                 use error_chain::ChainedError;
-                libc::strncpy(
-                    error_buffer,
-                    format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
-                    try_and_log_ffi!(
-                        amx,
-                        if error_buffer_size >= 0 {
-                            Ok(error_buffer_size as usize)
-                        } else {
-                            Err(ffi_error(format!(
-                                "Size {} should be greater or equal to zero.",
-                                error_buffer_size
-                            )))
-                        },
-                    ),
-                );
-
-                *error_buffer.offset(error_buffer_size) = '\0' as i8;
+                copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
                 0
             }
         }
     } else {
-        try_and_log_ffi!(
-            amx,
-            Err(ffi_error(
-                "Error/Cancellation/Timeout occurred for this response."
-            ))
-        );
-
-        0
+        unconditionally_log_error!(amx, ffi_error(
+            "Error/Cancellation/Timeout occurred for this response."
+        ))
     }
 }
 
@@ -611,23 +548,7 @@ pub unsafe extern "C" fn grip_json_parse_string(
         Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
-            libc::strncpy(
-                error_buffer,
-                format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
-                try_and_log_ffi!(
-                    amx,
-                    if error_buffer_size >= 0 {
-                        Ok(error_buffer_size as usize)
-                    } else {
-                        Err(ffi_error(format!(
-                            "Size {} should be greater or equal to zero.",
-                            error_buffer_size
-                        )))
-                    },
-                ),
-            );
-
-            *error_buffer.offset(error_buffer_size) = '\0' as i8;
+            copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
             0
         }
     }
@@ -658,23 +579,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
         Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
-            libc::strncpy(
-                error_buffer,
-                format!("{}\0", error.display_chain()).as_ptr() as *const c_char,
-                try_and_log_ffi!(
-                    amx,
-                    if error_buffer_size >= 0 {
-                        Ok(error_buffer_size as usize)
-                    } else {
-                        Err(ffi_error(format!(
-                            "Size {} should be greater or equal to zero.",
-                            error_buffer_size
-                        )))
-                    },
-                ),
-            );
-
-            *error_buffer.offset(error_buffer_size) = '\0' as i8;
+            copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
             0
         }
     }
@@ -764,14 +669,14 @@ pub unsafe extern "C" fn grip_json_init_number(value: Cell) -> Cell {
 pub unsafe extern "C" fn grip_json_init_float(value: f64) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(value))
+        .insert_with_unique_id(serde_json::json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_bool(value: bool) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(value))
+        .insert_with_unique_id(serde_json::json!(value))
 }
 
 #[no_mangle]
@@ -795,30 +700,13 @@ pub unsafe extern "C" fn grip_json_get_string(
             .get_mut_with_id(value)
             .chain_err(|| ffi_error(format!("Invalid JSON value handle {}", value)))
     ) {
-        serde_json::Value::String(s) => {
-            libc::strncpy(
-                buffer,
-                s.as_ptr() as *mut c_char,
-                try_and_log_ffi!(
-                    amx,
-                    if buffer_size >= 0 {
-                        Ok(buffer_size as usize)
-                    } else {
-                        Err(ffi_error(format!(
-                            "Size {} should be greater or equal to zero.",
-                            buffer_size
-                        )))
-                    },
-                ),
-            );
-
-            *buffer.offset(buffer_size) = '\0' as i8;
-
-            libc::strlen(buffer) as Cell
-        }
+        serde_json::Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
         v => try_and_log_ffi!(
             amx,
             Err(ffi_error(format!("JSON Handle is not string. {:?}", v)))
         ),
     }
 }
+//
+//#[no_mangle]
+//pub unsafe extern "C" fn grip_json_get_number(amx: *const c_void) -> Cell {}

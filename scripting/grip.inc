@@ -510,7 +510,7 @@ native grip_json_get_string(const GripJSONValue:value, buffer[], maxlen);
  * @error                   If passed value is not a valid handle
  */
 //TODO: Middle priority
-//native json_get_number(const GripJSONValue:value);
+//native grip_json_get_number(const GripJSONValue:value);
 
 /**
  * Gets a real number.
