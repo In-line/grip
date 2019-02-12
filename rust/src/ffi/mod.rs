@@ -342,7 +342,6 @@ pub unsafe extern "C" fn grip_get_error_description(
     }
 }
 
-// TODO: Remove copy paste
 #[no_mangle]
 pub unsafe extern "C" fn grip_get_response_body_stringgrip_get_response_body_string(
     amx: *const c_void,
@@ -496,7 +495,6 @@ pub unsafe extern "C" fn grip_process_request() {
     );
 }
 
-// TODO: Remove copy-paste
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_parse_response_body(
     amx: *const c_void,
