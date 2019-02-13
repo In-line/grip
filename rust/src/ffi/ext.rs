@@ -29,51 +29,120 @@
  *
  */
 
-use crate::ffi::*;
+use crate::errors::*;
 
 pub trait ResultFFIExt<T> {
-    unsafe fn handle_ffi_error(self, amx: *const c_void) -> std::result::Result<T, Cell>;
+    fn get_value(self) -> std::result::Result<T, String>;
 }
 
 impl<T> ResultFFIExt<T> for Result<T> {
-    unsafe fn handle_ffi_error(self, amx: *const c_void) -> std::result::Result<T, Cell> {
-        self.map_err(|err| {
-            use error_chain::ChainedError;
-            // TODO: More fancy and better formatted error message
-            (get_module().error_logger)(
-                amx,
-                format!("{}\0", err.display_chain()).as_ptr() as *const c_char,
-            );
-            INVALID_CELL
-        })
+    fn get_value(self) -> std::result::Result<T, String> {
+        use error_chain::ChainedError;
+        self.map_err(|e| format!("{}", e.display_chain()))
     }
 }
 
 impl<T> ResultFFIExt<T> for Option<T> {
-    unsafe fn handle_ffi_error(self, amx: *const c_void) -> std::result::Result<T, Cell> {
-        self.ok_or(INVALID_CELL).map_err(|_| {
-            (get_module().error_logger)(amx, "Got null pointer\0".as_ptr() as *const c_char);
-            INVALID_CELL
-        })
+    fn get_value(self) -> std::result::Result<T, String> {
+        self.ok_or_else(|| "Got empty option".to_owned())
     }
 }
 
 macro_rules! try_and_log_ffi {
-    ($amx:expr, $expr:expr) => {
-        match $expr.handle_ffi_error($amx) {
+    ($amx:expr, $expr:expr, $error_logger:expr) => {
+        match $expr.get_value() {
             std::result::Result::Ok(val) => val,
-            std::result::Result::Err(err) => return err,
+            std::result::Result::Err(err) => {
+                ($error_logger)($amx, err);
+                return 0;
+            }
         }
     };
-    ($amx:expr, $expr:expr,) => {
-        try_and_log_ffi!($amx, $expr)
+
+    ($amx:expr, $expr:expr) => {
+        try_and_log_ffi!($amx, $expr, |amx, err| {
+            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+        });
     };
 }
 
-pub fn handle_null_ptr<T>(ptr: *const T) -> Option<*const T> {
+pub fn ptr_to_option<T>(ptr: *const T) -> Option<*const T> {
     if ptr.is_null() {
         None
     } else {
         Some(ptr)
+    }
+}
+
+macro_rules! copy_unsafe_string {
+    ($amx:expr, $dest:expr, $source:expr, $size:expr, $error_logger:expr) => {{
+        let source = format!("{}\0", $source);
+        libc::strncpy(
+            $dest,
+            source.as_ptr() as *const c_char,
+            try_and_log_ffi!(
+                $amx,
+                if $size >= 0 {
+                    Ok($size as usize)
+                } else {
+                    Err(ffi_error(format!(
+                        "Size {} should be greater or equal to zero.",
+                        $size
+                    )))
+                },
+                $error_logger
+            ),
+        );
+
+        *$dest.offset($size) = '\0' as i8;
+
+        std::cmp::min($size, source.len() as isize)
+    }};
+
+    ($amx:expr, $dest:expr, $source:expr, $size:expr) => {
+        copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
+            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+        })
+    };
+}
+
+macro_rules! unconditionally_log_error {
+    ($amx:expr, $err:expr, $error_logger:expr) => {
+        try_and_log_ffi!($amx, Err($err), $error_logger)
+    };
+
+    ($amx:expr, $err:expr) => {
+        unconditionally_log_error!($amx, $err, |amx, err| {
+            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+        })
+    };
+}
+
+#[allow(unused_imports)]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ffi::Cell;
+    use libc::c_char;
+
+    unsafe fn copy_unsafe_string(size: isize) -> Cell {
+        let mut s: [c_char; 2] = [0; 2];
+
+        let status =
+            copy_unsafe_string!(123 as *mut c_char, s.as_mut_ptr(), "1", size, |amx, _| {
+                assert!(amx == 123 as *mut c_char);
+            });
+
+        assert_eq!(s, ['1' as c_char, '\0' as c_char]);
+
+        status
+    }
+
+    #[test]
+    fn copy_unsafe_string_test() {
+        unsafe {
+            assert_eq!(copy_unsafe_string(-1), 0);
+            assert_eq!(copy_unsafe_string(2), 2);
+        }
     }
 }

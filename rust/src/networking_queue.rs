@@ -43,6 +43,8 @@ use tokio::prelude::FutureExt;
 
 use reqwest::r#async as reqwest_async;
 
+use clone_all::clone_all;
+
 #[derive(Clone, Debug)]
 pub enum RequestType {
     Get,
@@ -347,6 +349,7 @@ impl Queue {
     }
 }
 
+#[cfg(test)]
 mod tests {
     #[test]
     fn test_basic_request() {

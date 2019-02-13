@@ -28,12 +28,11 @@
  *    version.
  *
  */
+
+// https://github.com/rust-lang/rust-clippy/issues/1553
+#![allow(clippy::redundant_closure_call)]
+
 #![recursion_limit = "1024"]
-extern crate bytes;
-extern crate crossbeam_channel;
-extern crate futures;
-extern crate reqwest;
-extern crate tokio;
 
 #[macro_use]
 extern crate log;
@@ -46,19 +45,6 @@ extern crate derive_more;
 
 #[macro_use]
 extern crate error_chain;
-
-#[macro_use]
-extern crate clone_all;
-
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate serde_json;
-
-extern crate float_cmp;
-
-extern crate itertools;
 
 mod errors {
     error_chain! {
