@@ -343,7 +343,7 @@ pub unsafe extern "C" fn grip_get_error_description(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn grip_get_response_body_stringgrip_get_response_body_string(
+pub unsafe extern "C" fn grip_get_response_body_string(
     amx: *const c_void,
     buffer: *mut c_char,
     size: Cell,
@@ -707,4 +707,4 @@ pub unsafe extern "C" fn grip_json_get_string(
 }
 //
 //#[no_mangle]
-//pub unsafe extern "C" fn grip_json_get_number(amx: *const c_void) -> Cell {}
+//pub unsafe extern "C" fn grip_json_get_number(amx: *const c_void) -> cell {}
