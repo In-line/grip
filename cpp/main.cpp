@@ -48,10 +48,9 @@ void log_error(const void* amx, const char* string) {
 	MF_LogError((AMX*)amx, AMX_ERR_NATIVE, "%s", string);
 }
 
-void request_handler(cell forward_handle, cell response_handle, cell user_data) {
+void request_handler(cell forward_handle, cell user_data) {
 	MF_ExecuteForward(
 			forward_handle,
-			response_handle,
 			user_data
 	);
 	MF_UnregisterSPForward(forward_handle);
