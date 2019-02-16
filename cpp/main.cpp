@@ -299,6 +299,12 @@ cell AMX_NATIVE_CALL grip_json_array_get_float_amxx(AMX *amx, cell *params) {
 }
 
 
+cell AMX_NATIVE_CALL grip_json_array_get_bool_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_array, arg_index};
+
+	return grip_json_array_get_bool(amx, params[arg_array], params[arg_index]);
+}
+
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -334,6 +340,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_array_get_string", grip_json_array_get_string_amxx},
 	{"grip_json_array_get_number", grip_json_array_get_number_amxx},
 	{"grip_json_array_get_float", grip_json_array_get_float_amxx},
+	{"grip_json_array_get_bool", grip_json_array_get_bool_amxx},
 	{nullptr, nullptr}
 };
 

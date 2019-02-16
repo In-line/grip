@@ -590,8 +590,7 @@ native Float:grip_json_array_get_float(const GripJSONValue:array, index);
  * @return                  Boolean value
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native bool:json_array_get_bool(const GripJSONValue:array, index);
+native bool:grip_json_array_get_bool(const GripJSONValue:array, index);
 
 /**
  * Gets count of the elements in the array.

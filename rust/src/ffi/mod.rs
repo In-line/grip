@@ -814,7 +814,7 @@ pub unsafe extern "C" fn grip_json_array_get_number(
             ) as Cell,
             v => unconditionally_log_error!(
                 amx,
-                ffi_error(format!("JSON Handle is not string. {:?}", v))
+                ffi_error(format!("JSON Handle is not number. {:?}", v))
             ),
         },
         v => {
@@ -843,7 +843,7 @@ pub unsafe extern "C" fn grip_json_array_get_float(
             }
             v => unconditionally_log_error!(
                 amx,
-                ffi_error(format!("JSON Handle is not string. {:?}", v))
+                ffi_error(format!("JSON Handle is not number. {:?}", v))
             ),
         },
         v => {
@@ -851,3 +851,24 @@ pub unsafe extern "C" fn grip_json_array_get_float(
         }
     }
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_get_bool(
+    amx: *const c_void,
+    array: Cell,
+    index: Cell
+) -> Cell {
+    match try_to_get_json_value!(amx, array) {
+        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
+            RcValue::Bool(b) => *b as Cell,
+            v => unconditionally_log_error!(
+                amx,
+                ffi_error(format!("JSON Handle is not number. {:?}", v))
+            ),
+        },
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
