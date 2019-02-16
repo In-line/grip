@@ -13,6 +13,7 @@ So to sum up there are 3 key requirements for the GRIP.
 1) Low-latency
 2) Asynchronous API
 3) Support for the modern web standards.
+4) Builtin JSON support (to bypass limits on the AMXX buffer sizes)
 
 Solutions implemented before, usually achieved only second requirement or just basically nothing. They used raw sockets and blocked the main thread for the IO. 
 To solve blocking problem requests were dispatched to another thread (See for SQL_ThreadQuery for example). This approach has several problems. One of them is the difficulty on concurrent and safe programming in C++. To speed up things, thread pool should be written. To write a fast thread pool you need to be a highly professional programmer... This is just a mess! 
