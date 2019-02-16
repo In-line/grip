@@ -36,6 +36,8 @@ cell grip_is_request_active(cell request_id);
 
 cell grip_json_array_get_bool(const void *amx, cell array, cell index);
 
+cell grip_json_array_get_count(const void *amx, cell array);
+
 cell grip_json_array_get_float(const void *amx, cell array, cell index, float *ret);
 
 cell grip_json_array_get_number(const void *amx, cell array, cell index);

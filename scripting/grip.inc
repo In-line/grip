@@ -600,8 +600,7 @@ native bool:grip_json_array_get_bool(const GripJSONValue:array, index);
  * @return                  Number of elements in the array
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native json_array_get_count(const GripJSONValue:array);
+native grip_json_array_get_count(const GripJSONValue:array);
 
 /**
  * Replaces an element in the array with value.

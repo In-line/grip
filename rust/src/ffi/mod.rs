@@ -856,7 +856,7 @@ pub unsafe extern "C" fn grip_json_array_get_float(
 pub unsafe extern "C" fn grip_json_array_get_bool(
     amx: *const c_void,
     array: Cell,
-    index: Cell
+    index: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
         RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
@@ -872,3 +872,12 @@ pub unsafe extern "C" fn grip_json_array_get_bool(
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_get_count(amx: *const c_void, array: Cell) -> Cell {
+    match try_to_get_json_value!(amx, array) {
+        RcValue::Array(vec) => vec.len() as Cell,
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
