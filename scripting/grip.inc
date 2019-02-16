@@ -578,8 +578,8 @@ native grip_json_array_get_number(const GripJSONValue:array, index);
  * @return                  The number as float
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native Float:json_array_get_real(const GripJSONValue:array, index);
+#define grip_json_array_get_real(%1, %2) grip_json_array_get_float(%1, %2)
+native Float:grip_json_array_get_float(const GripJSONValue:array, index);
 
 /**
  * Gets a boolean value from the array.
