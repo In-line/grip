@@ -509,20 +509,18 @@ native grip_json_get_string(const GripJSONValue:value, buffer[], maxlen);
  * @return                  Number
  * @error                   If passed value is not a valid handle
  */
-//TODO: Middle priority
-//native grip_json_get_number(const GripJSONValue:value);
+native grip_json_get_number(const GripJSONValue:value);
 
 /**
- * Gets a real number.
+ * Gets a float number.
  *
  * @param value             JSON handle
  *
  * @return                  Real number
  * @error                   If passed value is not a valid handle
  */
-//TODO: Middle priority
-#define json_get_real(%1) json_get_float(%1)
-//native Float:json_get_real(const GripJSONValue:value);
+#define grip_json_get_real(%1) grip_json_get_float(%1)
+native Float:grip_json_get_float(const GripJSONValue:value);
 
 /**
  * Gets a boolean value.
@@ -532,8 +530,7 @@ native grip_json_get_string(const GripJSONValue:value, buffer[], maxlen);
  * @return                  Boolean value
  * @error                   If passed value is not a valid handle
  */
-//TODO: Middle priority
-//native bool:json_get_bool(const GripJSONValue:value);
+native bool:grip_json_get_bool(const GripJSONValue:value);
 
 /**
  * Gets a value from the array.
@@ -546,8 +543,7 @@ native grip_json_get_string(const GripJSONValue:value, buffer[], maxlen);
  * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native GripJSONValue:grip_json_array_get_value(const GripJSONValue:array, index);
+native GripJSONValue:grip_json_array_get_value(const GripJSONValue:array, index);
 
 /**
  * Gets string data from the array.

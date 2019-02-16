@@ -34,7 +34,15 @@ void grip_init(void (*error_logger)(const void*, const char*), const char *confi
 
 cell grip_is_request_active(cell request_id);
 
+cell grip_json_array_get_value(const void *amx, cell array, cell index);
+
 cell grip_json_equals(const void *amx, cell value1, cell value2);
+
+cell grip_json_get_bool(const void *amx, cell value);
+
+cell grip_json_get_float(const void *amx, cell value, float *ret);
+
+cell grip_json_get_number(const void *amx, cell value);
 
 cell grip_json_get_string(const void *amx, cell value, char *buffer, cell buffer_size);
 

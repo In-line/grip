@@ -212,17 +212,17 @@ cell AMX_NATIVE_CALL grip_json_init_string_amxx(AMX *amx, cell *params) {
 	return grip_json_init_string(amx, MF_GetAmxString(amx, params[arg_string], 2, &dummy));
 }
 
-cell AMX_NATIVE_CALL grip_json_init_number_amxx(AMX *amx, cell *params) {
+cell AMX_NATIVE_CALL grip_json_init_number_amxx(AMX *, cell *params) {
     enum { arg_count, arg_value };
     return grip_json_init_number(params[arg_value]);
 }
 
-cell AMX_NATIVE_CALL grip_json_init_float_amxx(AMX *amx, cell *params) {
+cell AMX_NATIVE_CALL grip_json_init_float_amxx(AMX *, cell *params) {
 	enum { arg_count, arg_value };
 	return grip_json_init_float( (float) amx_ctof(params[arg_value]));
 }
 
-cell AMX_NATIVE_CALL grip_json_init_bool_amxx(AMX *amx, cell *params) {
+cell AMX_NATIVE_CALL grip_json_init_bool_amxx(AMX *, cell *params) {
 	enum { arg_count, arg_value };
 	return grip_json_init_bool(params[arg_value] != 0);
 }
@@ -242,6 +242,34 @@ cell AMX_NATIVE_CALL grip_json_get_string_amxx(AMX *amx, cell *params) {
 
 	return ret;
 }
+
+cell AMX_NATIVE_CALL grip_json_get_number_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_value};
+    return grip_json_get_number(amx, params[arg_value]);
+}
+
+cell AMX_NATIVE_CALL grip_json_get_float_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_value};
+
+	float ret;
+
+	grip_json_get_float(amx, params[arg_value], &ret);
+
+	return amx_ftoc(ret);
+}
+
+cell AMX_NATIVE_CALL grip_json_get_bool_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_value};
+
+	return grip_json_get_bool(amx, params[arg_value]);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_get_value_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_array, arg_index};
+
+	return grip_json_array_get_value(amx, params[arg_array], params[arg_index]);
+}
+
 
 
 AMX_NATIVE_INFO grip_exports[] = {
@@ -271,6 +299,10 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_init_bool", grip_json_init_bool_amxx},
 	{"grip_json_init_null", grip_json_init_null_amxx},
 	{"grip_json_get_string", grip_json_get_string_amxx},
+    {"grip_json_get_number", grip_json_get_number_amxx},
+	{"grip_json_get_float", grip_json_get_float_amxx},
+	{"grip_json_get_bool", grip_json_get_bool_amxx},
+	{"grip_json_array_get_value", grip_json_array_get_value_amxx},
     {nullptr, nullptr}
 };
 
