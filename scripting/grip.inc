@@ -567,8 +567,7 @@ native grip_json_array_get_string(const GripJSONValue:array, index, buffer[], bu
  * @return                  The number as integer
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native json_array_get_number(const GripJSONValue:array, index);
+native grip_json_array_get_number(const GripJSONValue:array, index);
 
 /**
  * Gets a real number from the array.

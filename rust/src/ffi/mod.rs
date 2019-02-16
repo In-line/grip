@@ -799,3 +799,26 @@ pub unsafe extern "C" fn grip_json_array_get_string(
         }
     }
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_get_number(
+    amx: *const c_void,
+    array: Cell,
+    index: Cell,
+) -> Cell {
+    match try_to_get_json_value!(amx, array) {
+        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
+            RcValue::Number(n) => try_and_log_ffi!(
+                amx,
+                n.as_i64().chain_err(|| ffi_error("Number is not integer"))
+            ) as Cell,
+            v => unconditionally_log_error!(
+                amx,
+                ffi_error(format!("JSON Handle is not string. {:?}", v))
+            ),
+        },
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
