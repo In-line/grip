@@ -31,7 +31,6 @@
 
 // https://github.com/rust-lang/rust-clippy/issues/1553
 #![allow(clippy::redundant_closure_call)]
-
 #![recursion_limit = "1024"]
 
 #[macro_use]

@@ -74,24 +74,36 @@ pub fn ptr_to_option<T>(ptr: *const T) -> Option<*const T> {
     }
 }
 
+macro_rules! try_as_usize {
+    ($amx:expr, $size:expr, $error_logger:expr) => {
+        try_and_log_ffi!(
+            $amx,
+            if $size >= 0 {
+                Ok($size as usize)
+            } else {
+                Err(ffi_error(format!(
+                    "Index/Size {} should be greater or equal to zero.",
+                    $size
+                )))
+            },
+            $error_logger
+        )
+    };
+
+    ($amx:expr, $size:expr) => {
+        try_as_usize!($amx, $size, |amx, err| {
+            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+        })
+    };
+}
+
 macro_rules! copy_unsafe_string {
     ($amx:expr, $dest:expr, $source:expr, $size:expr, $error_logger:expr) => {{
         let source = format!("{}\0", $source);
         libc::strncpy(
             $dest,
             source.as_ptr() as *const c_char,
-            try_and_log_ffi!(
-                $amx,
-                if $size >= 0 {
-                    Ok($size as usize)
-                } else {
-                    Err(ffi_error(format!(
-                        "Size {} should be greater or equal to zero.",
-                        $size
-                    )))
-                },
-                $error_logger
-            ),
+            try_as_usize!($amx, $size, $error_logger),
         );
 
         *$dest.offset($size) = '\0' as i8;
@@ -116,6 +128,21 @@ macro_rules! unconditionally_log_error {
             (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
         })
     };
+}
+
+macro_rules! try_to_get_json_value {
+    ($amx:expr, $value:expr) => {{
+        let value: &mut Rc<RcValue> = try_and_log_ffi!(
+            $amx,
+            get_module_mut()
+                .json_handles
+                .get_mut_with_id($value)
+                .chain_err(|| ffi_error(format!("Invalid JSON value handle {}", $value)))
+        );
+
+        let value: &RcValue = &**value;
+        value
+    }};
 }
 
 #[allow(unused_imports)]
