@@ -44,6 +44,7 @@ cell dummy;
 char name[std::max(0, size)]; \
 memset(&name[0], 0, std::max(0,size) * sizeof(char))
 
+#define MF_SetAmxStringSafe(amx, amx_cell, addr, size) MF_SetAmxString(amx, amx_cell, addr, std::max(0,size) * sizeof(char))
 void log_error(const void* amx, const char* string) {
 	MF_LogError((AMX*)amx, AMX_ERR_NATIVE, "%s", string);
 }
@@ -112,7 +113,7 @@ cell AMX_NATIVE_CALL grip_get_error_description_amxx(AMX *amx, cell *params) {
   char buffer[params[arg_buffer_size]];
   cell ret = grip_get_error_description(amx, &buffer[0], params[arg_buffer_size]);
 
-  MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+  MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
 
   return ret;
 }
@@ -124,7 +125,7 @@ cell AMX_NATIVE_CALL grip_get_response_body_string_amxx(AMX *amx, cell *params) 
 
   cell ret = grip_get_response_body_string(amx, &buffer[0], params[arg_buffer_size]);
 
-  MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+  MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
 
   return ret;
 }
@@ -161,7 +162,7 @@ cell AMX_NATIVE_CALL grip_json_parse_response_body_amxx(AMX *amx, cell *params) 
 
 	cell ret = grip_json_parse_response_body(amx, &buffer[0], params[arg_buffer_size]);
 
-	MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+	MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
 
 	return ret;
 }
@@ -173,7 +174,7 @@ cell AMX_NATIVE_CALL grip_json_parse_string_amxx(AMX *amx, cell *params) {
 
 	cell ret = grip_json_parse_string(amx, MF_GetAmxString(amx, params[arg_string], 0, &dummy), &buffer[0], params[arg_buffer_size]);
 
-	MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+	MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
 
 	return ret;
 }
@@ -185,7 +186,7 @@ cell AMX_NATIVE_CALL grip_json_parse_file_amxx(AMX *amx, cell *params) {
 
 	cell ret = grip_json_parse_file(amx, MF_GetAmxString(amx, params[arg_file], 0, &dummy), &buffer[0], params[arg_buffer_size]);
 
-	MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+	MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
 
 	return ret;
 }
@@ -238,7 +239,7 @@ cell AMX_NATIVE_CALL grip_json_get_string_amxx(AMX *amx, cell *params) {
 
 	cell ret = grip_json_get_string(amx, params[arg_value], &buffer[0], params[arg_buffer_size]);
 
-	MF_SetAmxString(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+	MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
 
 	return ret;
 }
@@ -268,6 +269,18 @@ cell AMX_NATIVE_CALL grip_json_array_get_value_amxx(AMX *amx, cell *params) {
 	enum { arg_count, arg_array, arg_index};
 
 	return grip_json_array_get_value(amx, params[arg_array], params[arg_index]);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_get_string_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_array, arg_index, arg_buffer, arg_buffer_size};
+
+    ZERO_INIT_STACK_BUFFER(buffer, params[arg_buffer_size]);
+
+    cell ret = grip_json_array_get_string(amx, params[arg_array], params[arg_index], &buffer[0], params[arg_buffer_size]);
+
+    MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
+
+    return ret;
 }
 
 
@@ -303,6 +316,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_get_float", grip_json_get_float_amxx},
 	{"grip_json_get_bool", grip_json_get_bool_amxx},
 	{"grip_json_array_get_value", grip_json_array_get_value_amxx},
+    {"grip_json_array_get_string", grip_json_array_get_string_amxx}
     {nullptr, nullptr}
 };
 

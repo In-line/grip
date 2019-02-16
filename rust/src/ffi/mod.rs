@@ -772,9 +772,30 @@ pub unsafe extern "C" fn grip_json_array_get_value(
         RcValue::Array(vec) => get_module_mut()
             .json_handles
             .insert_with_unique_id(vec[try_as_usize!(amx, index)].clone()),
-        v => unconditionally_log_error!(
-            amx,
-            ffi_error(format!("JSON Handle is not number. {:?}", v))
-        ),
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_get_string(
+    amx: *const c_void,
+    array: Cell,
+    index: Cell,
+    buffer: *mut c_char,
+    buffer_size: Cell,
+) -> Cell {
+    match try_to_get_json_value!(amx, array) {
+        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
+            RcValue::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
+            v => unconditionally_log_error!(
+                amx,
+                ffi_error(format!("JSON Handle is not string. {:?}", v))
+            ),
+        },
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
     }
 }

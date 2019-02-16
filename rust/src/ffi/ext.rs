@@ -82,7 +82,7 @@ macro_rules! try_as_usize {
                 Ok($size as usize)
             } else {
                 Err(ffi_error(format!(
-                    "Size {} should be greater or equal to zero.",
+                    "Index/Size {} should be greater or equal to zero.",
                     $size
                 )))
             },
