@@ -115,6 +115,8 @@ before_cache:
 - cd $TRAVIS_BUILD_DIR/rust
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo sweep --maxsize 1024
 - CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo sweep --maxsize 1024
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/release/rust cargo sweep -t 30
+- CARGO_TARGET_DIR=$TRAVIS_BUILD_DIR/build/debug/rust cargo sweep -t 30
 - cd -
 
 notifications:
