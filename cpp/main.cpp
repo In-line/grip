@@ -317,6 +317,39 @@ cell AMX_NATIVE_CALL grip_json_array_replace_value_amxx(AMX *amx, cell *params) 
 	return grip_json_array_replace_value(amx, params[arg_array], params[arg_index], params[arg_value]);
 }
 
+cell AMX_NATIVE_CALL grip_json_array_replace_string_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index, arg_string};
+
+	const char* string = MF_GetAmxString(amx, params[arg_string], 3, &dummy);
+	return grip_json_array_replace_string(amx, params[arg_array], params[arg_index], string);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_replace_number_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index, arg_value};
+
+	return grip_json_array_replace_number(amx, params[arg_array], params[arg_index], params[arg_value]);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_replace_float_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index, arg_value};
+
+	return grip_json_array_replace_float(amx, params[arg_array], params[arg_index], amx_ctof(params[arg_value]));
+}
+
+cell AMX_NATIVE_CALL grip_json_array_replace_bool_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index, arg_value};
+
+	return grip_json_array_replace_bool(amx, params[arg_array], params[arg_index], params[arg_value] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_replace_null_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index};
+
+	return grip_json_array_replace_null(amx, params[arg_array], params[arg_index]);
+}
+
+
+
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
 	{"grip_destroy_body", grip_destroy_body_amxx},
@@ -354,6 +387,11 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_array_get_bool", grip_json_array_get_bool_amxx},
 	{"grip_json_array_get_count", grip_json_array_get_count_amxx},
 	{"grip_json_array_replace_value", grip_json_array_replace_value_amxx},
+	{"grip_json_array_replace_string", grip_json_array_replace_string_amxx},
+	{"grip_json_array_replace_number", grip_json_array_replace_number_amxx},
+	{"grip_json_array_replace_float", grip_json_array_replace_float_amxx},
+	{"grip_json_array_replace_bool", grip_json_array_replace_bool_amxx},
+	{"grip_json_array_replace_null", grip_json_array_replace_null_amxx},
 	{nullptr, nullptr}
 };
 

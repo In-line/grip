@@ -624,8 +624,7 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_string(JSON:array, index, const string[]);
+native bool:grip_json_array_replace_string(GripJSONValue:array, index, const string[]);
 
 /**
  * Replaces an element in the array with number.
@@ -637,8 +636,7 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_number(JSON:array, index, number);
+native bool:grip_json_array_replace_number(GripJSONValue:array, index, number);
 
 /**
  * Replaces an element in the array with real number.
@@ -650,8 +648,8 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_real(JSON:array, index, Float:number);
+native bool:grip_json_array_replace_float(GripJSONValue:array, index, Float:number);
+#define grip_json_array_replace_real(%1, %2, %2) grip_json_array_replace_float(%1, %2, %3)
 
 /**
  * Replaces an element in the array with boolean value.
@@ -663,8 +661,7 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_bool(JSON:array, index, bool:boolean);
+native bool:grip_json_array_replace_bool(GripJSONValue:array, index, bool:boolean);
 
 /**
  * Replaces an element in the array with null.
@@ -675,8 +672,7 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_null(JSON:array, index);
+native bool:grip_json_array_replace_null(GripJSONValue:array, index);
 
 /**
  * Appends a value in the array.
@@ -687,8 +683,7 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_value(JSON:array, const GripJSONValue:value);
+native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:value);
 
 /**
  * Appends string data in the array.
@@ -699,8 +694,7 @@ native bool:grip_json_array_replace_value(GripJSONValue:array, index, const Grip
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_string(JSON:array, const string[]);
+//native bool:grip_json_array_append_string(GripJSONValue:array, const string[]);
 
 /**
  * Appends a number in the array.
