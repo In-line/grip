@@ -612,8 +612,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_value(JSON:array, index, const GripJSONValue:value);
+//native bool:grip_json_array_replace_value(JSON:array, index, const GripJSONValue:value);
 
 /**
  * Replaces an element in the array with string data.

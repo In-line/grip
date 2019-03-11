@@ -37,10 +37,6 @@ use self::ini::Ini;
 #[macro_use]
 mod ext;
 
-#[macro_use]
-mod rc_json;
-use rc_json::RcValue;
-
 use serde_json::json;
 
 use crate::ffi::ext::*;
@@ -62,14 +58,14 @@ use crate::networking_queue::{
 use std::prelude::v1::Vec;
 
 use crate::cell_map::CellMap;
-use std::rc::Rc;
+use serde_json::Value;
 
 struct ModuleStorage {
     pub global_queue: Queue,
     pub current_response: Option<Result<Response>>,
     pub bodies_handles: CellMap<Vec<u8>>,
     pub cancellations_handles: CellMap<RequestCancellation>,
-    pub json_handles: CellMap<Rc<RcValue>>,
+    pub json_handles: CellMap<Value>,
     pub options_handles: CellMap<RequestOptions>,
     pub error_logger: extern "C" fn(*const c_void, *const c_char),
     pub callbacks_per_frame: usize,
@@ -521,9 +517,7 @@ pub unsafe extern "C" fn grip_json_parse_response_body(
             serde_json::from_slice(&response.body[..]).map_err(|e| ErrorKind::JSONError(e).into());
 
         match value {
-            Ok(value) => get_module_mut()
-                .json_handles
-                .insert_with_unique_id(Rc::new(value.into())),
+            Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
             Err(error) => {
                 use error_chain::ChainedError;
                 copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
@@ -555,9 +549,7 @@ pub unsafe extern "C" fn grip_json_parse_string(
     .map_err(|e| ErrorKind::JSONError(e).into());
 
     match value {
-        Ok(value) => get_module_mut()
-            .json_handles
-            .insert_with_unique_id(Rc::new(value.into())),
+        Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
             copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
@@ -588,9 +580,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
         .map_err(|e| ErrorKind::JSONError(e).into());
 
     match value {
-        Ok(value) => get_module_mut()
-            .json_handles
-            .insert_with_unique_id(Rc::new(value.into())),
+        Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
             copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
@@ -626,19 +616,19 @@ pub unsafe extern "C" fn grip_json_equals(amx: *const c_void, value1: Cell, valu
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> Cell {
-    match **try_and_log_ffi!(
+    match try_and_log_ffi!(
         amx,
         get_module()
             .json_handles
             .get_with_id(value)
             .chain_err(|| ffi_error(format!("value {} handle is invalid", value)))
     ) {
-        RcValue::Null => 1,
-        RcValue::String(_) => 2,
-        RcValue::Number(_) => 3,
-        RcValue::Object(_) => 4,
-        RcValue::Array(_) => 5,
-        RcValue::Bool(_) => 6,
+        Value::Null => 1,
+        Value::String(_) => 2,
+        Value::Number(_) => 3,
+        Value::Object(_) => 4,
+        Value::Array(_) => 5,
+        Value::Bool(_) => 6,
     }
 }
 
@@ -646,21 +636,21 @@ pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> 
 pub unsafe extern "C" fn grip_json_init_object() -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!({}))
+        .insert_with_unique_id(json!({}))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_array() -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!([]))
+        .insert_with_unique_id(json!([]))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut c_char) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!(try_and_log_ffi!(
+        .insert_with_unique_id(json!(try_and_log_ffi!(
             amx,
             CStr::from_ptr(string)
                 .to_str()
@@ -673,28 +663,28 @@ pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut 
 pub unsafe extern "C" fn grip_json_init_number(value: Cell) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!(value))
+        .insert_with_unique_id(json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_float(value: f64) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!(value))
+        .insert_with_unique_id(json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_bool(value: bool) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!(value))
+        .insert_with_unique_id(json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_null() -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(rc_json!(null))
+        .insert_with_unique_id(json!(null))
 }
 
 #[no_mangle]
@@ -705,7 +695,7 @@ pub unsafe extern "C" fn grip_json_get_string(
     buffer_size: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, value) {
-        RcValue::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
+        Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not string. {:?}", v))
@@ -716,7 +706,7 @@ pub unsafe extern "C" fn grip_json_get_string(
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_get_number(amx: *const c_void, value: Cell) -> Cell {
     match try_to_get_json_value!(amx, value) {
-        RcValue::Number(n) => try_and_log_ffi!(
+        Value::Number(n) => try_and_log_ffi!(
             amx,
             n.as_i64().chain_err(|| ffi_error("Number is not integer"))
         ) as Cell,
@@ -736,7 +726,7 @@ pub unsafe extern "C" fn grip_json_get_float(
     *ret = 0.0;
 
     match try_to_get_json_value!(amx, value) {
-        RcValue::Number(n) => {
+        Value::Number(n) => {
             *ret = try_and_log_ffi!(
                 amx,
                 n.as_f64()
@@ -754,7 +744,7 @@ pub unsafe extern "C" fn grip_json_get_float(
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_get_bool(amx: *const c_void, value: Cell) -> Cell {
     match try_to_get_json_value!(amx, value) {
-        RcValue::Bool(b) => *b as Cell,
+        Value::Bool(b) => *b as Cell,
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not number. {:?}", v))
@@ -769,7 +759,7 @@ pub unsafe extern "C" fn grip_json_array_get_value(
     index: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
-        RcValue::Array(vec) => get_module_mut()
+        Value::Array(vec) => get_module_mut()
             .json_handles
             .insert_with_unique_id(vec[try_as_usize!(amx, index)].clone()),
         v => {
@@ -787,8 +777,8 @@ pub unsafe extern "C" fn grip_json_array_get_string(
     buffer_size: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
-        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
-            RcValue::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
+        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
+            Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
             v => unconditionally_log_error!(
                 amx,
                 ffi_error(format!("JSON Handle is not string. {:?}", v))
@@ -807,8 +797,8 @@ pub unsafe extern "C" fn grip_json_array_get_number(
     index: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
-        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
-            RcValue::Number(n) => try_and_log_ffi!(
+        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
+            Value::Number(n) => try_and_log_ffi!(
                 amx,
                 n.as_i64().chain_err(|| ffi_error("Number is not integer"))
             ) as Cell,
@@ -831,8 +821,8 @@ pub unsafe extern "C" fn grip_json_array_get_float(
     ret: *mut f32,
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
-        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
-            RcValue::Number(n) => {
+        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
+            Value::Number(n) => {
                 *ret = try_and_log_ffi!(
                     amx,
                     n.as_f64()
@@ -859,8 +849,8 @@ pub unsafe extern "C" fn grip_json_array_get_bool(
     index: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
-        RcValue::Array(vec) => match &*vec[try_as_usize!(amx, index)] {
-            RcValue::Bool(b) => *b as Cell,
+        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
+            Value::Bool(b) => *b as Cell,
             v => unconditionally_log_error!(
                 amx,
                 ffi_error(format!("JSON Handle is not number. {:?}", v))
@@ -875,7 +865,25 @@ pub unsafe extern "C" fn grip_json_array_get_bool(
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_array_get_count(amx: *const c_void, array: Cell) -> Cell {
     match try_to_get_json_value!(amx, array) {
-        RcValue::Array(vec) => vec.len() as Cell,
+        Value::Array(vec) => vec.len() as Cell,
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_replace_value(
+    amx: *const c_void,
+    array: Cell,
+    index: Cell,
+    value: Cell,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec[try_as_usize!(amx, index)] = try_to_get_json_value!(amx, value).clone();
+            1
+        }
         v => {
             unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
         }

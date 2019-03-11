@@ -132,7 +132,21 @@ macro_rules! unconditionally_log_error {
 
 macro_rules! try_to_get_json_value {
     ($amx:expr, $value:expr) => {{
-        let value: &mut Rc<RcValue> = try_and_log_ffi!(
+        let value: &Value = try_and_log_ffi!(
+            $amx,
+            get_module_mut()
+                .json_handles
+                .get_with_id($value)
+                .chain_err(|| ffi_error(format!("Invalid JSON value handle {}", $value)))
+        );
+
+        value
+    }};
+}
+
+macro_rules! try_to_get_json_value_mut {
+    ($amx:expr, $value:expr) => {{
+        let value: &mut Value = try_and_log_ffi!(
             $amx,
             get_module_mut()
                 .json_handles
@@ -140,7 +154,6 @@ macro_rules! try_to_get_json_value {
                 .chain_err(|| ffi_error(format!("Invalid JSON value handle {}", $value)))
         );
 
-        let value: &RcValue = &**value;
         value
     }};
 }

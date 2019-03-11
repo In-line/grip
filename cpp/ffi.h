@@ -50,6 +50,8 @@ cell grip_json_array_get_string(const void *amx,
 
 cell grip_json_array_get_value(const void *amx, cell array, cell index);
 
+cell grip_json_array_replace_value(const void *amx, cell array, cell index, cell value);
+
 cell grip_json_equals(const void *amx, cell value1, cell value2);
 
 cell grip_json_get_bool(const void *amx, cell value);
