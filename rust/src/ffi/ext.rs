@@ -30,6 +30,7 @@
  */
 
 use crate::errors::*;
+use serde_json::Value;
 
 pub trait ResultFFIExt<T> {
     fn get_value(self) -> std::result::Result<T, String>;
@@ -158,12 +159,54 @@ macro_rules! try_to_get_json_value_mut {
     }};
 }
 
+pub trait ValueExt {
+    fn dot_index(&self, name: &str) -> Result<&Value>;
+    fn dot_index_mut(&mut self, name: &str) -> Result<&mut Value>;
+}
+
+impl ValueExt for Value {
+    fn dot_index(&self, name: &str) -> Result<&Value> {
+        let mut it = self;
+        for element in name.split('.') {
+            if name.is_empty() {
+                bail!("Double/Empty separator in `{}`", name);
+            }
+
+            it = &it[element];
+
+            if it.is_null() {
+                bail!("Forwarding names in dot notation failed for `{}` in name `{}`", element, name);
+            }
+        }
+
+        Ok(it)
+    }
+
+    fn dot_index_mut(&mut self, name: &str) -> Result<&mut Value> {
+        let mut it = self;
+        for element in name.split('.') {
+            if name.is_empty() {
+                bail!("Double/Empty separator in `{}`", name);
+            }
+
+            it = &mut it[element];
+
+            if it.is_null() {
+                bail!("Forwarding names in dot notation failed for `{}` in name `{}`", element, name);
+            }
+        }
+
+        Ok(it)
+    }
+}
+
 #[allow(unused_imports)]
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ffi::Cell;
     use libc::c_char;
+    use serde_json::json;
 
     unsafe fn copy_unsafe_string(size: isize) -> Cell {
         let mut s: [c_char; 2] = [0; 2];
@@ -185,4 +228,25 @@ mod tests {
             assert_eq!(copy_unsafe_string(2), 2);
         }
     }
+
+    #[test]
+    fn dot_index() {
+        let json = json!({
+            "a": {
+                "b": 123
+            }
+        });
+
+        assert_eq!(json.dot_index("a.b").unwrap().as_u64().unwrap(), 123);
+        assert!(json.dot_index("a.b.c").is_err());
+        assert!(json.dot_index("a..").is_err());
+        assert!(json.dot_index("a").unwrap().is_object());
+
+
+        assert_eq!(json.dot_index_mut("a.b").unwrap().as_u64().unwrap(), 123);
+        assert!(json.dot_index_mut("a.b.c").is_err());
+        assert!(json.dot_index_mut("a..").is_err());
+        assert!(json.dot_index_mut("a").unwrap().is_object());
+    }
+
 }
