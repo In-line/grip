@@ -519,7 +519,7 @@ pub unsafe extern "C" fn grip_json_parse_response_body(
         match value {
             Ok(value) => get_module_mut()
                 .json_handles
-                .insert_with_unique_id(Rc::new(value.into())),
+                .insert_with_unique_id(value),
             Err(error) => {
                 use error_chain::ChainedError;
                 copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
@@ -553,7 +553,7 @@ pub unsafe extern "C" fn grip_json_parse_string(
     match value {
         Ok(value) => get_module_mut()
             .json_handles
-            .insert_with_unique_id(Rc::new(value.into())),
+            .insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
             copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
@@ -586,7 +586,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
     match value {
         Ok(value) => get_module_mut()
             .json_handles
-            .insert_with_unique_id(Rc::new(value.into())),
+            .insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
             copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
@@ -629,12 +629,12 @@ pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> 
             .get_with_id(value)
             .chain_err(|| ffi_error(format!("value {} handle is invalid", value)))
     ) {
-        RcValue::Null => 1,
-        RcValue::String(_) => 2,
-        RcValue::Number(_) => 3,
-        RcValue::Object(_) => 4,
-        RcValue::Array(_) => 5,
-        RcValue::Bool(_) => 6,
+        Value::Null => 1,
+        Value::String(_) => 2,
+        Value::Number(_) => 3,
+        Value::Object(_) => 4,
+        Value::Array(_) => 5,
+        Value::Bool(_) => 6,
     }
 }
 

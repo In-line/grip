@@ -311,6 +311,11 @@ cell AMX_NATIVE_CALL grip_json_array_get_count_amxx(AMX *amx, cell *params) {
 	return grip_json_array_get_count(amx, params[arg_array]);
 }
 
+cell AMX_NATIVE_CALL grip_json_array_replace_value_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index, arg_value};
+
+	return grip_json_array_replace_value(amx, params[arg_array], params[arg_index], params[arg_value]);
+}
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -347,7 +352,8 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_array_get_number", grip_json_array_get_number_amxx},
 	{"grip_json_array_get_float", grip_json_array_get_float_amxx},
 	{"grip_json_array_get_bool", grip_json_array_get_bool_amxx},
-	{"grip_json_array_get_count", grip_json_array_get_count_amxx}
+	{"grip_json_array_get_count", grip_json_array_get_count_amxx},
+	{"grip_json_array_replace_value", grip_json_array_replace_value_amxx},
 	{nullptr, nullptr}
 };
 
