@@ -348,6 +348,56 @@ cell AMX_NATIVE_CALL grip_json_array_replace_null_amxx(AMX *amx, cell *params) {
 	return grip_json_array_replace_null(amx, params[arg_array], params[arg_index]);
 }
 
+cell AMX_NATIVE_CALL grip_json_array_append_value_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_value};
+
+	return grip_json_array_append_value(amx, params[arg_array], params[arg_value]);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_append_string_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_string};
+
+	const char* string = MF_GetAmxString(amx, params[arg_string], 3, &dummy);
+	return grip_json_array_append_string(amx, params[arg_array], string);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_append_number_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_value};
+
+	return grip_json_array_append_number(amx, params[arg_array], params[arg_value]);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_append_float_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_value};
+
+	return grip_json_array_append_float(amx, params[arg_array], amx_ctof(params[arg_value]));
+}
+
+cell AMX_NATIVE_CALL grip_json_array_append_bool_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_value};
+
+	return grip_json_array_append_bool(amx, params[arg_array], params[arg_value] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_append_null_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array};
+
+	return grip_json_array_append_null(amx, params[arg_array]);
+}
+
+
+cell AMX_NATIVE_CALL grip_json_array_remove_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array, arg_index};
+
+	return grip_json_array_remove(amx, params[arg_array], params[arg_index]);
+}
+
+cell AMX_NATIVE_CALL grip_json_array_clear_amxx(AMX *amx, cell *params) {
+	enum {arg_count, arg_array};
+
+	return grip_json_array_clear(amx, params[arg_array]);
+}
+
 
 
 AMX_NATIVE_INFO grip_exports[] = {
@@ -392,6 +442,14 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_array_replace_float", grip_json_array_replace_float_amxx},
 	{"grip_json_array_replace_bool", grip_json_array_replace_bool_amxx},
 	{"grip_json_array_replace_null", grip_json_array_replace_null_amxx},
+	{"grip_json_array_append_value", grip_json_array_append_value_amxx},
+	{"grip_json_array_append_string", grip_json_array_append_string_amxx},
+	{"grip_json_array_append_number", grip_json_array_append_number_amxx},
+	{"grip_json_array_append_float", grip_json_array_append_float_amxx},
+	{"grip_json_array_append_bool", grip_json_array_append_bool_amxx},
+	{"grip_json_array_append_null", grip_json_array_append_null_amxx},
+	{"grip_json_array_remove", grip_json_array_remove_amxx},
+	{"grip_json_array_clear", grip_json_array_clear_amxx},
 	{nullptr, nullptr}
 };
 

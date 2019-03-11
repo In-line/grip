@@ -683,7 +683,7 @@ native bool:grip_json_array_replace_null(GripJSONValue:array, index);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:value);
+native bool:grip_json_array_append_value(GripJSONValue:array, const GripJSONValue:value);
 
 /**
  * Appends string data in the array.
@@ -694,7 +694,7 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//native bool:grip_json_array_append_string(GripJSONValue:array, const string[]);
+native bool:grip_json_array_append_string(GripJSONValue:array, const string[]);
 
 /**
  * Appends a number in the array.
@@ -705,8 +705,7 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_number(JSON:array, number);
+native bool:grip_json_array_append_number(GripJSONValue:array, number);
 
 /**
  * Appends a real number in the array.
@@ -717,8 +716,8 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_real(JSON:array, Float:number);
+native bool:grip_json_array_append_float(GripJSONValue:array, Float:number);
+#define grip_json_array_append_real(%1, %2, %3) grip_json_array_append_float(%1, %2, %3)
 
 /**
  * Appends a boolean value in the array.
@@ -729,8 +728,7 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_bool(JSON:array, bool:boolean);
+native bool:grip_json_array_append_bool(GripJSONValue:array, bool:boolean);
 
 /**
  * Appends a null in the array.
@@ -740,8 +738,7 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_null(JSON:array);
+native bool:grip_json_array_append_null(GripJSONValue:array);
 
 /**
  * Removes an element from the array.
@@ -754,8 +751,7 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native bool:json_array_remove(JSON:array, index);
+native bool:grip_json_array_remove(GripJSONValue:array, index);
 
 /**
  * Removes all elements from the array.
@@ -765,8 +761,7 @@ native bool:json_array_append_value(GripJSONValue:array, const GripJSONValue:val
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_clear(JSON:array);
+native bool:grip_json_array_clear(GripJSONValue:array);
 
 /**
  * Gets a value from the object.

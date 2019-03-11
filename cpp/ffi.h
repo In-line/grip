@@ -34,6 +34,20 @@ void grip_init(void (*error_logger)(const void*, const char*), const char *confi
 
 cell grip_is_request_active(cell request_id);
 
+cell grip_json_array_append_bool(const void *amx, cell array, bool value);
+
+cell grip_json_array_append_float(const void *amx, cell array, float value);
+
+cell grip_json_array_append_null(const void *amx, cell array);
+
+cell grip_json_array_append_number(const void *amx, cell array, cell value);
+
+cell grip_json_array_append_string(const void *amx, cell array, const char *string);
+
+cell grip_json_array_append_value(const void *amx, cell array, cell value);
+
+cell grip_json_array_clear(const void *amx, cell array);
+
 cell grip_json_array_get_bool(const void *amx, cell array, cell index);
 
 cell grip_json_array_get_count(const void *amx, cell array);
@@ -49,6 +63,8 @@ cell grip_json_array_get_string(const void *amx,
                                 cell buffer_size);
 
 cell grip_json_array_get_value(const void *amx, cell array, cell index);
+
+cell grip_json_array_remove(const void *amx, cell array, cell index);
 
 cell grip_json_array_replace_bool(const void *amx, cell array, cell index, bool value);
 

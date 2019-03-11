@@ -895,7 +895,7 @@ pub unsafe extern "C" fn grip_json_array_replace_string(
     amx: *const c_void,
     array: Cell,
     index: Cell,
-    string: *const c_char
+    string: *const c_char,
 ) -> Cell {
     match try_to_get_json_value_mut!(amx, array) {
         Value::Array(vec) => {
@@ -968,16 +968,162 @@ pub unsafe extern "C" fn grip_json_array_replace_bool(
     }
 }
 
-
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_array_replace_null(
     amx: *const c_void,
     array: Cell,
-    index: Cell
+    index: Cell,
 ) -> Cell {
     match try_to_get_json_value_mut!(amx, array) {
         Value::Array(vec) => {
             vec[try_as_usize!(amx, index)] = json!(null);
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_append_value(
+    amx: *const c_void,
+    array: Cell,
+    value: Cell,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.push(try_to_get_json_value!(amx, value).clone());
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_append_string(
+    amx: *const c_void,
+    array: Cell,
+    string: *const c_char,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.push(json!(try_and_log_ffi!(
+                amx,
+                CStr::from_ptr(string)
+                    .to_str()
+                    .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+            )
+            .to_owned()));
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_append_number(
+    amx: *const c_void,
+    array: Cell,
+    value: Cell,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.push(json!(value));
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_append_float(
+    amx: *const c_void,
+    array: Cell,
+    value: f32,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.push(json!(value));
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_append_bool(
+    amx: *const c_void,
+    array: Cell,
+    value: bool,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.push(json!(value));
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_append_null(amx: *const c_void, array: Cell) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.push(json!(null));
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_remove(
+    amx: *const c_void,
+    array: Cell,
+    index: Cell,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.remove(try_and_log_ffi!(
+                amx,
+                if index >= 0 {
+                    Ok(index as usize)
+                } else {
+                    Err(ffi_error(format!(
+                        "Index/Size {} should be greater or equal to zero.",
+                        index
+                    )))
+                }
+            ));
+            1
+        }
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_array_clear(
+    amx: *const c_void,
+    array: Cell,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, array) {
+        Value::Array(vec) => {
+            vec.clear();
             1
         }
         v => {
