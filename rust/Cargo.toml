@@ -23,7 +23,7 @@ reqwest = { version = "0.9.10", features = ["trust-dns"] }
 futures = "0.1.25"
 derive_more = "0.14.0"
 libc = "0.2.50"
-tokio = "0.1.14"
+tokio = "0.1.16"
 derive_builder = "0.7.1"
 error-chain = { version = "0.12.0", default-features = false }
 log = "0.4.6"
