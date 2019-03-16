@@ -168,14 +168,19 @@ impl ValueExt for Value {
     fn dot_index(&self, name: &str) -> Result<&Value> {
         let mut it = self;
         for element in name.split('.') {
-            if name.is_empty() {
+            if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
             }
 
-            it = &it[element];
-
-            if it.is_null() {
-                bail!("Forwarding names in dot notation failed for `{}` in name `{}`", element, name);
+            match it {
+                Value::Object(m) => {
+                    if let Some(val) = m.get(element) {
+                        it = &val;
+                    } else {
+                        bail!("Can't index json using `{}`, because json doesn't contain element `{}`.", name, element)
+                    }
+                },
+                _ => bail!("Can't index json using `{}`, because at element `{}` json stops to be object.", name, element),
             }
         }
 
@@ -185,14 +190,19 @@ impl ValueExt for Value {
     fn dot_index_mut(&mut self, name: &str) -> Result<&mut Value> {
         let mut it = self;
         for element in name.split('.') {
-            if name.is_empty() {
+            if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
             }
 
-            it = &mut it[element];
-
-            if it.is_null() {
-                bail!("Forwarding names in dot notation failed for `{}` in name `{}`", element, name);
+            match it {
+                Value::Object(m) => {
+                    if let Some(val) = m.get_mut(element) {
+                        it = val;
+                    } else {
+                        bail!("Can't index json using `{}`, because json doesn't contain element `{}`.", name, element)
+                    }
+                },
+                _ => bail!("Can't index json using `{}`, because at element `{}` json stops to be object.", name, element),
             }
         }
 
@@ -207,6 +217,7 @@ mod tests {
     use crate::ffi::Cell;
     use libc::c_char;
     use serde_json::json;
+    use std::panic::catch_unwind;
 
     unsafe fn copy_unsafe_string(size: isize) -> Cell {
         let mut s: [c_char; 2] = [0; 2];
@@ -231,20 +242,21 @@ mod tests {
 
     #[test]
     fn dot_index() {
-        let json = json!({
+        let mut json = json!({
             "a": {
                 "b": 123
             }
         });
 
         assert_eq!(json.dot_index("a.b").unwrap().as_u64().unwrap(), 123);
+
         assert!(json.dot_index("a.b.c").is_err());
         assert!(json.dot_index("a..").is_err());
         assert!(json.dot_index("a").unwrap().is_object());
 
 
-        assert_eq!(json.dot_index_mut("a.b").unwrap().as_u64().unwrap(), 123);
         assert!(json.dot_index_mut("a.b.c").is_err());
+        assert_eq!(json.dot_index_mut("a.b").unwrap().as_u64().unwrap(), 123);
         assert!(json.dot_index_mut("a..").is_err());
         assert!(json.dot_index_mut("a").unwrap().is_object());
     }
