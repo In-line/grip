@@ -104,6 +104,15 @@ cell grip_json_init_object();
 
 cell grip_json_init_string(const void *amx, char *string);
 
+cell grip_json_object_get_string(const void *amx,
+                                 cell object,
+                                 const char *name,
+                                 char *buffer,
+                                 cell maxlen,
+                                 bool dot_notation);
+
+cell grip_json_object_get_value(const void *amx, cell object, const char *name, bool dot_notation);
+
 cell grip_json_parse_file(const void *amx, char *file, char *error_buffer, cell error_buffer_size);
 
 cell grip_json_parse_response_body(const void *amx, char *error_buffer, cell error_buffer_size);

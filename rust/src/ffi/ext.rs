@@ -31,6 +31,8 @@
 
 use crate::errors::*;
 use serde_json::Value;
+use std::ffi::CStr;
+use std::os::raw::c_char;
 
 pub trait ResultFFIExt<T> {
     fn get_value(self) -> std::result::Result<T, String>;
@@ -73,6 +75,12 @@ pub fn ptr_to_option<T>(ptr: *const T) -> Option<*const T> {
     } else {
         Some(ptr)
     }
+}
+
+pub unsafe fn str_from_ptr<'a>(value: *const c_char) -> Result<&'a str> {
+    CStr::from_ptr(value)
+        .to_str()
+        .chain_err(|| "Can't create string from raw pointer.")
 }
 
 macro_rules! try_as_usize {
@@ -159,54 +167,102 @@ macro_rules! try_to_get_json_value_mut {
     }};
 }
 
-pub trait ValueExt {
-    fn dot_index(&self, name: &str) -> Result<&Value>;
-    fn dot_index_mut(&mut self, name: &str) -> Result<&mut Value>;
+macro_rules! try_to_get_json_object_value {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_value!($amx, $object)
+                .index_selective_safe(try_and_log_ffi!($amx, str_from_ptr($name)), $dot_notation)
+        )
+    }};
 }
 
-impl ValueExt for Value {
-    fn dot_index(&self, name: &str) -> Result<&Value> {
+pub trait ValueExt<'a>: std::ops::Index<&'a str, Output = Value> {
+    fn dot_index_safe(&self, name: &str) -> Result<&Value>;
+    fn dot_index_safe_mut(&mut self, name: &str) -> Result<&mut Value>;
+
+    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<&Value>;
+    fn index_selective_safe_mut(&mut self, name: &'a str, dot_notation: bool)
+        -> Result<&mut Value>;
+}
+
+impl<'a> ValueExt<'a> for Value {
+    fn dot_index_safe(&self, name: &str) -> Result<&Value> {
         let mut it = self;
         for element in name.split('.') {
             if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
             }
 
-            match it {
-                Value::Object(m) => {
-                    if let Some(val) = m.get(element) {
-                        it = &val;
-                    } else {
-                        bail!("Can't index json using `{}`, because json doesn't contain element `{}`.", name, element)
-                    }
-                },
-                _ => bail!("Can't index json using `{}`, because at element `{}` json stops to be object.", name, element),
-            }
+            // Same as bounds checked index.
+            it = it.index_selective_safe(element, false)?;
         }
 
         Ok(it)
     }
 
-    fn dot_index_mut(&mut self, name: &str) -> Result<&mut Value> {
+    fn dot_index_safe_mut(&mut self, name: &str) -> Result<&mut Value> {
         let mut it = self;
         for element in name.split('.') {
             if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
             }
 
-            match it {
-                Value::Object(m) => {
-                    if let Some(val) = m.get_mut(element) {
-                        it = val;
-                    } else {
-                        bail!("Can't index json using `{}`, because json doesn't contain element `{}`.", name, element)
-                    }
-                },
-                _ => bail!("Can't index json using `{}`, because at element `{}` json stops to be object.", name, element),
-            }
+            // Same as bounds checked index.
+            it = it.index_selective_safe_mut(element, false)?;
         }
 
         Ok(it)
+    }
+
+    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<&Value> {
+        if dot_notation {
+            self.dot_index_safe(name)
+        } else {
+            match self {
+                Value::Object(m) => {
+                    if let Some(val) = m.get(name) {
+                        Ok(val)
+                    } else {
+                        bail!(
+                            "Can't index json using `{}`, because json doesn't contain it",
+                            name
+                        )
+                    }
+                }
+                _ => bail!(
+                    "Can't index json using `{}` json stops is not object.",
+                    name
+                ),
+            }
+        }
+    }
+
+    fn index_selective_safe_mut(
+        &mut self,
+        name: &'a str,
+        dot_notation: bool,
+    ) -> Result<&mut Value> {
+        if dot_notation {
+            self.dot_index_safe_mut(name)
+        } else {
+            match self {
+                Value::Object(m) => {
+                    if let Some(val) = m.get_mut(name) {
+                        Ok(val)
+                    } else {
+                        bail!(
+                            "Can't index json using `{}`, because json doesn't contain it",
+                            name
+                        )
+                    }
+                }
+                _ => bail!(
+                    "Can't index json using `{}` json stops is not object.",
+                    name
+                ),
+            }
+        }
     }
 }
 
@@ -217,7 +273,6 @@ mod tests {
     use crate::ffi::Cell;
     use libc::c_char;
     use serde_json::json;
-    use std::panic::catch_unwind;
 
     unsafe fn copy_unsafe_string(size: isize) -> Cell {
         let mut s: [c_char; 2] = [0; 2];
@@ -241,24 +296,59 @@ mod tests {
     }
 
     #[test]
-    fn dot_index() {
+    fn dot_index_safe() {
         let mut json = json!({
             "a": {
                 "b": 123
             }
         });
 
-        assert_eq!(json.dot_index("a.b").unwrap().as_u64().unwrap(), 123);
+        assert_eq!(json.dot_index_safe("a.b").unwrap().as_u64().unwrap(), 123);
+        assert!(json.dot_index_safe("a.b.c").is_err());
+        assert!(json.dot_index_safe("a..").is_err());
+        assert!(json.dot_index_safe("a").unwrap().is_object());
 
-        assert!(json.dot_index("a.b.c").is_err());
-        assert!(json.dot_index("a..").is_err());
-        assert!(json.dot_index("a").unwrap().is_object());
+        assert!(json.dot_index_safe_mut("a.b.c").is_err());
+        assert_eq!(
+            json.dot_index_safe_mut("a.b").unwrap().as_u64().unwrap(),
+            123
+        );
+        assert!(json.dot_index_safe_mut("a..").is_err());
+        assert!(json.dot_index_safe_mut("a").unwrap().is_object());
 
+        assert_eq!(
+            json.index_selective_safe("a.b", true)
+                .unwrap()
+                .as_u64()
+                .unwrap(),
+            123
+        );
+        assert!(json.index_selective_safe("a.b.c", true).is_err());
+        assert!(json.index_selective_safe("a..", true).is_err());
+        assert!(json.index_selective_safe("a", true).unwrap().is_object());
 
-        assert!(json.dot_index_mut("a.b.c").is_err());
-        assert_eq!(json.dot_index_mut("a.b").unwrap().as_u64().unwrap(), 123);
-        assert!(json.dot_index_mut("a..").is_err());
-        assert!(json.dot_index_mut("a").unwrap().is_object());
+        assert_eq!(
+            json.index_selective_safe_mut("a.b", true)
+                .unwrap()
+                .as_u64()
+                .unwrap(),
+            123
+        );
+        assert!(json.index_selective_safe_mut("a.b.c", true).is_err());
+        assert!(json.index_selective_safe_mut("a..", true).is_err());
+        assert!(json
+            .index_selective_safe_mut("a", true)
+            .unwrap()
+            .is_object());
+
+        assert!(json.index_selective_safe("a", false).unwrap().is_object());
+        assert!(json.index_selective_safe("a.b.c", false).is_err());
+
+        assert!(json
+            .index_selective_safe_mut("a", false)
+            .unwrap()
+            .is_object());
+        assert!(json.index_selective_safe_mut("a.b.c", false).is_err());
     }
 
 }

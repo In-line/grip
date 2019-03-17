@@ -398,6 +398,13 @@ cell AMX_NATIVE_CALL grip_json_array_clear_amxx(AMX *amx, cell *params) {
 	return grip_json_array_clear(amx, params[arg_array]);
 }
 
+cell AMX_NATIVE_CALL grip_json_object_get_value_amxx(AMX *amx, cell *params) {
+    enum {arg_count, arg_object, arg_name, arg_dot_notation};
+
+    const char* name = MF_GetAmxString(amx, params[arg_name], 3, &dummy);
+
+    return grip_json_object_get_value(amx, params[arg_object], name, params[arg_dot_notation] != 0);
+}
 
 
 AMX_NATIVE_INFO grip_exports[] = {
@@ -450,6 +457,7 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_array_append_null", grip_json_array_append_null_amxx},
 	{"grip_json_array_remove", grip_json_array_remove_amxx},
 	{"grip_json_array_clear", grip_json_array_clear_amxx},
+    {"grip_json_object_get_value", grip_json_object_get_value_amxx},
 	{nullptr, nullptr}
 };
 

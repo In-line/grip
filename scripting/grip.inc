@@ -777,8 +777,7 @@ native bool:grip_json_array_clear(GripJSONValue:array);
  * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native GripJSONValue:grip_json_object_get_value(const GripJSONValue:object, const name[], bool:dot_not = false);
+native GripJSONValue:grip_json_object_get_value(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets string data from the object.
@@ -795,8 +794,7 @@ native bool:grip_json_array_clear(GripJSONValue:array);
  * @return                  The number of cells written to the buffer
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native json_object_get_string(const GripJSONValue:object, const name[], buffer[], maxlen, bool:dot_not = false);
+native grip_json_object_get_string(const GripJSONValue:object, const name[], buffer[], maxlen, bool:dot_not = false);
 
 /**
  * Gets a number from the object.

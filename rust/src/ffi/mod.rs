@@ -79,7 +79,7 @@ pub unsafe extern "C" fn grip_init(
     error_logger: extern "C" fn(*const c_void, *const c_char),
     config_file_path: *const c_char,
 ) {
-    let ini = Ini::load_from_file(CStr::from_ptr(config_file_path).to_str().unwrap())
+    let ini = Ini::load_from_file(str_from_ptr(config_file_path).unwrap())
         .map_err(|e| {
             println!(
                 "Error: Can't parse/open grip config. Examine carefully ini parser log message\n{}",
@@ -468,8 +468,7 @@ pub unsafe extern "C" fn grip_options_add_header(
 
     let header_value = try_and_log_ffi!(
         amx,
-        CStr::from_ptr(header_value)
-            .to_str()
+        str_from_ptr(header_value)
             .chain_err(|| ffi_error("Invalid header value. Can't create UTF-8 string"))
     );
 
@@ -1117,10 +1116,7 @@ pub unsafe extern "C" fn grip_json_array_remove(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn grip_json_array_clear(
-    amx: *const c_void,
-    array: Cell,
-) -> Cell {
+pub unsafe extern "C" fn grip_json_array_clear(amx: *const c_void, array: Cell) -> Cell {
     match try_to_get_json_value_mut!(amx, array) {
         Value::Array(vec) => {
             vec.clear();
@@ -1129,5 +1125,34 @@ pub unsafe extern "C" fn grip_json_array_clear(
         v => {
             unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
         }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_value(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    dot_notation: bool,
+) -> Cell {
+    get_module_mut().json_handles.insert_with_unique_id(
+        try_to_get_json_object_value!(amx, object, name, dot_notation).clone(),
+    )
+}
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_string(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    buffer: *mut c_char,
+    maxlen: Cell,
+    dot_notation: bool,
+) -> Cell {
+    match try_to_get_json_object_value!(amx, object, name, dot_notation) {
+        Value::String(s) => copy_unsafe_string!(amx, buffer, s, maxlen),
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not string. {:?}", v))
+        ),
     }
 }
