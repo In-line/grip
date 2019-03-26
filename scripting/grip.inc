@@ -809,8 +809,7 @@ native grip_json_object_get_string(const GripJSONValue:object, const name[], buf
  * @return                  Number
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native json_object_get_number(const GripJSONValue:object, const name[], bool:dot_not = false);
+native grip_json_object_get_number(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets a real number from the object.
@@ -825,8 +824,8 @@ native grip_json_object_get_string(const GripJSONValue:object, const name[], buf
  * @return                  Real number
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native Float:json_object_get_real(const GripJSONValue:object, const name[], bool:dot_not = false);
+native Float:grip_json_object_get_float(const GripJSONValue:object, const name[], bool:dot_not = false);
+#define grip_json_object_get_real(%1, %2, %3) grip_json_object_get_float(%1, %2, %3)
 
 /**
  * Gets a boolean value from the object.
@@ -841,8 +840,7 @@ native grip_json_object_get_string(const GripJSONValue:object, const name[], buf
  * @return                  Boolean value
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native bool:json_object_get_bool(const GripJSONValue:object, const name[], bool:dot_not = false);
+native bool:grip_json_object_get_bool(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets count of the keys in the object.

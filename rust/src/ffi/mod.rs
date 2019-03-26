@@ -746,7 +746,7 @@ pub unsafe extern "C" fn grip_json_get_bool(amx: *const c_void, value: Cell) -> 
         Value::Bool(b) => *b as Cell,
         v => unconditionally_log_error!(
             amx,
-            ffi_error(format!("JSON Handle is not number. {:?}", v))
+            ffi_error(format!("JSON Handle is not bool. {:?}", v))
         ),
     }
 }
@@ -1153,6 +1153,65 @@ pub unsafe extern "C" fn grip_json_object_get_string(
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not string. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_number(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    dot_notation: bool,
+) -> Cell {
+    match try_to_get_json_object_value!(amx, object, name, dot_notation) {
+        Value::Number(n) => try_and_log_ffi!(
+            amx,
+            n.as_i64().chain_err(|| ffi_error("Number is not integer"))
+        ) as Cell,
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not number. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_float(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    dot_notation: bool,
+    ret: *mut f32,
+) -> Cell {
+    match try_to_get_json_object_value!(amx, object, name, dot_notation) {
+        Value::Number(n) => {
+            *ret = try_and_log_ffi!(
+                amx,
+                n.as_f64().chain_err(|| ffi_error("Number is not float"))
+            ) as f32;
+
+            1
+        }
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not number. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_bool(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    dot_notation: bool,
+) -> Cell {
+    match try_to_get_json_object_value!(amx, object, name, dot_notation) {
+        Value::Bool(b) => *b as Cell,
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not bool. {:?}", v))
         ),
     }
 }

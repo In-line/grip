@@ -110,7 +110,7 @@ cell AMX_NATIVE_CALL grip_is_request_active_amxx(AMX *, cell *params) {
 cell AMX_NATIVE_CALL grip_get_error_description_amxx(AMX *amx, cell *params) {
   enum { arg_count, arg_buffer, arg_buffer_size};
 
-  char buffer[params[arg_buffer_size]];
+  ZERO_INIT_STACK_BUFFER(buffer, params[arg_buffer_size]);
   cell ret = grip_get_error_description(amx, &buffer[0], params[arg_buffer_size]);
 
   MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
@@ -121,8 +121,7 @@ cell AMX_NATIVE_CALL grip_get_error_description_amxx(AMX *amx, cell *params) {
 cell AMX_NATIVE_CALL grip_get_response_body_string_amxx(AMX *amx, cell *params) {
   enum { arg_count, arg_buffer, arg_buffer_size};
 
-  char buffer[params[arg_buffer_size]];
-
+  ZERO_INIT_STACK_BUFFER(buffer, params[arg_buffer_size]);
   cell ret = grip_get_response_body_string(amx, &buffer[0], params[arg_buffer_size]);
 
   MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_buffer_size]);
@@ -406,6 +405,48 @@ cell AMX_NATIVE_CALL grip_json_object_get_value_amxx(AMX *amx, cell *params) {
     return grip_json_object_get_value(amx, params[arg_object], name, params[arg_dot_notation] != 0);
 }
 
+cell AMX_NATIVE_CALL grip_json_object_get_string_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_buffer, arg_maxlen, arg_dotnot };
+
+    ZERO_INIT_STACK_BUFFER(buffer, params[arg_maxlen]);
+
+    cell ret = grip_json_object_get_string(amx, params[arg_object],
+                                       MF_GetAmxString(amx, params[arg_name], 1, &dummy),
+                                       &buffer[0], params[arg_maxlen], params[arg_dotnot] != 0);
+
+    MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_maxlen]);
+
+    return ret;
+}
+
+cell AMX_NATIVE_CALL grip_json_object_get_number_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_object, arg_name, arg_dotnot };
+
+	return grip_json_object_get_number(amx, params[arg_object],
+			MF_GetAmxString(amx, params[arg_name], 1, &dummy),
+			params[arg_dotnot] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_get_float_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_object, arg_name, arg_dotnot };
+
+	float ret;
+
+	grip_json_object_get_float(amx, params[arg_object],
+									   MF_GetAmxString(amx, params[arg_name], 1, &dummy),
+									   params[arg_dotnot] != 0,
+									   &ret);
+
+	return amx_ftoc(ret);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_get_bool_amxx(AMX *amx, cell *params) {
+	enum { arg_count, arg_object, arg_name, arg_dotnot };
+
+	return grip_json_object_get_bool(amx, params[arg_object],
+									   MF_GetAmxString(amx, params[arg_name], 1, &dummy),
+									   params[arg_dotnot] != 0);
+}
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -458,6 +499,10 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_array_remove", grip_json_array_remove_amxx},
 	{"grip_json_array_clear", grip_json_array_clear_amxx},
     {"grip_json_object_get_value", grip_json_object_get_value_amxx},
+    {"grip_json_object_get_string", grip_json_object_get_string_amxx},
+	{"grip_json_object_get_number", grip_json_object_get_number_amxx},
+	{"grip_json_object_get_float", grip_json_object_get_float_amxx},
+	{"grip_json_object_get_bool", grip_json_object_get_bool_amxx},
 	{nullptr, nullptr}
 };
 
