@@ -850,8 +850,7 @@ native bool:grip_json_object_get_bool(const GripJSONValue:object, const name[], 
  * @return                  Keys count
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native json_object_get_count(const GripJSONValue:object);
+native grip_json_object_get_count(const GripJSONValue:object);
 
 /**
  * Gets name of the object's key.
@@ -864,8 +863,7 @@ native bool:grip_json_object_get_bool(const GripJSONValue:object, const name[], 
  * @return                  The number of cells written to the buffer
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native json_object_get_name(const GripJSONValue:object, index, buffer[], maxlen);
+native grip_json_object_get_name(const GripJSONValue:object, index, buffer[], maxlen);
 
 /**
  * Gets a value at the specified position from the object.
