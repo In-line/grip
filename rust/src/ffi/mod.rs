@@ -900,8 +900,7 @@ pub unsafe extern "C" fn grip_json_array_replace_string(
         Value::Array(vec) => {
             vec[try_as_usize!(amx, index)] = json!(try_and_log_ffi!(
                 amx,
-                CStr::from_ptr(string)
-                    .to_str()
+                str_from_ptr(string)
                     .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
             )
             .to_owned());
@@ -913,29 +912,6 @@ pub unsafe extern "C" fn grip_json_array_replace_string(
     }
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn grip_json_array_replace_string(
-    amx: *const c_void,
-    array: Cell,
-    index: Cell,
-    string: *const c_char,
-) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = json!(try_and_log_ffi!(
-                amx,
-                CStr::from_ptr(string)
-                    .to_str()
-                    .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
-            )
-            .to_owned());
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_array_replace_number(
@@ -1245,7 +1221,7 @@ pub unsafe extern "C" fn grip_json_object_get_count(
     amx: *const c_void,
     object: Cell,
 ) -> Cell {
-    match try_to_get_json_value!($amx, $object) {
+    match try_to_get_json_value!(amx, chobject) {
         Value::Object(m) => m.len() as Cell,
         v => unconditionally_log_error!(
             amx,
@@ -1263,7 +1239,7 @@ pub unsafe extern "C" fn grip_json_object_get_name(
     buffer: *mut c_char,
     maxlen: Cell,
 ) -> Cell {
-    match try_to_get_json_value!($amx, $object) {
+    match try_to_get_json_value!(amx, object) {
         Value::Object(m) => m.len() as Cell,
         v => unconditionally_log_error!(
             amx,

@@ -106,11 +106,15 @@ cell grip_json_init_string(const void *amx, char *string);
 
 cell grip_json_object_get_bool(const void *amx, cell object, const char *name, bool dot_notation);
 
+cell grip_json_object_get_count(const void *amx, cell object);
+
 cell grip_json_object_get_float(const void *amx,
                                 cell object,
                                 const char *name,
                                 bool dot_notation,
                                 float *ret);
+
+cell grip_json_object_get_name(const void *amx, cell object, cell index, char *buffer, cell maxlen);
 
 cell grip_json_object_get_number(const void *amx, cell object, const char *name, bool dot_notation);
 

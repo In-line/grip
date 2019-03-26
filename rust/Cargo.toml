@@ -14,7 +14,7 @@ panic = "abort"
 
 [features]
 vendored = ["reqwest/default-tls-vendored"]
-default = ["vendored"] # TODO: Conditional dynamic linking.
+#default = ["vendored"] # TODO: Conditional dynamic linking.
 
 [dependencies]
 bytes = "0.4.12"
