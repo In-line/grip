@@ -612,8 +612,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_value(JSON:array, index, const GripJSONValue:value);
+native bool:grip_json_array_replace_value(GripJSONValue:array, index, const GripJSONValue:value);
 
 /**
  * Replaces an element in the array with string data.
@@ -625,8 +624,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_string(JSON:array, index, const string[]);
+native bool:grip_json_array_replace_string(GripJSONValue:array, index, const string[]);
 
 /**
  * Replaces an element in the array with number.
@@ -638,8 +636,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_number(JSON:array, index, number);
+native bool:grip_json_array_replace_number(GripJSONValue:array, index, number);
 
 /**
  * Replaces an element in the array with real number.
@@ -651,8 +648,8 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_real(JSON:array, index, Float:number);
+native bool:grip_json_array_replace_float(GripJSONValue:array, index, Float:number);
+#define grip_json_array_replace_real(%1, %2, %2) grip_json_array_replace_float(%1, %2, %3)
 
 /**
  * Replaces an element in the array with boolean value.
@@ -664,8 +661,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_bool(JSON:array, index, bool:boolean);
+native bool:grip_json_array_replace_bool(GripJSONValue:array, index, bool:boolean);
 
 /**
  * Replaces an element in the array with null.
@@ -676,8 +672,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_replace_null(JSON:array, index);
+native bool:grip_json_array_replace_null(GripJSONValue:array, index);
 
 /**
  * Appends a value in the array.
@@ -688,8 +683,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_value(JSON:array, const GripJSONValue:value);
+native bool:grip_json_array_append_value(GripJSONValue:array, const GripJSONValue:value);
 
 /**
  * Appends string data in the array.
@@ -700,8 +694,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_string(JSON:array, const string[]);
+native bool:grip_json_array_append_string(GripJSONValue:array, const string[]);
 
 /**
  * Appends a number in the array.
@@ -712,8 +705,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_number(JSON:array, number);
+native bool:grip_json_array_append_number(GripJSONValue:array, number);
 
 /**
  * Appends a real number in the array.
@@ -724,8 +716,8 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_real(JSON:array, Float:number);
+native bool:grip_json_array_append_float(GripJSONValue:array, Float:number);
+#define grip_json_array_append_real(%1, %2, %3) grip_json_array_append_float(%1, %2, %3)
 
 /**
  * Appends a boolean value in the array.
@@ -736,8 +728,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_bool(JSON:array, bool:boolean);
+native bool:grip_json_array_append_bool(GripJSONValue:array, bool:boolean);
 
 /**
  * Appends a null in the array.
@@ -747,8 +738,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_append_null(JSON:array);
+native bool:grip_json_array_append_null(GripJSONValue:array);
 
 /**
  * Removes an element from the array.
@@ -761,8 +751,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Middle priority
-//native bool:json_array_remove(JSON:array, index);
+native bool:grip_json_array_remove(GripJSONValue:array, index);
 
 /**
  * Removes all elements from the array.
@@ -772,8 +761,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid array
  */
-//TODO: Low priority
-//native bool:json_array_clear(JSON:array);
+native bool:grip_json_array_clear(GripJSONValue:array);
 
 /**
  * Gets a value from the object.
@@ -789,8 +777,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native GripJSONValue:grip_json_object_get_value(const GripJSONValue:object, const name[], bool:dot_not = false);
+native GripJSONValue:grip_json_object_get_value(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets string data from the object.
@@ -807,8 +794,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  The number of cells written to the buffer
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native json_object_get_string(const GripJSONValue:object, const name[], buffer[], maxlen, bool:dot_not = false);
+native grip_json_object_get_string(const GripJSONValue:object, const name[], buffer[], maxlen, bool:dot_not = false);
 
 /**
  * Gets a number from the object.
@@ -823,8 +809,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  Number
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native json_object_get_number(const GripJSONValue:object, const name[], bool:dot_not = false);
+native grip_json_object_get_number(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets a real number from the object.
@@ -839,8 +824,8 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  Real number
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native Float:json_object_get_real(const GripJSONValue:object, const name[], bool:dot_not = false);
+native Float:grip_json_object_get_float(const GripJSONValue:object, const name[], bool:dot_not = false);
+#define grip_json_object_get_real(%1, %2, %3) grip_json_object_get_float(%1, %2, %3)
 
 /**
  * Gets a boolean value from the object.
@@ -855,8 +840,7 @@ native grip_json_array_get_count(const GripJSONValue:array);
  * @return                  Boolean value
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native bool:json_object_get_bool(const GripJSONValue:object, const name[], bool:dot_not = false);
+native bool:grip_json_object_get_bool(const GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Gets count of the keys in the object.
