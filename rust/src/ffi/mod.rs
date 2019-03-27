@@ -339,7 +339,7 @@ pub unsafe extern "C" fn grip_get_error_description(
         );
 
         use error_chain::ChainedError;
-        copy_unsafe_string!(amx, buffer, e.display_chain(), size)
+        try_to_copy_unsafe_string!(amx, buffer, e.display_chain(), size)
     } else {
         try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")))
     }
@@ -358,7 +358,7 @@ pub unsafe extern "C" fn grip_get_response_body_string(
             .as_ref()
             .chain_err(|| ffi_error("No active response at this time"))
     ) {
-        copy_unsafe_string!(
+        try_to_copy_unsafe_string!(
             amx,
             buffer,
             try_and_log_ffi!(
@@ -519,7 +519,7 @@ pub unsafe extern "C" fn grip_json_parse_response_body(
             Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
             Err(error) => {
                 use error_chain::ChainedError;
-                copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
+                try_to_copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
                 0
             }
         }
@@ -551,7 +551,7 @@ pub unsafe extern "C" fn grip_json_parse_string(
         Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
-            copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
+            try_to_copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
             0
         }
     }
@@ -582,7 +582,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
         Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
         Err(error) => {
             use error_chain::ChainedError;
-            copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
+            try_to_copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
             0
         }
     }
@@ -694,7 +694,7 @@ pub unsafe extern "C" fn grip_json_get_string(
     buffer_size: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, value) {
-        Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
+        Value::String(s) => try_to_copy_unsafe_string!(amx, buffer, s, buffer_size),
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not string. {:?}", v))
@@ -777,7 +777,7 @@ pub unsafe extern "C" fn grip_json_array_get_string(
 ) -> Cell {
     match try_to_get_json_value!(amx, array) {
         Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
-            Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
+            Value::String(s) => try_to_copy_unsafe_string!(amx, buffer, s, buffer_size),
             v => unconditionally_log_error!(
                 amx,
                 ffi_error(format!("JSON Handle is not string. {:?}", v))
@@ -1149,7 +1149,7 @@ pub unsafe extern "C" fn grip_json_object_get_string(
     dot_notation: bool,
 ) -> Cell {
     match try_to_get_json_object_value!(amx, object, name, dot_notation) {
-        Value::String(s) => copy_unsafe_string!(amx, buffer, s, maxlen),
+        Value::String(s) => try_to_copy_unsafe_string!(amx, buffer, s, maxlen),
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not string. {:?}", v))
@@ -1221,7 +1221,7 @@ pub unsafe extern "C" fn grip_json_object_get_count(
     amx: *const c_void,
     object: Cell,
 ) -> Cell {
-    match try_to_get_json_value!(amx, chobject) {
+    match try_to_get_json_value!(amx, object) {
         Value::Object(m) => m.len() as Cell,
         v => unconditionally_log_error!(
             amx,
@@ -1240,7 +1240,7 @@ pub unsafe extern "C" fn grip_json_object_get_name(
     maxlen: Cell,
 ) -> Cell {
     match try_to_get_json_value!(amx, object) {
-        Value::Object(m) => m.len() as Cell,
+        Value::Object(m) => try_to_copy_unsafe_string!(amx, buffer, "bla", maxlen),
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not object. {:?}", v))

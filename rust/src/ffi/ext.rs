@@ -106,22 +106,23 @@ macro_rules! try_as_usize {
     };
 }
 
-macro_rules! copy_unsafe_string {
+macro_rules! try_to_copy_unsafe_string {
     ($amx:expr, $dest:expr, $source:expr, $size:expr, $error_logger:expr) => {{
         let source = format!("{}\0", $source);
+        let size = try_as_usize!($amx, $size - 1, $error_logger);
         libc::strncpy(
             $dest,
             source.as_ptr() as *const c_char,
-            try_as_usize!($amx, $size, $error_logger),
+            size,
         );
 
-        *$dest.offset($size) = '\0' as i8;
+        *$dest.offset(size) = '\0' as i8;
 
-        std::cmp::min($size, source.len() as isize)
+        std::cmp::max(std::cmp::min(size - 1, source.len() as isize), 0)
     }};
 
     ($amx:expr, $dest:expr, $source:expr, $size:expr) => {
-        copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
+        try_to_copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
             (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
         })
     };
@@ -278,7 +279,7 @@ mod tests {
         let mut s: [c_char; 2] = [0; 2];
 
         let status =
-            copy_unsafe_string!(123 as *mut c_char, s.as_mut_ptr(), "1", size, |amx, _| {
+            try_to_copy_unsafe_string!(123 as *mut c_char, s.as_mut_ptr(), "1", size, |amx, _| {
                 assert!(amx == 123 as *mut c_char);
             });
 
