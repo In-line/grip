@@ -82,13 +82,13 @@
 /** All plugins loaded
  * Do forward functions init here (MF_RegisterForward)
  */
-//#define FN_AMXX_PLUGINSLOADED OnPluginsLoaded
+#define FN_AMXX_PLUGINSLOADED OnPluginsLoaded
 
 /** All plugins are about to be unloaded */
 //#define FN_AMXX_PLUGINSUNLOADING OnPluginsUnloading
 
 /** All plugins are now unloaded */
-//#define FN_AMXX_PLUGINSUNLOADED OnPluginsUnloaded
+#define FN_AMXX_PLUGINSUNLOADED OnPluginsUnloaded
 
 /**** METAMOD ****/
 // If your module doesn't use metamod, you may close the file now :)
@@ -110,7 +110,7 @@
 // (wd) are Will Day's notes
 // - GetEntityAPI2 functions
 // #define FN_GameDLLInit				GameDLLInit					/* pfnGameInit() */
-#define FN_DispatchSpawn				DispatchSpawn				/* pfnSpawn() */
+// #define FN_DispatchSpawn				DispatchSpawn				/* pfnSpawn() */
 // #define FN_DispatchThink				DispatchThink				/* pfnThink() */
 // #define FN_DispatchUse				DispatchUse					/* pfnUse() */
 // #define FN_DispatchTouch				DispatchTouch				/* pfnTouch() */
@@ -183,7 +183,7 @@
 // #define FN_ClientCommand_Post				ClientCommand_Post
 // #define FN_ClientUserInfoChanged_Post		ClientUserInfoChanged_Post
 // #define FN_ServerActivate_Post				ServerActivate_Post
-#define FN_ServerDeactivate_Post				ServerDeactivate_Post
+// #define FN_ServerDeactivate_Post				ServerDeactivate_Post
 // #define FN_PlayerPreThink_Post				PlayerPreThink_Post
 // #define FN_PlayerPostThink_Post				PlayerPostThink_Post
 // #define FN_StartFrame_Post					StartFrame_Post
