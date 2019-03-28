@@ -513,14 +513,12 @@ void OnAmxxAttach()
 }
 
 void OnPluginsLoaded() {
-    SERVER_PRINT("OnPluginsLoadedOnPluginsLoadedOnPluginsLoaded");
     char configFilePath[MAX_PATH];
     MF_BuildPathnameR(configFilePath, sizeof(configFilePath), "%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs"));
     grip_init(log_error, configFilePath);
 }
 
 void OnPluginsUnloaded() {
-    SERVER_PRINT("LOOOOOOOOOOOOOOOOOOOOOOOOOOLI");
     grip_deinit();
 }
 
