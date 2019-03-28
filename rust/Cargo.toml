@@ -8,6 +8,9 @@ build = "src/build.rs"
 [lib]
 crate-type = ["staticlib"]
 
+[profile.dev]
+panic = "unwind"
+
 [profile.release]
 lto = true
 panic = "abort"
