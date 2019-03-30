@@ -304,7 +304,7 @@ mod tests {
     use super::*;
     use crate::ffi::Cell;
     use libc::c_char;
-    use serde_json::json;
+    use serde_json::{json, Value};
 
     unsafe fn copy_unsafe_string(size: isize) -> Cell {
         let mut s: [c_char; 2] = [0; 2];
@@ -323,62 +323,66 @@ mod tests {
     fn copy_unsafe_string_test() {
         unsafe {
             assert_eq!(copy_unsafe_string(-1), 0);
-            assert_eq!(copy_unsafe_string(2), 2);
+            assert_eq!(copy_unsafe_string(2), 1);
         }
     }
 
     #[test]
     fn dot_index_safe() {
-        let mut json = json!({
+        let mut json = gc_json!({
             "a": {
                 "b": 123
             }
         });
 
-        assert_eq!(json.dot_index_safe("a.b").unwrap().as_u64().unwrap(), 123);
+        fn gc_to_json(v: GCValue) -> Value {
+            (*gc_borrow_inner!(v)).clone().into()
+        }
+
+        assert_eq!(gc_to_json(json.dot_index_safe("a.b").unwrap()).as_u64().unwrap(), 123);
         assert!(json.dot_index_safe("a.b.c").is_err());
         assert!(json.dot_index_safe("a..").is_err());
-        assert!(json.dot_index_safe("a").unwrap().is_object());
+        assert!(gc_to_json(json.dot_index_safe("a").unwrap()).is_object());
 
         assert!(json.dot_index_safe_mut("a.b.c").is_err());
         assert_eq!(
-            json.dot_index_safe_mut("a.b").unwrap().as_u64().unwrap(),
+            gc_to_json(json.dot_index_safe_mut("a.b").unwrap()).as_u64().unwrap(),
             123
         );
         assert!(json.dot_index_safe_mut("a..").is_err());
-        assert!(json.dot_index_safe_mut("a").unwrap().is_object());
+        assert!(gc_to_json(json.dot_index_safe_mut("a").unwrap()).is_object());
 
         assert_eq!(
-            json.index_selective_safe("a.b", true)
-                .unwrap()
+            gc_to_json(json.index_selective_safe("a.b", true)
+                .unwrap())
                 .as_u64()
                 .unwrap(),
             123
         );
         assert!(json.index_selective_safe("a.b.c", true).is_err());
         assert!(json.index_selective_safe("a..", true).is_err());
-        assert!(json.index_selective_safe("a", true).unwrap().is_object());
+        assert!(gc_to_json(json.index_selective_safe("a", true).unwrap()).is_object());
 
         assert_eq!(
-            json.index_selective_safe_mut("a.b", true)
-                .unwrap()
+            gc_to_json(json.index_selective_safe_mut("a.b", true)
+                .unwrap())
                 .as_u64()
                 .unwrap(),
             123
         );
         assert!(json.index_selective_safe_mut("a.b.c", true).is_err());
         assert!(json.index_selective_safe_mut("a..", true).is_err());
-        assert!(json
+        assert!(gc_to_json(json
             .index_selective_safe_mut("a", true)
-            .unwrap()
+            .unwrap())
             .is_object());
 
-        assert!(json.index_selective_safe("a", false).unwrap().is_object());
+        assert!(gc_to_json(json.index_selective_safe("a", false).unwrap()).is_object());
         assert!(json.index_selective_safe("a.b.c", false).is_err());
 
-        assert!(json
+        assert!(gc_to_json(json
             .index_selective_safe_mut("a", false)
-            .unwrap()
+            .unwrap())
             .is_object());
         assert!(json.index_selective_safe_mut("a.b.c", false).is_err());
     }
