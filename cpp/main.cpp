@@ -506,26 +506,23 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{nullptr, nullptr}
 };
 
+
 void OnAmxxAttach()
 {
 	MF_AddNatives(grip_exports);
 }
 
+void OnPluginsLoaded() {
+    char configFilePath[MAX_PATH];
+    MF_BuildPathnameR(configFilePath, sizeof(configFilePath), "%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs"));
+    grip_init(log_error, configFilePath);
+}
+
+void OnPluginsUnloaded() {
+    grip_deinit();
+}
+
 void StartFrame() {
 	grip_process_request();
-	RETURN_META(MRES_IGNORED);
-}
-
-void ServerActivate(edict_t *, int , int ) {
-	char configFilePath[MAX_PATH];
-	MF_BuildPathnameR(configFilePath, sizeof(configFilePath), "%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs"));
-
-	grip_init(log_error, configFilePath);
-
-	RETURN_META(MRES_IGNORED);
-}
-
-void ServerDeactivate() {
-	grip_deinit();
 	RETURN_META(MRES_IGNORED);
 }
