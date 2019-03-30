@@ -24,7 +24,6 @@ macro_rules! gc_borrow_inner_mut {
     };
 }
 
-
 custom_derive! {
     #[derive(Debug, Clone, PartialEq, NewtypeDerefMut, NewtypeDeref, NewtypeFrom)]
     pub struct GCValue(Cc<RefCell<InnerValue>>);
@@ -75,7 +74,9 @@ impl From<Value> for InnerValue {
             Value::Bool(b) => InnerValue::Bool(b),
             Value::Number(n) => InnerValue::Number(n),
             Value::String(s) => InnerValue::String(s),
-            Value::Array(v) => InnerValue::Array(v.into_iter().map(|e| GCValue::new(e.into())).collect()),
+            Value::Array(v) => {
+                InnerValue::Array(v.into_iter().map(|e| GCValue::new(e.into())).collect())
+            }
             Value::Object(m) => InnerValue::Object(
                 m.into_iter()
                     .map(|(k, v)| (k, GCValue::new(v.into())))
@@ -92,7 +93,11 @@ impl Into<Value> for InnerValue {
             InnerValue::Bool(b) => Value::Bool(b),
             InnerValue::Number(n) => Value::Number(n),
             InnerValue::String(s) => Value::String(s),
-            InnerValue::Array(a) => Value::Array(a.into_iter().map(|e| gc_borrow_inner!(e).clone().into()).collect()),
+            InnerValue::Array(a) => Value::Array(
+                a.into_iter()
+                    .map(|e| gc_borrow_inner!(e).clone().into())
+                    .collect(),
+            ),
             InnerValue::Object(m) => Value::Object(
                 m.into_iter()
                     .map(|(k, v)| (k, gc_borrow_inner!(v).clone().into()))

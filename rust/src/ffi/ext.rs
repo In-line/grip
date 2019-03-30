@@ -284,15 +284,18 @@ mod tests {
             (*gc_borrow_inner!(v)).clone().into()
         }
 
-        assert_eq!(gc_to_json(json.dot_index_safe("a.b").unwrap()).as_u64().unwrap(), 123);
+        assert_eq!(
+            gc_to_json(json.dot_index_safe("a.b").unwrap())
+                .as_u64()
+                .unwrap(),
+            123
+        );
         assert!(json.dot_index_safe("a.b.c").is_err());
         assert!(json.dot_index_safe("a..").is_err());
         assert!(gc_to_json(json.dot_index_safe("a").unwrap()).is_object());
 
-
         assert_eq!(
-            gc_to_json(json.index_selective_safe("a.b", true)
-                .unwrap())
+            gc_to_json(json.index_selective_safe("a.b", true).unwrap())
                 .as_u64()
                 .unwrap(),
             123
