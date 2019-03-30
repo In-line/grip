@@ -127,6 +127,20 @@ cell grip_json_object_get_string(const void *amx,
 
 cell grip_json_object_get_value(const void *amx, cell object, const char *name, bool dot_notation);
 
+cell grip_json_object_get_value_at(const void *amx, cell object, cell index);
+
+cell grip_json_object_has_value(const void *amx,
+                                cell object,
+                                const char *name,
+                                cell json_type,
+                                bool dot_notation);
+
+cell grip_json_object_set_value(const void *amx,
+                                cell object,
+                                const char *name,
+                                cell value,
+                                bool dot_notation);
+
 cell grip_json_parse_file(const void *amx, char *file, char *error_buffer, cell error_buffer_size);
 
 cell grip_json_parse_response_body(const void *amx, char *error_buffer, cell error_buffer_size);
@@ -151,8 +165,6 @@ cell grip_request(const void *amx,
                   void (*handler)(cell forward_handle, cell user_data),
                   cell options_handle,
                   cell user_data);
-
-size_t strlcpy(char *dst, const char *src, size_t dsize);
 
 } // extern "C"
 

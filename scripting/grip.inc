@@ -81,7 +81,8 @@ enum GripJSONType
 	GripJSONNumber  = 3,
 	GripJSONObject  = 4,
 	GripJSONArray   = 5,
-	GripJSONBoolean = 6
+	GripJSONBoolean = 6,
+	GripJSONError = 7,
 };
 
 enum GripResponseState {
@@ -876,8 +877,7 @@ native grip_json_object_get_name(const GripJSONValue:object, index, buffer[], ma
  * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native GripJSONValue:grip_json_object_get_value_at(const GripJSONValue:object, index);
+native GripJSONValue:grip_json_object_get_value_at(const GripJSONValue:object, index);
 
 /**
  * Checks if the object has a value with a specific name and type.
@@ -890,8 +890,7 @@ native grip_json_object_get_name(const GripJSONValue:object, index, buffer[], ma
  * @return                  True if has, false if not
  * @error                   If passed handle is not a valid object
  */
-//TODO: Middle priority
-//native bool:json_object_has_value(const GripJSONValue:object, const name[], JSONType:type = JSONError, bool:dot_not = false);
+native bool:grip_json_object_has_value(const GripJSONValue:object, const name[], GripJSONType:type = GripJSONError, bool:dot_not = false);
 
 /**
  * Sets a value in the object.
@@ -908,8 +907,7 @@ native grip_json_object_get_name(const GripJSONValue:object, index, buffer[], ma
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_set_value(JSON:object, const name[], const GripJSONValue:value, bool:dot_not = false);
+native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSONValue:value, bool:dot_not = false);
 
 /**
  * Sets string data in the object.

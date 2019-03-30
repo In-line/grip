@@ -41,8 +41,8 @@
 cell dummy;
 
 #define ZERO_INIT_STACK_BUFFER(name, size) \
-char name[std::max(0, size)]; \
-memset(&name[0], 0, std::max(0,size) * sizeof(char))
+char name[std::max(1, size + 1)]; \
+memset(&name[0], 0, std::max(1, size + 1) * sizeof(char))
 
 #define MF_SetAmxStringSafe(amx, amx_cell, addr, size) MF_SetAmxString(amx, amx_cell, addr, std::max(0,size) * sizeof(char))
 void log_error(const void* amx, const char* string) {
@@ -454,6 +454,34 @@ cell AMX_NATIVE_CALL grip_json_object_get_count_amxx(AMX *amx, cell *params) {
     return grip_json_object_get_count(amx, params[arg_object]);
 }
 
+cell AMX_NATIVE_CALL grip_json_object_get_name_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_index, arg_buffer, arg_maxlen };
+
+    ZERO_INIT_STACK_BUFFER(buffer, params[arg_maxlen]);
+
+    cell ret = grip_json_object_get_name(amx, params[arg_object], params[arg_index],
+                                     buffer,
+                                     params[arg_maxlen]);
+
+    MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_maxlen]);
+
+    return ret;
+}
+
+cell AMX_NATIVE_CALL grip_json_object_get_value_at_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_index };
+
+    return grip_json_object_get_value_at(amx, params[arg_object], params[arg_index]);
+}
+
+//(const GripJSONValue:object, const name[], GripJSONType:type = GripJSONError, bool:dot_not = false);
+cell AMX_NATIVE_CALL grip_json_object_has_value_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_type, arg_dot_not };
+
+    return grip_json_object_has_value(amx, params[arg_object],
+            MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+            params[arg_type], params[arg_dot_not] != 0);
+}
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -511,6 +539,9 @@ AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_json_object_get_float", grip_json_object_get_float_amxx},
 	{"grip_json_object_get_bool", grip_json_object_get_bool_amxx},
     {"grip_json_object_get_count", grip_json_object_get_count_amxx},
+    {"grip_json_object_get_name", grip_json_object_get_name_amxx},
+    {"grip_json_object_get_value_at", grip_json_object_get_value_at_amxx},
+    {"grip_json_object_has_value", grip_json_object_has_value_amxx}
 	{nullptr, nullptr}
 };
 

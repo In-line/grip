@@ -26,8 +26,7 @@ where
     d.wrapping_div(pointee_size as _)
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn strlcpy(
+pub unsafe fn strlcpy(
     mut dst: *mut libc::c_char,
     mut src: *const libc::c_char,
     mut dsize: libc::size_t,

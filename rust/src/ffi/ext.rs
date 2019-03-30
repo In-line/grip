@@ -194,14 +194,16 @@ macro_rules! try_to_get_json_object_value {
     }};
 }
 
+use std::cell::Ref;
+
 pub trait ValueExt<'a> {
-    fn dot_index_safe(&self, name: &str) -> Result<GCValue>;
-    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<GCValue>;
+    fn dot_index_safe(&self, name: &str) -> Result<Ref<GCValue>>;
+    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<Ref<GCValue>>;
 }
 
 impl<'a> ValueExt<'a> for GCValue {
-    fn dot_index_safe(&self, name: &str) -> Result<GCValue> {
-        let mut it: Option<GCValue> = None;
+    fn dot_index_safe(&self, name: &str) -> Result<Ref<GCValue>> {
+        let mut it: Option<Ref<GCValue>> = None;
         for element in name.split('.') {
             if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
@@ -218,7 +220,7 @@ impl<'a> ValueExt<'a> for GCValue {
         Ok(it.chain_err(|| "Name is invalid")?)
     }
 
-    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<GCValue> {
+    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<Ref<GCValue>> {
         if dot_notation {
             self.dot_index_safe(name)
         } else {
@@ -226,7 +228,7 @@ impl<'a> ValueExt<'a> for GCValue {
             match &value as &InnerValue {
                 InnerValue::Object(m) => {
                     if let Some(val) = m.get(name) {
-                        Ok(val.clone())
+                        Ok(val)
                     } else {
                         bail!(
                             "Can't index json using `{}`, because json doesn't contain it",
