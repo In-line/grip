@@ -581,8 +581,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
             amx,
             File::open(try_and_log_ffi!(
                 amx,
-                CStr::from_ptr(file)
-                    .to_str()
+                str_from_ptr(file)
                     .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
             ))
             .chain_err(|| ffi_error("Can't open file."))
@@ -658,8 +657,7 @@ pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut 
         .json_handles
         .insert_with_unique_id(gc_json!(try_and_log_ffi!(
             amx,
-            CStr::from_ptr(string)
-                .to_str()
+            str_from_ptr(string)
                 .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
         )
         .to_owned()))
@@ -1016,8 +1014,7 @@ pub unsafe extern "C" fn grip_json_array_append_string(
         InnerValue::Array(vec) => {
             vec.push(gc_json!(try_and_log_ffi!(
                 amx,
-                CStr::from_ptr(string)
-                    .to_str()
+                str_from_ptr(string)
                     .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
             )
             .to_owned()));
