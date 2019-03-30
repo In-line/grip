@@ -30,9 +30,11 @@
  */
 
 use crate::errors::*;
-use serde_json::Value;
+use crate::gc_json::*;
+use core::borrow::{Borrow, BorrowMut};
 use std::ffi::CStr;
 use std::os::raw::c_char;
+use std::cell::{RefMut, Ref};
 
 pub trait ResultFFIExt<T> {
     fn get_value(self) -> std::result::Result<T, String>;
@@ -107,18 +109,12 @@ macro_rules! try_as_usize {
 }
 
 macro_rules! try_to_copy_unsafe_string {
-    ($amx:expr, $dest:expr, $source:expr, $size:expr, $error_logger:expr) => {{
-        let source = format!("{}\0", $source);
-        let size = try_as_usize!($amx, $size - 1, $error_logger);
-        libc::strncpy(
+    ($amx:expr, $dest:expr, $source:expr, $charsmax:expr, $error_logger:expr) => {{
+        crate::ffi::strlcpy::strlcpy(
             $dest,
-            source.as_ptr() as *const c_char,
-            size,
-        );
-
-        *$dest.offset(size) = '\0' as i8;
-
-        std::cmp::max(std::cmp::min(size - 1, source.len() as isize), 0)
+            format!("{}\0", $source).as_ptr() as *const c_char,
+            try_as_usize!($amx, $charsmax, $error_logger) + 1,
+        ) as Cell
     }};
 
     ($amx:expr, $dest:expr, $source:expr, $size:expr) => {
@@ -140,9 +136,9 @@ macro_rules! unconditionally_log_error {
     };
 }
 
-macro_rules! try_to_get_json_value {
+macro_rules! try_to_get_json_value_gc {
     ($amx:expr, $value:expr) => {{
-        let value: &Value = try_and_log_ffi!(
+        let value: &GCValue = try_and_log_ffi!(
             $amx,
             get_module_mut()
                 .json_handles
@@ -153,10 +149,15 @@ macro_rules! try_to_get_json_value {
         value
     }};
 }
-
-macro_rules! try_to_get_json_value_mut {
+macro_rules! try_to_get_json_value {
     ($amx:expr, $value:expr) => {{
-        let value: &mut Value = try_and_log_ffi!(
+        gc_borrow_inner!(try_to_get_json_value_gc!($amx, $value))
+    }};
+}
+
+macro_rules! try_to_get_json_value_gc_mut {
+    ($amx:expr, $value:expr) => {{
+        let value: &mut GCValue = try_and_log_ffi!(
             $amx,
             get_module_mut()
                 .json_handles
@@ -168,62 +169,91 @@ macro_rules! try_to_get_json_value_mut {
     }};
 }
 
-macro_rules! try_to_get_json_object_value {
+macro_rules! try_to_get_json_value_mut {
+    ($amx:expr, $value:expr) => {{
+        gc_borrow_inner_mut!(try_to_get_json_value_gc_mut!($amx, $value))
+    }};
+}
+
+macro_rules! try_to_get_json_object_value_gc {
     ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
         try_and_log_ffi!(
             $amx,
-            try_to_get_json_value!($amx, $object)
+            try_to_get_json_value_gc!($amx, $object)
                 .index_selective_safe(try_and_log_ffi!($amx, str_from_ptr($name)), $dot_notation)
         )
     }};
 }
 
-pub trait ValueExt<'a>: std::ops::Index<&'a str, Output = Value> {
-    fn dot_index_safe(&self, name: &str) -> Result<&Value>;
-    fn dot_index_safe_mut(&mut self, name: &str) -> Result<&mut Value>;
-
-    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<&Value>;
-    fn index_selective_safe_mut(&mut self, name: &'a str, dot_notation: bool)
-        -> Result<&mut Value>;
+macro_rules! try_to_get_json_object_value {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
+        gc_borrow_inner!(try_to_get_json_object_value_gc!(
+            $amx,
+            $object,
+            $name,
+            $dot_notation
+        ))
+    }};
 }
 
-impl<'a> ValueExt<'a> for Value {
-    fn dot_index_safe(&self, name: &str) -> Result<&Value> {
-        let mut it = self;
+pub trait ValueExt<'a> {
+    fn dot_index_safe(&self, name: &str) -> Result<GCValue>;
+    fn dot_index_safe_mut(&mut self, name: &str) -> Result<GCValue>;
+
+    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<GCValue>;
+    fn index_selective_safe_mut(
+        &mut self,
+        name: &'a str,
+        dot_notation: bool,
+    ) -> Result<GCValue>;
+}
+
+impl<'a> ValueExt<'a> for GCValue {
+    fn dot_index_safe(&self, name: &str) -> Result<GCValue> {
+        let mut it: Option<GCValue> = None;
         for element in name.split('.') {
             if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
             }
 
             // Same as bounds checked index.
-            it = it.index_selective_safe(element, false)?;
+            if let Some(it_raw) = it {
+                it = Some(it_raw.index_selective_safe(element, false)?);
+            } else {
+                it = Some(self.index_selective_safe(element, false)?);
+            }
         }
 
-        Ok(it)
+        Ok(it.chain_err(|| "Name is invalid")?)
     }
 
-    fn dot_index_safe_mut(&mut self, name: &str) -> Result<&mut Value> {
-        let mut it = self;
+    fn dot_index_safe_mut(&mut self, name: &str) -> Result<GCValue> {
+        let mut it: Option<GCValue> = None;
         for element in name.split('.') {
             if element.is_empty() {
                 bail!("Double/Empty separator in `{}`", name);
             }
 
             // Same as bounds checked index.
-            it = it.index_selective_safe_mut(element, false)?;
+            if let Some(mut it_raw) = it {
+                it = Some(it_raw.index_selective_safe_mut(element, false)?);
+            } else {
+                it = Some(self.index_selective_safe_mut(element, false)?);
+            }
         }
 
-        Ok(it)
+        Ok(it.chain_err(|| "Name is invalid")?)
     }
 
-    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<&Value> {
+    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<GCValue> {
         if dot_notation {
             self.dot_index_safe(name)
         } else {
-            match self {
-                Value::Object(m) => {
+            let value = self.borrow_inner_ref();
+            match value.borrow() as &InnerValue {
+                InnerValue::Object(m) => {
                     if let Some(val) = m.get(name) {
-                        Ok(val)
+                        Ok(val.clone())
                     } else {
                         bail!(
                             "Can't index json using `{}`, because json doesn't contain it",
@@ -243,14 +273,15 @@ impl<'a> ValueExt<'a> for Value {
         &mut self,
         name: &'a str,
         dot_notation: bool,
-    ) -> Result<&mut Value> {
+    ) -> Result<GCValue> {
         if dot_notation {
             self.dot_index_safe_mut(name)
         } else {
-            match self {
-                Value::Object(m) => {
-                    if let Some(val) = m.get_mut(name) {
-                        Ok(val)
+            let mut value = self.borrow_inner_ref_mut();
+            match value.borrow_mut() as &mut InnerValue {
+                InnerValue::Object(m) => {
+                    if let Some(val) = m.get(name) {
+                        Ok(val.clone())
                     } else {
                         bail!(
                             "Can't index json using `{}`, because json doesn't contain it",

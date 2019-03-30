@@ -1,6 +1,7 @@
 fn main() {
     let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
 
+    /*
     cbindgen::Builder::new()
         .with_crate(crate_dir)
         .with_include_guard("GRIP_FFI_H")
@@ -11,4 +12,5 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file("../cpp/ffi.h");
+        */
 }
