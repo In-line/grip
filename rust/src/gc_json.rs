@@ -1,5 +1,4 @@
 use bacon_rajan_cc::{Cc, Trace, Tracer};
-use core::borrow::Borrow;
 use indexmap::IndexMap;
 use serde_json::*;
 use std::cell::{Ref, RefCell, RefMut};
@@ -21,7 +20,7 @@ macro_rules! gc_borrow_inner {
 #[macro_export]
 macro_rules! gc_borrow_inner_mut {
     ($gc:expr) => {
-        $gc.borrow_inner_ref_mut().borrow_mut() as &mut InnerValue
+        &mut $gc.borrow_inner_ref_mut() as &mut InnerValue
     };
 }
 

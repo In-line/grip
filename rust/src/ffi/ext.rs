@@ -34,7 +34,6 @@ use crate::gc_json::*;
 use core::borrow::{Borrow, BorrowMut};
 use std::ffi::CStr;
 use std::os::raw::c_char;
-use std::cell::{RefMut, Ref};
 
 pub trait ResultFFIExt<T> {
     fn get_value(self) -> std::result::Result<T, String>;

@@ -33,8 +33,6 @@ extern crate ini;
 extern crate libc;
 
 use self::ini::Ini;
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
 
 #[macro_use]
 mod ext;
