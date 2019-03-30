@@ -31,7 +31,6 @@
 
 use crate::errors::*;
 use crate::gc_json::*;
-use core::borrow::{Borrow, BorrowMut};
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -197,14 +196,7 @@ macro_rules! try_to_get_json_object_value {
 
 pub trait ValueExt<'a> {
     fn dot_index_safe(&self, name: &str) -> Result<GCValue>;
-    fn dot_index_safe_mut(&mut self, name: &str) -> Result<GCValue>;
-
     fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<GCValue>;
-    fn index_selective_safe_mut(
-        &mut self,
-        name: &'a str,
-        dot_notation: bool,
-    ) -> Result<GCValue>;
 }
 
 impl<'a> ValueExt<'a> for GCValue {
@@ -226,58 +218,12 @@ impl<'a> ValueExt<'a> for GCValue {
         Ok(it.chain_err(|| "Name is invalid")?)
     }
 
-    fn dot_index_safe_mut(&mut self, name: &str) -> Result<GCValue> {
-        let mut it: Option<GCValue> = None;
-        for element in name.split('.') {
-            if element.is_empty() {
-                bail!("Double/Empty separator in `{}`", name);
-            }
-
-            // Same as bounds checked index.
-            if let Some(mut it_raw) = it {
-                it = Some(it_raw.index_selective_safe_mut(element, false)?);
-            } else {
-                it = Some(self.index_selective_safe_mut(element, false)?);
-            }
-        }
-
-        Ok(it.chain_err(|| "Name is invalid")?)
-    }
-
     fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<GCValue> {
         if dot_notation {
             self.dot_index_safe(name)
         } else {
             let value = self.borrow_inner_ref();
-            match value.borrow() as &InnerValue {
-                InnerValue::Object(m) => {
-                    if let Some(val) = m.get(name) {
-                        Ok(val.clone())
-                    } else {
-                        bail!(
-                            "Can't index json using `{}`, because json doesn't contain it",
-                            name
-                        )
-                    }
-                }
-                _ => bail!(
-                    "Can't index json using `{}` json stops is not object.",
-                    name
-                ),
-            }
-        }
-    }
-
-    fn index_selective_safe_mut(
-        &mut self,
-        name: &'a str,
-        dot_notation: bool,
-    ) -> Result<GCValue> {
-        if dot_notation {
-            self.dot_index_safe_mut(name)
-        } else {
-            let mut value = self.borrow_inner_ref_mut();
-            match value.borrow_mut() as &mut InnerValue {
+            match &value as &InnerValue {
                 InnerValue::Object(m) => {
                     if let Some(val) = m.get(name) {
                         Ok(val.clone())
@@ -328,7 +274,7 @@ mod tests {
 
     #[test]
     fn dot_index_safe() {
-        let mut json = gc_json!({
+        let json = gc_json!({
             "a": {
                 "b": 123
             }
@@ -343,13 +289,6 @@ mod tests {
         assert!(json.dot_index_safe("a..").is_err());
         assert!(gc_to_json(json.dot_index_safe("a").unwrap()).is_object());
 
-        assert!(json.dot_index_safe_mut("a.b.c").is_err());
-        assert_eq!(
-            gc_to_json(json.dot_index_safe_mut("a.b").unwrap()).as_u64().unwrap(),
-            123
-        );
-        assert!(json.dot_index_safe_mut("a..").is_err());
-        assert!(gc_to_json(json.dot_index_safe_mut("a").unwrap()).is_object());
 
         assert_eq!(
             gc_to_json(json.index_selective_safe("a.b", true)
@@ -362,28 +301,8 @@ mod tests {
         assert!(json.index_selective_safe("a..", true).is_err());
         assert!(gc_to_json(json.index_selective_safe("a", true).unwrap()).is_object());
 
-        assert_eq!(
-            gc_to_json(json.index_selective_safe_mut("a.b", true)
-                .unwrap())
-                .as_u64()
-                .unwrap(),
-            123
-        );
-        assert!(json.index_selective_safe_mut("a.b.c", true).is_err());
-        assert!(json.index_selective_safe_mut("a..", true).is_err());
-        assert!(gc_to_json(json
-            .index_selective_safe_mut("a", true)
-            .unwrap())
-            .is_object());
-
         assert!(gc_to_json(json.index_selective_safe("a", false).unwrap()).is_object());
         assert!(json.index_selective_safe("a.b.c", false).is_err());
-
-        assert!(gc_to_json(json
-            .index_selective_safe_mut("a", false)
-            .unwrap())
-            .is_object());
-        assert!(json.index_selective_safe_mut("a.b.c", false).is_err());
     }
 
 }
