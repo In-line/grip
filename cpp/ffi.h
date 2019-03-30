@@ -152,6 +152,8 @@ cell grip_request(const void *amx,
                   cell options_handle,
                   cell user_data);
 
+size_t strlcpy(char *dst, const char *src, size_t dsize);
+
 } // extern "C"
 
 #endif // GRIP_FFI_H
