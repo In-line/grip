@@ -205,7 +205,7 @@ native grip_destroy_body(GripBody:body);
 /**
  * Starts sending of the request  
  * @note	The handle should look like:
- * 		public RequestHandler(const userData);
+ * 		public RequestHandler(const any: userData);
  *
  *
  * @param uri		Request URI. Supports TLS.
@@ -217,7 +217,7 @@ native grip_destroy_body(GripBody:body);
  *  
  * @return		Cancellation handle.
  */
-native GripRequestCancellation:grip_request(const uri[], GripBody:body, GripRequestType:type, const handler[], GripRequestOptions:options = Empty_GripRequestOptions, const userData = 0);
+native GripRequestCancellation:grip_request(const uri[], GripBody:body, GripRequestType:type, const handler[], GripRequestOptions:options = Empty_GripRequestOptions, const any: userData = 0);
 
 /**
  * Cancel sending of the request and receiving of response.  

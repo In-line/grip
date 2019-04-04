@@ -81,6 +81,10 @@ pub unsafe extern "C" fn grip_init(
     error_logger: extern "C" fn(*const c_void, *const c_char),
     config_file_path: *const c_char,
 ) {
+    if MODULE.is_some() {
+        return;
+    }
+
     let ini = Ini::load_from_file(str_from_ptr(config_file_path).unwrap())
         .map_err(|e| {
             println!(
