@@ -55,7 +55,7 @@ impl GCValue {
     pub fn deep_clone_with_recursion_limit(&self, recursion_limit: usize) -> GCValue {
         GCValue::new(match &self.borrow_inner_ref() as &InnerValue {
             InnerValue::Array(a) => InnerValue::Array(
-                a.into_iter()
+                a.iter()
                     .filter(|_| recursion_limit - 1 != 0)
                     .map(|e| e.deep_clone_with_recursion_limit(recursion_limit - 1))
                     .collect(),
