@@ -77,7 +77,7 @@ script:
       fi
 
   - |
-      if [ "$TRAVIS_RUST_VERSION" = stable ] && [ -n "RUN_RELEASE_BUILD" ]; then
+      if [ "$TRAVIS_RUST_VERSION" = stable ] && [ -n "$RUN_RELEASE_BUILD" ]; then
           DO_DEPLOY=1
       fi
 
