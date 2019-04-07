@@ -13,11 +13,11 @@ panic = "unwind"
 
 [profile.release]
 lto = true
-panic = "abort"
+panic = "unwind"
 
 [features]
 vendored = ["reqwest/default-tls-vendored"]
-# default = ["vendored"] # TODO: Conditional dynamic linking.
+default = ["vendored"] # TODO: Conditional dynamic linking.
 
 [dependencies]
 bytes = "0.4.12"

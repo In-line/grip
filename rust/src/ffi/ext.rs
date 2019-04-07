@@ -224,39 +224,43 @@ macro_rules! try_to_get_json_object_value_mut {
 macro_rules! try_to_get_json_array {
     ($amx:expr, $array:expr) => {
         match &try_to_get_json_value!($amx, $array) {
-            InnerValue::Array(vec) => {
-                vec
-            }
-            v => {
-                unconditionally_log_error!($amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-            }
+            InnerValue::Array(vec) => vec,
+            v => unconditionally_log_error!(
+                $amx,
+                ffi_error(format!("JSON Handle is not array. {:?}", v))
+            ),
         }
-    }
+    };
 }
 
 macro_rules! try_to_get_json_array_mut {
     ($amx:expr, $array:expr) => {
         match &mut try_to_get_json_value_mut!($amx, $array) {
-            InnerValue::Array(vec) => {
-                vec
-            }
-            v => {
-                unconditionally_log_error!($amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-            }
+            InnerValue::Array(vec) => vec,
+            v => unconditionally_log_error!(
+                $amx,
+                ffi_error(format!("JSON Handle is not array. {:?}", v))
+            ),
         }
-    }
+    };
 }
 
 macro_rules! try_to_get_json_array_value {
     ($amx:expr, $array:expr, $index:expr) => {
-        try_and_log_ffi!($amx, try_to_get_json_array!($amx, $array).get(try_as_usize!($amx, $index)))
-    }
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_array!($amx, $array).get(try_as_usize!($amx, $index))
+        )
+    };
 }
 
 macro_rules! try_to_get_json_array_value_mut {
     ($amx:expr, $array:expr, $index:expr) => {
-        try_and_log_ffi!($amx, try_to_get_json_array_mut!($amx, $array).get_mut(try_as_usize!($amx, $index)))
-    }
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_array_mut!($amx, $array).get_mut(try_as_usize!($amx, $index))
+        )
+    };
 }
 
 use core::borrow::Borrow;

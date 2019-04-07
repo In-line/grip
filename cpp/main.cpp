@@ -540,11 +540,10 @@ cell AMX_NATIVE_CALL grip_json_object_set_null_amxx(AMX *amx, cell *params) {
 
 
 cell AMX_NATIVE_CALL grip_json_object_remove_amxx(AMX *amx, cell *params) {
-    enum { arg_count, arg_object, arg_name, arg_dot_not };
+    enum { arg_count, arg_object, arg_name };
 
-    return grip_json_object_set_null(amx, params[arg_object],
-                                     MF_GetAmxString(amx, params[arg_name], 3, &dummy),
-                                     params[arg_dot_not] != 0);
+    return grip_json_object_remove(amx, params[arg_object],
+                                     MF_GetAmxString(amx, params[arg_name], 3, &dummy));
 }
 
 cell AMX_NATIVE_CALL grip_json_object_clear_amxx(AMX *amx, cell *params) {
@@ -553,7 +552,32 @@ cell AMX_NATIVE_CALL grip_json_object_clear_amxx(AMX *amx, cell *params) {
     return grip_json_object_clear(amx, params[arg_object]);
 }
 
+cell AMX_NATIVE_CALL grip_json_serial_size_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_value, arg_pretty, arg_null_byte, arg_recursion_limit };
+    return grip_json_serial_size(amx, params[arg_value], params[arg_pretty] != 0, params[arg_null_byte] != 0, params[arg_recursion_limit]);
+}
 
+cell AMX_NATIVE_CALL grip_json_serial_to_string_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_value, arg_pretty, arg_buffer, arg_maxlen, arg_recursion_limit };
+    ZERO_INIT_STACK_BUFFER(buffer, params[arg_maxlen]);
+    cell ret = grip_json_serial_to_string(amx, params[arg_value], params[arg_pretty] != 0, &buffer[0], params[arg_maxlen], params[arg_recursion_limit]);
+    MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_maxlen]);
+    return ret;
+}
+
+cell AMX_NATIVE_CALL grip_json_serial_to_file_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_value, arg_file, arg_pretty, arg_recursion_limit };
+    return grip_json_serial_to_file(amx, params[arg_value], 
+            MF_GetAmxString(amx, params[arg_file], 3, &dummy),
+            params[arg_pretty] != 0,
+            params[arg_recursion_limit]);
+}
+
+
+cell AMX_NATIVE_CALL grip_json_validate_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_schema, arg_value};
+    return grip_json_validate(amx, params[arg_schema], params[arg_value]);
+}
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -622,6 +646,10 @@ AMX_NATIVE_INFO grip_exports[] = {
     {"grip_json_object_set_null", grip_json_object_set_null_amxx},
     {"grip_json_object_remove", grip_json_object_remove_amxx},
     {"grip_json_object_clear", grip_json_object_clear_amxx},
+    {"grip_json_serial_size", grip_json_serial_size_amxx},
+    {"grip_json_serial_to_string", grip_json_serial_to_string_amxx},
+    {"grip_json_serial_to_file", grip_json_serial_to_file_amxx},
+    {"grip_json_validate", grip_json_validate_amxx},
 	{nullptr, nullptr}
 };
 

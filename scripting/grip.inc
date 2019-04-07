@@ -380,8 +380,7 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  * @return                  True if passed value is valid, false otherwise
  * @error                   If a schema handle or value handle is invalid
  */
-//TODO: Very Low priority
-//native bool:json_validate(const GripJSONValue:schema, const GripJSONValue:value);
+native bool:grip_json_validate(const GripJSONValue:schema, const GripJSONValue:value);
 
 /**
  * Gets value's parent handle.
@@ -392,8 +391,8 @@ native bool:grip_json_equals(const GripJSONValue:value1, const GripJSONValue:val
  *
  * @return                Parent's handle
  */
-//TODO: Low priority
-//native GripJSONValue:grip_json_get_parent(const GripJSONValue:value);
+// This method is wontfix, because of mixed value/ref semantics of json.inc
+// native GripJSONValue:grip_json_get_parent(const GripJSONValue:value);
 
 /**
  * Gets JSON type of passed value.
@@ -487,8 +486,7 @@ native GripJSONValue:grip_json_init_null();
  * @return                  JSON handle, Invalid_GripJSONValue if error occurred
  * @error                   If passed value is not a valid handle
  */
-//TODO: Low priority.
-//native GripJSONValue:grip_json_deep_copy(const GripJSONValue:value);
+native GripJSONValue:grip_json_deep_copy(const GripJSONValue:value);
 
 /**
  * Gets string data.
@@ -1025,12 +1023,12 @@ native bool:grip_json_object_clear(GripJSONValue:object);
  * @param value             JSON handle
  * @param pretty            True to count size for pretty format, false to not
  * @param null_byte         True to include null byte, false to not
+ * @param recursion_limit   Limit of the internal recursion
  *
  * @return                  Size of serialized string
  * @error                   If passed handle is not a valid value
  */
- // TODO: Very low priority
-//native json_serial_size(const GripJSONValue:value, bool:pretty = false, bool:null_byte = false);
+native grip_json_serial_size(const GripJSONValue:value, bool:pretty = false, bool:null_byte = false, recursion_limit = 100);
 
 /**
  * Copies serialized string to the buffer.
@@ -1039,12 +1037,12 @@ native bool:grip_json_object_clear(GripJSONValue:object);
  * @param buffer            Buffer to copy string to
  * @param maxlen            Maximum size of the buffer
  * @param pretty            True to format pretty JSON string, false to not
+ * @param recursion_limit   Limit of the internal recursion
  *
  * @return                  The number of cells written to the buffer
  * @error                   If passed handle is not a valid value
  */
-// TODO: Low priority
-//native grip_json_serial_to_string(const GripJSONValue:value, buffer[], maxlen, bool:pretty = false);
+native grip_json_serial_to_string(const GripJSONValue:value, buffer[], maxlen, bool:pretty = false, recursion_limit = 100);
 
 /**
  * Copies serialized string to the file.
@@ -1052,9 +1050,9 @@ native bool:grip_json_object_clear(GripJSONValue:object);
  * @param value             JSON handle
  * @param file              Path to the file
  * @param pretty            True to format pretty JSON string, false to not
+ * @param recursion_limit   Limit of the internal recursion
  *
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid value
  */
-// TODO: Low priority
-//native bool:grip_json_serial_to_file(const GripJSONValue:value, const file[], bool:pretty = false);
+native bool:grip_json_serial_to_file(const GripJSONValue:value, const file[], bool:pretty = false, recursion_limit = 100);

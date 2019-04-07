@@ -1,13 +1,14 @@
-use bacon_rajan_cc::{Cc, Trace, Tracer};
+use bacon_rajan_cc::{collect_cycles, number_of_roots_buffered, Cc, Trace, Tracer};
 use indexmap::IndexMap;
 use serde_json::*;
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 #[macro_export]
 macro_rules! gc_json {
     ($($json:tt)+) => {
-        GCValue::new(json!($($json)+).into())
+        json!($($json)+).into()
     };
 }
 
@@ -44,11 +45,37 @@ impl GCValue {
     pub fn borrow_inner_ref_mut(&mut self) -> RefMut<InnerValue> {
         (&*self.0 as &RefCell<InnerValue>).borrow_mut()
     }
-}
 
-impl From<Value> for GCValue {
-    fn from(v: Value) -> Self {
-        GCValue::new(v.into())
+    pub fn into_with_recursion_limit(self, recursion_limit: usize) -> Value {
+        self.borrow_inner_ref()
+            .clone()
+            .into_with_recursion_limit(recursion_limit)
+    }
+
+    pub fn deep_clone_with_recursion_limit(&self, recursion_limit: usize) -> GCValue {
+        GCValue::new(match &self.borrow_inner_ref() as &InnerValue {
+            InnerValue::Array(a) => InnerValue::Array(
+                a.into_iter()
+                    .filter(|_| recursion_limit - 1 != 0)
+                    .map(|e| e.deep_clone_with_recursion_limit(recursion_limit - 1))
+                    .collect(),
+            ),
+            InnerValue::Object(m) => InnerValue::Object(
+                m.into_iter()
+                    .filter(|_| recursion_limit - 1 != 0)
+                    .map(|(k, v)| {
+                        (
+                            k.clone(),
+                            Rc::new(RefCell::new(
+                                v.borrow()
+                                    .deep_clone_with_recursion_limit(recursion_limit - 1),
+                            )),
+                        )
+                    })
+                    .collect(),
+            ),
+            v => v.clone(),
+        })
     }
 }
 
@@ -68,27 +95,25 @@ pub enum InnerValue {
     Object(IndexMap<String, Rc<RefCell<GCValue>>>),
 }
 
-impl From<Value> for InnerValue {
+impl From<Value> for GCValue {
     fn from(v: Value) -> Self {
-        match v {
+        GCValue::new(match v {
             Value::Null => InnerValue::Null,
             Value::Bool(b) => InnerValue::Bool(b),
             Value::Number(n) => InnerValue::Number(n),
             Value::String(s) => InnerValue::String(s),
-            Value::Array(v) => {
-                InnerValue::Array(v.into_iter().map(|e| GCValue::new(e.into())).collect())
-            }
+            Value::Array(v) => InnerValue::Array(v.into_iter().map(|e| e.into()).collect()),
             Value::Object(m) => InnerValue::Object(
                 m.into_iter()
-                    .map(|(k, v)| (k, Rc::new(RefCell::new(GCValue::new(v.into())))))
+                    .map(|(k, v)| (k, Rc::new(RefCell::new(v.into()))))
                     .collect(),
             ),
-        }
+        })
     }
 }
 
-impl Into<Value> for InnerValue {
-    fn into(self) -> Value {
+impl InnerValue {
+    pub fn into_with_recursion_limit(self, recursion_limit: usize) -> Value {
         match self {
             InnerValue::Null => Value::Null,
             InnerValue::Bool(b) => Value::Bool(b),
@@ -96,12 +121,25 @@ impl Into<Value> for InnerValue {
             InnerValue::String(s) => Value::String(s),
             InnerValue::Array(a) => Value::Array(
                 a.into_iter()
-                    .map(|e| gc_borrow_inner!(e).clone().into())
+                    .filter(|_| recursion_limit - 1 != 0)
+                    .map(|e| {
+                        gc_borrow_inner!(e)
+                            .clone()
+                            .into_with_recursion_limit(recursion_limit - 1)
+                    })
                     .collect(),
             ),
             InnerValue::Object(m) => Value::Object(
                 m.into_iter()
-                    .map(|(k, v)| (k, gc_borrow_inner!(&v.borrow()).clone().into()))
+                    .filter(|_| recursion_limit - 1 != 0)
+                    .map(|(k, v)| {
+                        (
+                            k,
+                            gc_borrow_inner!(&v.borrow())
+                                .clone()
+                                .into_with_recursion_limit(recursion_limit - 1),
+                        )
+                    })
                     .collect(),
             ),
         }
@@ -122,5 +160,22 @@ impl Trace for InnerValue {
                 }
             }
         }
+    }
+}
+
+pub unsafe fn collect_cycles_if_needed() {
+    let current_time = Instant::now();
+
+    static mut LAST_TIME: Option<Instant> = None;
+    if LAST_TIME.is_none() {
+        LAST_TIME = Some(current_time);
+    }
+
+    if current_time.duration_since(LAST_TIME.unwrap()) >= Duration::from_secs(1)
+        && number_of_roots_buffered() >= 1
+    {
+        LAST_TIME = Some(current_time);
+
+        collect_cycles()
     }
 }
