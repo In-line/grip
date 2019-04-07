@@ -45,6 +45,12 @@ extern crate derive_more;
 #[macro_use]
 extern crate error_chain;
 
+#[macro_use]
+extern crate custom_derive;
+
+#[macro_use]
+extern crate newtype_derive;
+
 mod errors {
     error_chain! {
         errors {
@@ -71,6 +77,10 @@ mod errors {
     }
 }
 
+#[macro_use]
+pub mod gc_json;
+
 pub mod cell_map;
 pub mod ffi;
+
 pub mod networking_queue;

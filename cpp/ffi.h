@@ -78,6 +78,8 @@ cell grip_json_array_replace_string(const void *amx, cell array, cell index, con
 
 cell grip_json_array_replace_value(const void *amx, cell array, cell index, cell value);
 
+cell grip_json_deep_copy(const void *amx, cell object, cell recursion_limit);
+
 cell grip_json_equals(const void *amx, cell value1, cell value2);
 
 cell grip_json_get_bool(const void *amx, cell value);
@@ -104,13 +106,19 @@ cell grip_json_init_object();
 
 cell grip_json_init_string(const void *amx, char *string);
 
+cell grip_json_object_clear(const void *amx, cell object);
+
 cell grip_json_object_get_bool(const void *amx, cell object, const char *name, bool dot_notation);
+
+cell grip_json_object_get_count(const void *amx, cell object);
 
 cell grip_json_object_get_float(const void *amx,
                                 cell object,
                                 const char *name,
                                 bool dot_notation,
                                 float *ret);
+
+cell grip_json_object_get_name(const void *amx, cell object, cell index, char *buffer, cell maxlen);
 
 cell grip_json_object_get_number(const void *amx, cell object, const char *name, bool dot_notation);
 
@@ -123,6 +131,48 @@ cell grip_json_object_get_string(const void *amx,
 
 cell grip_json_object_get_value(const void *amx, cell object, const char *name, bool dot_notation);
 
+cell grip_json_object_get_value_at(const void *amx, cell object, cell index);
+
+cell grip_json_object_has_value(const void *amx,
+                                cell object,
+                                const char *name,
+                                cell json_type,
+                                bool dot_notation);
+
+cell grip_json_object_remove(const void *amx, cell object, const char *name);
+
+cell grip_json_object_set_bool(const void *amx,
+                               cell object,
+                               const char *name,
+                               bool value,
+                               bool dot_notation);
+
+cell grip_json_object_set_float(const void *amx,
+                                cell object,
+                                const char *name,
+                                float number,
+                                bool dot_notation);
+
+cell grip_json_object_set_null(const void *amx, cell object, const char *name, bool dot_notation);
+
+cell grip_json_object_set_number(const void *amx,
+                                 cell object,
+                                 const char *name,
+                                 cell number,
+                                 bool dot_notation);
+
+cell grip_json_object_set_string(const void *amx,
+                                 cell object,
+                                 const char *name,
+                                 const char *string,
+                                 bool dot_notation);
+
+cell grip_json_object_set_value(const void *amx,
+                                cell object,
+                                const char *name,
+                                cell value,
+                                bool dot_notation);
+
 cell grip_json_parse_file(const void *amx, char *file, char *error_buffer, cell error_buffer_size);
 
 cell grip_json_parse_response_body(const void *amx, char *error_buffer, cell error_buffer_size);
@@ -131,6 +181,27 @@ cell grip_json_parse_string(const void *amx,
                             char *string,
                             char *error_buffer,
                             cell error_buffer_size);
+
+cell grip_json_serial_size(const void *amx,
+                           cell value,
+                           bool pretty,
+                           bool null_byte,
+                           cell recursion_limit);
+
+cell grip_json_serial_to_file(const void *amx,
+                              cell value,
+                              const char *file,
+                              bool pretty,
+                              cell recursion_limit);
+
+cell grip_json_serial_to_string(const void *amx,
+                                cell value,
+                                bool pretty,
+                                char *buffer,
+                                cell maxlen,
+                                cell recursion_limit);
+
+cell grip_json_validate(const void *amx, cell schema, cell value);
 
 cell grip_options_add_header(const void *amx,
                              cell options_handle,

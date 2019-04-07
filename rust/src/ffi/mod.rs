@@ -37,6 +37,8 @@ use self::ini::Ini;
 #[macro_use]
 mod ext;
 
+mod strlcpy;
+
 use serde_json::json;
 
 use crate::ffi::ext::*;
@@ -58,14 +60,16 @@ use crate::networking_queue::{
 use std::prelude::v1::Vec;
 
 use crate::cell_map::CellMap;
-use serde_json::Value;
+use crate::gc_json::*;
+use std::cell::RefCell;
+use std::panic::catch_unwind;
 
 struct ModuleStorage {
     pub global_queue: Queue,
     pub current_response: Option<Result<Response>>,
     pub bodies_handles: CellMap<Vec<u8>>,
     pub cancellations_handles: CellMap<RequestCancellation>,
-    pub json_handles: CellMap<Value>,
+    pub json_handles: CellMap<GCValue>,
     pub options_handles: CellMap<RequestOptions>,
     pub error_logger: extern "C" fn(*const c_void, *const c_char),
     pub callbacks_per_frame: usize,
@@ -343,7 +347,7 @@ pub unsafe extern "C" fn grip_get_error_description(
         );
 
         use error_chain::ChainedError;
-        copy_unsafe_string!(amx, buffer, e.display_chain(), size)
+        try_to_copy_unsafe_string!(amx, buffer, e.display_chain(), size)
     } else {
         try_and_log_ffi!(amx, Err(ffi_error("No error for this response.")))
     }
@@ -362,7 +366,7 @@ pub unsafe extern "C" fn grip_get_response_body_string(
             .as_ref()
             .chain_err(|| ffi_error("No active response at this time"))
     ) {
-        copy_unsafe_string!(
+        try_to_copy_unsafe_string!(
             amx,
             buffer,
             try_and_log_ffi!(
@@ -501,6 +505,8 @@ pub unsafe extern "C" fn grip_process_request() {
         get_module().callbacks_per_frame * multiplier,
         std::time::Duration::from_micros(get_module().microseconds_delay_between_attempts as u64),
     );
+
+    collect_cycles_if_needed();
 }
 
 #[no_mangle]
@@ -520,10 +526,17 @@ pub unsafe extern "C" fn grip_json_parse_response_body(
             serde_json::from_slice(&response.body[..]).map_err(|e| ErrorKind::JSONError(e).into());
 
         match value {
-            Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+            Ok(value) => get_module_mut()
+                .json_handles
+                .insert_with_unique_id(value.into()),
             Err(error) => {
                 use error_chain::ChainedError;
-                copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
+                try_to_copy_unsafe_string!(
+                    amx,
+                    error_buffer,
+                    error.display_chain(),
+                    error_buffer_size
+                );
                 0
             }
         }
@@ -552,10 +565,12 @@ pub unsafe extern "C" fn grip_json_parse_string(
     .map_err(|e| ErrorKind::JSONError(e).into());
 
     match value {
-        Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+        Ok(value) => get_module_mut()
+            .json_handles
+            .insert_with_unique_id(value.into()),
         Err(error) => {
             use error_chain::ChainedError;
-            copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
+            try_to_copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
             0
         }
     }
@@ -574,8 +589,7 @@ pub unsafe extern "C" fn grip_json_parse_file(
             amx,
             File::open(try_and_log_ffi!(
                 amx,
-                CStr::from_ptr(file)
-                    .to_str()
+                str_from_ptr(file)
                     .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
             ))
             .chain_err(|| ffi_error("Can't open file."))
@@ -583,10 +597,12 @@ pub unsafe extern "C" fn grip_json_parse_file(
         .map_err(|e| ErrorKind::JSONError(e).into());
 
     match value {
-        Ok(value) => get_module_mut().json_handles.insert_with_unique_id(value),
+        Ok(value) => get_module_mut()
+            .json_handles
+            .insert_with_unique_id(value.into()),
         Err(error) => {
             use error_chain::ChainedError;
-            copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
+            try_to_copy_unsafe_string!(amx, error_buffer, error.display_chain(), error_buffer_size);
             0
         }
     }
@@ -619,19 +635,13 @@ pub unsafe extern "C" fn grip_json_equals(amx: *const c_void, value1: Cell, valu
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> Cell {
-    match try_and_log_ffi!(
-        amx,
-        get_module()
-            .json_handles
-            .get_with_id(value)
-            .chain_err(|| ffi_error(format!("value {} handle is invalid", value)))
-    ) {
-        Value::Null => 1,
-        Value::String(_) => 2,
-        Value::Number(_) => 3,
-        Value::Object(_) => 4,
-        Value::Array(_) => 5,
-        Value::Bool(_) => 6,
+    match try_to_get_json_value!(amx, value) {
+        InnerValue::Null => 1,
+        InnerValue::String(_) => 2,
+        InnerValue::Number(_) => 3,
+        InnerValue::Object(_) => 4,
+        InnerValue::Array(_) => 5,
+        InnerValue::Bool(_) => 6,
     }
 }
 
@@ -639,24 +649,23 @@ pub unsafe extern "C" fn grip_json_get_type(amx: *const c_void, value: Cell) -> 
 pub unsafe extern "C" fn grip_json_init_object() -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!({}))
+        .insert_with_unique_id(gc_json!({}))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_array() -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!([]))
+        .insert_with_unique_id(gc_json!([]))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut c_char) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(try_and_log_ffi!(
+        .insert_with_unique_id(gc_json!(try_and_log_ffi!(
             amx,
-            CStr::from_ptr(string)
-                .to_str()
+            str_from_ptr(string)
                 .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
         )
         .to_owned()))
@@ -666,28 +675,28 @@ pub unsafe extern "C" fn grip_json_init_string(amx: *const c_void, string: *mut 
 pub unsafe extern "C" fn grip_json_init_number(value: Cell) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(value))
+        .insert_with_unique_id(gc_json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_float(value: f64) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(value))
+        .insert_with_unique_id(gc_json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_bool(value: bool) -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(value))
+        .insert_with_unique_id(gc_json!(value))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_init_null() -> Cell {
     get_module_mut()
         .json_handles
-        .insert_with_unique_id(json!(null))
+        .insert_with_unique_id(gc_json!(null))
 }
 
 #[no_mangle]
@@ -697,8 +706,8 @@ pub unsafe extern "C" fn grip_json_get_string(
     buffer: *mut c_char,
     buffer_size: Cell,
 ) -> Cell {
-    match try_to_get_json_value!(amx, value) {
-        Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
+    match &try_to_get_json_value!(amx, value) as &InnerValue {
+        InnerValue::String(s) => try_to_copy_unsafe_string!(amx, buffer, s, buffer_size),
         v => unconditionally_log_error!(
             amx,
             ffi_error(format!("JSON Handle is not string. {:?}", v))
@@ -708,8 +717,8 @@ pub unsafe extern "C" fn grip_json_get_string(
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_get_number(amx: *const c_void, value: Cell) -> Cell {
-    match try_to_get_json_value!(amx, value) {
-        Value::Number(n) => try_and_log_ffi!(
+    match &try_to_get_json_value!(amx, value) as &InnerValue {
+        InnerValue::Number(n) => try_and_log_ffi!(
             amx,
             n.as_i64().chain_err(|| ffi_error("Number is not integer"))
         ) as Cell,
@@ -728,8 +737,8 @@ pub unsafe extern "C" fn grip_json_get_float(
 ) -> Cell {
     *ret = 0.0;
 
-    match try_to_get_json_value!(amx, value) {
-        Value::Number(n) => {
+    match &try_to_get_json_value!(amx, value) as &InnerValue {
+        InnerValue::Number(n) => {
             *ret = try_and_log_ffi!(
                 amx,
                 n.as_f64()
@@ -746,12 +755,11 @@ pub unsafe extern "C" fn grip_json_get_float(
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_get_bool(amx: *const c_void, value: Cell) -> Cell {
-    match try_to_get_json_value!(amx, value) {
-        Value::Bool(b) => *b as Cell,
-        v => unconditionally_log_error!(
-            amx,
-            ffi_error(format!("JSON Handle is not bool. {:?}", v))
-        ),
+    match &try_to_get_json_value!(amx, value) as &InnerValue {
+        InnerValue::Bool(b) => *b as Cell,
+        v => {
+            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not bool. {:?}", v)))
+        }
     }
 }
 
@@ -761,14 +769,9 @@ pub unsafe extern "C" fn grip_json_array_get_value(
     array: Cell,
     index: Cell,
 ) -> Cell {
-    match try_to_get_json_value!(amx, array) {
-        Value::Array(vec) => get_module_mut()
-            .json_handles
-            .insert_with_unique_id(vec[try_as_usize!(amx, index)].clone()),
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    get_module_mut()
+        .json_handles
+        .insert_with_unique_id(try_to_get_json_array_value!(amx, array, index).clone())
 }
 
 #[no_mangle]
@@ -779,17 +782,12 @@ pub unsafe extern "C" fn grip_json_array_get_string(
     buffer: *mut c_char,
     buffer_size: Cell,
 ) -> Cell {
-    match try_to_get_json_value!(amx, array) {
-        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
-            Value::String(s) => copy_unsafe_string!(amx, buffer, s, buffer_size),
-            v => unconditionally_log_error!(
-                amx,
-                ffi_error(format!("JSON Handle is not string. {:?}", v))
-            ),
-        },
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
+    match gc_borrow_inner!(*try_to_get_json_array_value!(amx, array, index)) {
+        InnerValue::String(s) => try_to_copy_unsafe_string!(amx, buffer, s, buffer_size),
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not string. {:?}", v))
+        ),
     }
 }
 
@@ -799,20 +797,15 @@ pub unsafe extern "C" fn grip_json_array_get_number(
     array: Cell,
     index: Cell,
 ) -> Cell {
-    match try_to_get_json_value!(amx, array) {
-        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
-            Value::Number(n) => try_and_log_ffi!(
-                amx,
-                n.as_i64().chain_err(|| ffi_error("Number is not integer"))
-            ) as Cell,
-            v => unconditionally_log_error!(
-                amx,
-                ffi_error(format!("JSON Handle is not number. {:?}", v))
-            ),
-        },
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
+    match gc_borrow_inner!(*try_to_get_json_array_value!(amx, array, index)) {
+        InnerValue::Number(n) => try_and_log_ffi!(
+            amx,
+            n.as_i64().chain_err(|| ffi_error("Number is not integer"))
+        ) as Cell,
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not number. {:?}", v))
+        ),
     }
 }
 
@@ -823,25 +816,20 @@ pub unsafe extern "C" fn grip_json_array_get_float(
     index: Cell,
     ret: *mut f32,
 ) -> Cell {
-    match try_to_get_json_value!(amx, array) {
-        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
-            Value::Number(n) => {
-                *ret = try_and_log_ffi!(
-                    amx,
-                    n.as_f64()
-                        .chain_err(|| ffi_error("Number is not 32 bit float"))
-                ) as f32;
-
-                1
-            }
-            v => unconditionally_log_error!(
+    match gc_borrow_inner!(*try_to_get_json_array_value!(amx, array, index)) {
+        InnerValue::Number(n) => {
+            *ret = try_and_log_ffi!(
                 amx,
-                ffi_error(format!("JSON Handle is not number. {:?}", v))
-            ),
-        },
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
+                n.as_f64()
+                    .chain_err(|| ffi_error("Number is not 32 bit float"))
+            ) as f32;
+
+            1
         }
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not number. {:?}", v))
+        ),
     }
 }
 
@@ -851,28 +839,18 @@ pub unsafe extern "C" fn grip_json_array_get_bool(
     array: Cell,
     index: Cell,
 ) -> Cell {
-    match try_to_get_json_value!(amx, array) {
-        Value::Array(vec) => match &vec[try_as_usize!(amx, index)] {
-            Value::Bool(b) => *b as Cell,
-            v => unconditionally_log_error!(
-                amx,
-                ffi_error(format!("JSON Handle is not number. {:?}", v))
-            ),
-        },
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
+    match gc_borrow_inner!(*try_to_get_json_array_value!(amx, array, index)) {
+        InnerValue::Bool(b) => *b as Cell,
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not number. {:?}", v))
+        ),
     }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_array_get_count(amx: *const c_void, array: Cell) -> Cell {
-    match try_to_get_json_value!(amx, array) {
-        Value::Array(vec) => vec.len() as Cell,
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array!(amx, array).len() as Cell
 }
 
 #[no_mangle]
@@ -882,15 +860,18 @@ pub unsafe extern "C" fn grip_json_array_replace_value(
     index: Cell,
     value: Cell,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = try_to_get_json_value!(amx, value).clone();
+    try_and_log_ffi!(
+        amx,
+        catch_unwind(|| {
+            *try_to_get_json_array_value_mut!(amx, array, index) =
+                try_to_get_json_value_gc!(amx, value).clone();
+
             1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+        })
+        .map_err(|_| ffi_error(
+            "This function panicked unexpectly. This can be attempt to mutate self"
+        ))
+    )
 }
 
 #[no_mangle]
@@ -900,21 +881,13 @@ pub unsafe extern "C" fn grip_json_array_replace_string(
     index: Cell,
     string: *const c_char,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = json!(try_and_log_ffi!(
-                amx,
-                CStr::from_ptr(string)
-                    .to_str()
-                    .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
-            )
-            .to_owned());
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    *try_to_get_json_array_value_mut!(amx, array, index) = gc_json!(try_and_log_ffi!(
+        amx,
+        str_from_ptr(string).chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+    )
+    .to_owned());
+
+    1
 }
 
 #[no_mangle]
@@ -924,15 +897,8 @@ pub unsafe extern "C" fn grip_json_array_replace_number(
     index: Cell,
     value: Cell,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = json!(value);
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    *try_to_get_json_array_value_mut!(amx, array, index) = gc_json!(value);
+    1
 }
 
 #[no_mangle]
@@ -942,15 +908,8 @@ pub unsafe extern "C" fn grip_json_array_replace_float(
     index: Cell,
     value: f32,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = json!(value);
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    *try_to_get_json_array_value_mut!(amx, array, index) = gc_json!(value);
+    1
 }
 
 #[no_mangle]
@@ -960,15 +919,8 @@ pub unsafe extern "C" fn grip_json_array_replace_bool(
     index: Cell,
     value: bool,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = json!(value);
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    *try_to_get_json_array_value_mut!(amx, array, index) = gc_json!(value);
+    1
 }
 
 #[no_mangle]
@@ -977,15 +929,8 @@ pub unsafe extern "C" fn grip_json_array_replace_null(
     array: Cell,
     index: Cell,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec[try_as_usize!(amx, index)] = json!(null);
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    *try_to_get_json_array_value_mut!(amx, array, index) = gc_json!(null);
+    1
 }
 
 #[no_mangle]
@@ -994,15 +939,17 @@ pub unsafe extern "C" fn grip_json_array_append_value(
     array: Cell,
     value: Cell,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.push(try_to_get_json_value!(amx, value).clone());
+    try_and_log_ffi!(
+        amx,
+        catch_unwind(|| {
+            try_to_get_json_array_mut!(amx, array)
+                .push(try_to_get_json_value_gc!(amx, value).clone());
             1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+        })
+        .map_err(|_| ffi_error(
+            "This function panicked unexpectly. This can be attempt to mutate self"
+        ))
+    )
 }
 
 #[no_mangle]
@@ -1011,21 +958,12 @@ pub unsafe extern "C" fn grip_json_array_append_string(
     array: Cell,
     string: *const c_char,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.push(json!(try_and_log_ffi!(
-                amx,
-                CStr::from_ptr(string)
-                    .to_str()
-                    .chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
-            )
-            .to_owned()));
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).push(gc_json!(try_and_log_ffi!(
+        amx,
+        str_from_ptr(string).chain_err(|| ffi_error("Invalid string. Can't create UTF-8 string"))
+    )
+    .to_owned()));
+    1
 }
 
 #[no_mangle]
@@ -1034,15 +972,8 @@ pub unsafe extern "C" fn grip_json_array_append_number(
     array: Cell,
     value: Cell,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.push(json!(value));
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).push(gc_json!(value));
+    1
 }
 
 #[no_mangle]
@@ -1051,15 +982,8 @@ pub unsafe extern "C" fn grip_json_array_append_float(
     array: Cell,
     value: f32,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.push(json!(value));
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).push(gc_json!(value));
+    1
 }
 
 #[no_mangle]
@@ -1068,28 +992,14 @@ pub unsafe extern "C" fn grip_json_array_append_bool(
     array: Cell,
     value: bool,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.push(json!(value));
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).push(gc_json!(value));
+    1
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_array_append_null(amx: *const c_void, array: Cell) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.push(json!(null));
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).push(gc_json!(null));
+    1
 }
 
 #[no_mangle]
@@ -1098,38 +1008,14 @@ pub unsafe extern "C" fn grip_json_array_remove(
     array: Cell,
     index: Cell,
 ) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.remove(try_and_log_ffi!(
-                amx,
-                if index >= 0 {
-                    Ok(index as usize)
-                } else {
-                    Err(ffi_error(format!(
-                        "Index/Size {} should be greater or equal to zero.",
-                        index
-                    )))
-                }
-            ));
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).remove(try_as_usize!(amx, index));
+    1
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn grip_json_array_clear(amx: *const c_void, array: Cell) -> Cell {
-    match try_to_get_json_value_mut!(amx, array) {
-        Value::Array(vec) => {
-            vec.clear();
-            1
-        }
-        v => {
-            unconditionally_log_error!(amx, ffi_error(format!("JSON Handle is not array. {:?}", v)))
-        }
-    }
+    try_to_get_json_array_mut!(amx, array).clear();
+    1
 }
 
 #[no_mangle]
@@ -1140,7 +1026,7 @@ pub unsafe extern "C" fn grip_json_object_get_value(
     dot_notation: bool,
 ) -> Cell {
     get_module_mut().json_handles.insert_with_unique_id(
-        try_to_get_json_object_value!(amx, object, name, dot_notation).clone(),
+        try_to_get_json_object_value_gc!(amx, object, name, dot_notation).clone(),
     )
 }
 #[no_mangle]
@@ -1153,10 +1039,10 @@ pub unsafe extern "C" fn grip_json_object_get_string(
     dot_notation: bool,
 ) -> Cell {
     match try_to_get_json_object_value!(amx, object, name, dot_notation) {
-        Value::String(s) => copy_unsafe_string!(amx, buffer, s, maxlen),
+        InnerValue::String(s) => try_to_copy_unsafe_string!(amx, buffer, s, maxlen),
         v => unconditionally_log_error!(
             amx,
-            ffi_error(format!("JSON Handle is not string. {:?}", v))
+            ffi_error(format!("JSON at object index is not string. {:?}", v))
         ),
     }
 }
@@ -1169,13 +1055,13 @@ pub unsafe extern "C" fn grip_json_object_get_number(
     dot_notation: bool,
 ) -> Cell {
     match try_to_get_json_object_value!(amx, object, name, dot_notation) {
-        Value::Number(n) => try_and_log_ffi!(
+        InnerValue::Number(n) => try_and_log_ffi!(
             amx,
             n.as_i64().chain_err(|| ffi_error("Number is not integer"))
         ) as Cell,
         v => unconditionally_log_error!(
             amx,
-            ffi_error(format!("JSON Handle is not number. {:?}", v))
+            ffi_error(format!("JSON at object index is not number. {:?}", v))
         ),
     }
 }
@@ -1189,7 +1075,7 @@ pub unsafe extern "C" fn grip_json_object_get_float(
     ret: *mut f32,
 ) -> Cell {
     match try_to_get_json_object_value!(amx, object, name, dot_notation) {
-        Value::Number(n) => {
+        InnerValue::Number(n) => {
             *ret = try_and_log_ffi!(
                 amx,
                 n.as_f64().chain_err(|| ffi_error("Number is not float"))
@@ -1199,7 +1085,7 @@ pub unsafe extern "C" fn grip_json_object_get_float(
         }
         v => unconditionally_log_error!(
             amx,
-            ffi_error(format!("JSON Handle is not number. {:?}", v))
+            ffi_error(format!("JSON at object index is not number. {:?}", v))
         ),
     }
 }
@@ -1212,10 +1098,374 @@ pub unsafe extern "C" fn grip_json_object_get_bool(
     dot_notation: bool,
 ) -> Cell {
     match try_to_get_json_object_value!(amx, object, name, dot_notation) {
-        Value::Bool(b) => *b as Cell,
+        InnerValue::Bool(b) => *b as Cell,
         v => unconditionally_log_error!(
             amx,
-            ffi_error(format!("JSON Handle is not bool. {:?}", v))
+            ffi_error(format!("JSON at object index is not bool. {:?}", v))
         ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_count(amx: *const c_void, object: Cell) -> Cell {
+    match try_to_get_json_value!(amx, object) {
+        InnerValue::Object(m) => m.len() as Cell,
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not object. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_name(
+    amx: *const c_void,
+    object: Cell,
+    index: Cell,
+    buffer: *mut c_char,
+    maxlen: Cell,
+) -> Cell {
+    match try_to_get_json_value!(amx, object) {
+        InnerValue::Object(m) => try_to_copy_unsafe_string!(
+            amx,
+            buffer,
+            try_and_log_ffi!(
+                amx,
+                m.get_index(try_as_usize!(amx, index))
+                    .chain_err(|| "Index wasn't found")
+            )
+            .0,
+            maxlen
+        ),
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not object. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_get_value_at(
+    amx: *const c_void,
+    object: Cell,
+    index: Cell,
+) -> Cell {
+    match try_to_get_json_value!(amx, object) {
+        InnerValue::Object(m) => get_module_mut().json_handles.insert_with_unique_id(
+            try_and_log_ffi!(
+                amx,
+                m.get_index(try_as_usize!(amx, index))
+                    .chain_err(|| "Index wasn't found")
+            )
+            .1
+            .borrow()
+            .clone(),
+        ),
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not object. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_has_value(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    json_type: Cell,
+    dot_notation: bool,
+) -> Cell {
+    let type_id = match try_to_get_json_object_value!(amx, object, name, dot_notation) {
+        InnerValue::Null => 1,
+        InnerValue::String(_) => 2,
+        InnerValue::Number(_) => 3,
+        InnerValue::Object(_) => 4,
+        InnerValue::Array(_) => 5,
+        InnerValue::Bool(_) => 6,
+    };
+
+    if json_type > 7 || json_type < 1 {
+        unconditionally_log_error!(amx, ffi_error(format!("Invalid json type: {}", json_type)));
+    }
+
+    // Ignore if error and check type.
+    if json_type == 7 || type_id == json_type {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_set_value(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    value: Cell,
+    dot_notation: bool,
+) -> Cell {
+    try_and_log_ffi!(
+        amx,
+        catch_unwind(|| {
+            *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) =
+                try_to_get_json_value_gc!(amx, value).clone();
+            1
+        })
+        .map_err(|_| ffi_error(
+            "This function panicked unexpectly. This can be attempt to mutate self"
+        ))
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_set_string(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    string: *const c_char,
+    dot_notation: bool,
+) -> Cell {
+    match &mut try_to_get_json_object_value_mut!(amx, object, name, dot_notation) {
+        InnerValue::String(s) => {
+            *s = try_and_log_ffi!(
+                amx,
+                str_from_ptr(string).chain_err(|| ffi_error("Can't create UTF-8 string"))
+            )
+            .to_owned();
+
+            1
+        }
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("Object at index is not string: {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_set_number(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    number: Cell,
+    dot_notation: bool,
+) -> Cell {
+    match &mut try_to_get_json_object_value_mut!(amx, object, name, dot_notation) {
+        InnerValue::Number(n) => {
+            *n = number.into();
+            1
+        }
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("Object at index is not number: {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_set_float(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    number: f32,
+    dot_notation: bool,
+) -> Cell {
+    *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) = gc_json!(number);
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_set_bool(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    value: bool,
+    dot_notation: bool,
+) -> Cell {
+    *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) = gc_json!(value);
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_set_null(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+    dot_notation: bool,
+) -> Cell {
+    *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) = gc_json!(null);
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_remove(
+    amx: *const c_void,
+    object: Cell,
+    name: *const c_char,
+) -> Cell {
+    match try_to_get_json_value_mut!(amx, object) {
+        InnerValue::Object(o) => {
+            o.remove(try_and_log_ffi!(
+                amx,
+                str_from_ptr(name).chain_err(|| ffi_error("Can't create UTF-8 string"))
+            ));
+            1
+        }
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not object. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_object_clear(amx: *const c_void, object: Cell) -> Cell {
+    match try_to_get_json_value_mut!(amx, object) {
+        InnerValue::Object(o) => {
+            o.clear();
+            1
+        }
+        v => unconditionally_log_error!(
+            amx,
+            ffi_error(format!("JSON Handle is not object. {:?}", v))
+        ),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_deep_copy(
+    amx: *const c_void,
+    object: Cell,
+    recursion_limit: Cell,
+) -> Cell {
+    get_module_mut().json_handles.insert_with_unique_id(
+        try_to_get_json_value_gc!(amx, object)
+            .deep_clone_with_recursion_limit(try_as_usize!(amx, recursion_limit)),
+    )
+}
+
+fn serialize_to_string(value: &serde_json::Value, pretty: bool, null_byte: bool) -> Result<String> {
+    Ok(format!(
+        "{}{}",
+        if pretty {
+            serde_json::to_string_pretty(value).chain_err(|| ffi_error("Can't serialize JSON"))?
+        } else {
+            serde_json::to_string(value).chain_err(|| ffi_error("Can't serialize JSON"))?
+        },
+        if null_byte { "\0" } else { "" }
+    ))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_serial_size(
+    amx: *const c_void,
+    value: Cell,
+    pretty: bool,
+    null_byte: bool,
+    recursion_limit: Cell,
+) -> Cell {
+    try_and_log_ffi!(
+        amx,
+        serialize_to_string(
+            &try_to_get_json_value!(amx, value)
+                .clone()
+                .into_with_recursion_limit(try_as_usize!(amx, recursion_limit)),
+            pretty,
+            null_byte
+        )
+    )
+    .len() as Cell
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_serial_to_string(
+    amx: *const c_void,
+    value: Cell,
+    pretty: bool,
+    buffer: *mut c_char,
+    maxlen: Cell,
+    recursion_limit: Cell,
+) -> Cell {
+    try_to_copy_unsafe_string!(
+        amx,
+        buffer,
+        try_and_log_ffi!(
+            amx,
+            serialize_to_string(
+                &try_to_get_json_value!(amx, value)
+                    .clone()
+                    .into_with_recursion_limit(try_as_usize!(amx, recursion_limit)),
+                pretty,
+                false
+            )
+        ),
+        maxlen
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_serial_to_file(
+    amx: *const c_void,
+    value: Cell,
+    file: *const c_char,
+    pretty: bool,
+    recursion_limit: Cell,
+) -> Cell {
+    use std::fs::File;
+    use std::io::{BufWriter, Write};
+
+    try_and_log_ffi!(
+        amx,
+        BufWriter::new(try_and_log_ffi!(
+            amx,
+            File::create(try_and_log_ffi!(amx, str_from_ptr(file)))
+                .chain_err(|| ffi_error("Unable to create file"))
+        ))
+        .write_all(
+            try_and_log_ffi!(
+                amx,
+                serialize_to_string(
+                    &try_to_get_json_value!(amx, value)
+                        .clone()
+                        .into_with_recursion_limit(try_as_usize!(amx, recursion_limit)),
+                    pretty,
+                    false
+                )
+            )
+            .as_bytes(),
+        )
+        .chain_err(|| ffi_error("Unable to write data"))
+    );
+
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_json_validate(amx: *const c_void, schema: Cell, value: Cell) -> Cell {
+    let schema = match try_to_get_json_value!(amx, schema) {
+        InnerValue::Object(o) => o.clone(),
+        _ => unconditionally_log_error!(amx, ffi_error("JSON schema is not object")),
+    };
+
+    let value = match try_to_get_json_value!(amx, value) {
+        InnerValue::Object(o) => o.clone(),
+        _ => unconditionally_log_error!(amx, ffi_error("JSON schema is not object")),
+    };
+
+    if schema
+        .values()
+        .map(|i| std::mem::discriminant(gc_borrow_inner!(&i.borrow()) as &InnerValue))
+        .collect::<Vec<_>>()
+        != value
+            .values()
+            .map(|i| std::mem::discriminant(gc_borrow_inner!(&i.borrow()) as &InnerValue))
+            .collect::<Vec<_>>()
+        || schema.keys().map(|i| i.as_str()).collect::<Vec<_>>()
+            != value.keys().map(|i| i.as_str()).collect::<Vec<_>>()
+    {
+        0
+    } else {
+        1
     }
 }

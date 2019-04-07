@@ -30,7 +30,7 @@
  */
 
 use crate::errors::*;
-use serde_json::Value;
+use crate::gc_json::*;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -106,22 +106,17 @@ macro_rules! try_as_usize {
     };
 }
 
-macro_rules! copy_unsafe_string {
-    ($amx:expr, $dest:expr, $source:expr, $size:expr, $error_logger:expr) => {{
-        let source = format!("{}\0", $source);
-        libc::strncpy(
+macro_rules! try_to_copy_unsafe_string {
+    ($amx:expr, $dest:expr, $source:expr, $charsmax:expr, $error_logger:expr) => {{
+        crate::ffi::strlcpy::strlcpy(
             $dest,
-            source.as_ptr() as *const c_char,
-            try_as_usize!($amx, $size, $error_logger),
-        );
-
-        *$dest.offset($size) = '\0' as i8;
-
-        std::cmp::min($size, source.len() as isize)
+            format!("{}\0", $source).as_ptr() as *const c_char,
+            try_as_usize!($amx, $charsmax, $error_logger) + 1,
+        ) as Cell
     }};
 
     ($amx:expr, $dest:expr, $source:expr, $size:expr) => {
-        copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
+        try_to_copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
             (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
         })
     };
@@ -139,9 +134,9 @@ macro_rules! unconditionally_log_error {
     };
 }
 
-macro_rules! try_to_get_json_value {
+macro_rules! try_to_get_json_value_gc {
     ($amx:expr, $value:expr) => {{
-        let value: &Value = try_and_log_ffi!(
+        let value: &GCValue = try_and_log_ffi!(
             $amx,
             get_module_mut()
                 .json_handles
@@ -152,10 +147,15 @@ macro_rules! try_to_get_json_value {
         value
     }};
 }
-
-macro_rules! try_to_get_json_value_mut {
+macro_rules! try_to_get_json_value {
     ($amx:expr, $value:expr) => {{
-        let value: &mut Value = try_and_log_ffi!(
+        gc_borrow_inner!(try_to_get_json_value_gc!($amx, $value))
+    }};
+}
+
+macro_rules! try_to_get_json_value_gc_mut {
+    ($amx:expr, $value:expr) => {{
+        let value: &mut GCValue = try_and_log_ffi!(
             $amx,
             get_module_mut()
                 .json_handles
@@ -167,96 +167,156 @@ macro_rules! try_to_get_json_value_mut {
     }};
 }
 
-macro_rules! try_to_get_json_object_value {
-    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
-        try_and_log_ffi!(
-            $amx,
-            try_to_get_json_value!($amx, $object)
-                .index_selective_safe(try_and_log_ffi!($amx, str_from_ptr($name)), $dot_notation)
-        )
+macro_rules! try_to_get_json_value_mut {
+    ($amx:expr, $value:expr) => {{
+        gc_borrow_inner_mut!(try_to_get_json_value_gc_mut!($amx, $value)) as &mut InnerValue
     }};
 }
 
-pub trait ValueExt<'a>: std::ops::Index<&'a str, Output = Value> {
-    fn dot_index_safe(&self, name: &str) -> Result<&Value>;
-    fn dot_index_safe_mut(&mut self, name: &str) -> Result<&mut Value>;
-
-    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<&Value>;
-    fn index_selective_safe_mut(&mut self, name: &'a str, dot_notation: bool)
-        -> Result<&mut Value>;
+macro_rules! try_to_get_json_object_value_rc_gc {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_value_gc!($amx, $object).index_selective_safe_rc_gc(
+                try_and_log_ffi!($amx, str_from_ptr($name)),
+                $dot_notation
+            )
+        )
+    };
 }
 
-impl<'a> ValueExt<'a> for Value {
-    fn dot_index_safe(&self, name: &str) -> Result<&Value> {
-        let mut it = self;
-        for element in name.split('.') {
-            if element.is_empty() {
-                bail!("Double/Empty separator in `{}`", name);
-            }
+macro_rules! try_to_get_json_object_value_gc {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
+        try_to_get_json_object_value_rc_gc!($amx, $object, $name, $dot_notation).borrow()
+    }};
+}
 
-            // Same as bounds checked index.
-            it = it.index_selective_safe(element, false)?;
+macro_rules! try_to_get_json_object_value_gc_mut {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {
+        (&*try_to_get_json_object_value_rc_gc!($amx, $object, $name, $dot_notation)
+            as &RefCell<GCValue>)
+            .borrow_mut()
+    };
+}
+
+macro_rules! try_to_get_json_object_value {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
+        gc_borrow_inner!(try_to_get_json_object_value_gc!(
+            $amx,
+            $object,
+            $name,
+            $dot_notation
+        ))
+    }};
+}
+
+macro_rules! try_to_get_json_object_value_mut {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
+        gc_borrow_inner_mut!(try_to_get_json_object_value_gc_mut!(
+            $amx,
+            $object,
+            $name,
+            $dot_notation
+        ))
+    }};
+}
+
+macro_rules! try_to_get_json_array {
+    ($amx:expr, $array:expr) => {
+        match &try_to_get_json_value!($amx, $array) {
+            InnerValue::Array(vec) => vec,
+            v => unconditionally_log_error!(
+                $amx,
+                ffi_error(format!("JSON Handle is not array. {:?}", v))
+            ),
         }
+    };
+}
 
-        Ok(it)
-    }
-
-    fn dot_index_safe_mut(&mut self, name: &str) -> Result<&mut Value> {
-        let mut it = self;
-        for element in name.split('.') {
-            if element.is_empty() {
-                bail!("Double/Empty separator in `{}`", name);
-            }
-
-            // Same as bounds checked index.
-            it = it.index_selective_safe_mut(element, false)?;
+macro_rules! try_to_get_json_array_mut {
+    ($amx:expr, $array:expr) => {
+        match &mut try_to_get_json_value_mut!($amx, $array) {
+            InnerValue::Array(vec) => vec,
+            v => unconditionally_log_error!(
+                $amx,
+                ffi_error(format!("JSON Handle is not array. {:?}", v))
+            ),
         }
+    };
+}
 
-        Ok(it)
-    }
+macro_rules! try_to_get_json_array_value {
+    ($amx:expr, $array:expr, $index:expr) => {
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_array!($amx, $array).get(try_as_usize!($amx, $index))
+        )
+    };
+}
 
-    fn index_selective_safe(&self, name: &'a str, dot_notation: bool) -> Result<&Value> {
-        if dot_notation {
-            self.dot_index_safe(name)
-        } else {
-            match self {
-                Value::Object(m) => {
-                    if let Some(val) = m.get(name) {
-                        Ok(val)
-                    } else {
-                        bail!(
-                            "Can't index json using `{}`, because json doesn't contain it",
-                            name
-                        )
-                    }
-                }
-                _ => bail!(
-                    "Can't index json using `{}` json stops is not object.",
-                    name
-                ),
-            }
-        }
-    }
+macro_rules! try_to_get_json_array_value_mut {
+    ($amx:expr, $array:expr, $index:expr) => {
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_array_mut!($amx, $array).get_mut(try_as_usize!($amx, $index))
+        )
+    };
+}
 
-    fn index_selective_safe_mut(
-        &mut self,
-        name: &'a str,
+use core::borrow::Borrow;
+use std::cell::RefCell;
+use std::rc::Rc;
+
+pub trait ValueExt<'a> {
+    fn dot_index_safe_rc_gc(&'a self, name: &str) -> Result<Rc<RefCell<GCValue>>>;
+    fn index_selective_safe_rc_gc(
+        &'a self,
+        name: &str,
         dot_notation: bool,
-    ) -> Result<&mut Value> {
+    ) -> Result<Rc<RefCell<GCValue>>>;
+}
+
+impl<'a> ValueExt<'a> for GCValue {
+    fn dot_index_safe_rc_gc(&'a self, name: &str) -> Result<Rc<RefCell<GCValue>>> {
+        let mut it: Option<Rc<RefCell<GCValue>>> = None;
+        for element in name.split('.') {
+            if element.is_empty() {
+                bail!("Double/Empty separator in `{}`", name);
+            }
+
+            // Same as bounds checked index.
+            if let Some(it_raw) = it {
+                let it_raw: &RefCell<_> = it_raw.borrow();
+                it = Some(
+                    it_raw
+                        .borrow()
+                        .index_selective_safe_rc_gc(element, false)?
+                        .clone(),
+                );
+            } else {
+                it = Some(self.index_selective_safe_rc_gc(element, false)?.clone());
+            }
+        }
+
+        Ok(it.chain_err(|| "Name is invalid")?)
+    }
+
+    fn index_selective_safe_rc_gc(
+        &'a self,
+        name: &str,
+        dot_notation: bool,
+    ) -> Result<Rc<RefCell<GCValue>>> {
         if dot_notation {
-            self.dot_index_safe_mut(name)
+            self.dot_index_safe_rc_gc(name)
         } else {
-            match self {
-                Value::Object(m) => {
-                    if let Some(val) = m.get_mut(name) {
-                        Ok(val)
-                    } else {
-                        bail!(
-                            "Can't index json using `{}`, because json doesn't contain it",
-                            name
-                        )
-                    }
-                }
+            match &self.borrow_inner_ref() as &InnerValue {
+                InnerValue::Object(m) => match m.get(name) {
+                    Some(target) => Ok(target.clone()),
+                    _ => bail!(
+                        "Can't index json using `{}`, because json doesn't contain it",
+                        name
+                    ),
+                },
                 _ => bail!(
                     "Can't index json using `{}` json stops is not object.",
                     name
@@ -272,13 +332,14 @@ mod tests {
     use super::*;
     use crate::ffi::Cell;
     use libc::c_char;
-    use serde_json::json;
+    use serde_json::{json, Value};
+    use std::cell::Ref;
 
     unsafe fn copy_unsafe_string(size: isize) -> Cell {
         let mut s: [c_char; 2] = [0; 2];
 
         let status =
-            copy_unsafe_string!(123 as *mut c_char, s.as_mut_ptr(), "1", size, |amx, _| {
+            try_to_copy_unsafe_string!(123 as *mut c_char, s.as_mut_ptr(), "1", size, |amx, _| {
                 assert!(amx == 123 as *mut c_char);
             });
 
@@ -291,64 +352,45 @@ mod tests {
     fn copy_unsafe_string_test() {
         unsafe {
             assert_eq!(copy_unsafe_string(-1), 0);
-            assert_eq!(copy_unsafe_string(2), 2);
+            assert_eq!(copy_unsafe_string(2), 1);
         }
     }
 
     #[test]
-    fn dot_index_safe() {
-        let mut json = json!({
+    fn dot_index_safe_rc_gc() {
+        let json: GCValue = gc_json!({
             "a": {
                 "b": 123
             }
         });
 
-        assert_eq!(json.dot_index_safe("a.b").unwrap().as_u64().unwrap(), 123);
-        assert!(json.dot_index_safe("a.b.c").is_err());
-        assert!(json.dot_index_safe("a..").is_err());
-        assert!(json.dot_index_safe("a").unwrap().is_object());
-
-        assert!(json.dot_index_safe_mut("a.b.c").is_err());
-        assert_eq!(
-            json.dot_index_safe_mut("a.b").unwrap().as_u64().unwrap(),
-            123
-        );
-        assert!(json.dot_index_safe_mut("a..").is_err());
-        assert!(json.dot_index_safe_mut("a").unwrap().is_object());
+        fn gc_to_json(v: Rc<RefCell<GCValue>>) -> Value {
+            let value: &RefCell<_> = v.borrow();
+            (*gc_borrow_inner!(value.borrow())).clone().into_with_recursion_limit(2)
+        }
 
         assert_eq!(
-            json.index_selective_safe("a.b", true)
-                .unwrap()
+            gc_to_json(json.dot_index_safe_rc_gc("a.b").unwrap())
                 .as_u64()
                 .unwrap(),
             123
         );
-        assert!(json.index_selective_safe("a.b.c", true).is_err());
-        assert!(json.index_selective_safe("a..", true).is_err());
-        assert!(json.index_selective_safe("a", true).unwrap().is_object());
+        assert!(json.dot_index_safe_rc_gc("a.b.c").is_err());
+        assert!(json.dot_index_safe_rc_gc("a..").is_err());
+        assert!(gc_to_json(json.dot_index_safe_rc_gc("a").unwrap()).is_object());
 
         assert_eq!(
-            json.index_selective_safe_mut("a.b", true)
-                .unwrap()
+            gc_to_json(json.index_selective_safe_rc_gc("a.b", true).unwrap())
                 .as_u64()
                 .unwrap(),
             123
         );
-        assert!(json.index_selective_safe_mut("a.b.c", true).is_err());
-        assert!(json.index_selective_safe_mut("a..", true).is_err());
-        assert!(json
-            .index_selective_safe_mut("a", true)
-            .unwrap()
-            .is_object());
+        assert!(json.index_selective_safe_rc_gc("a.b.c", true).is_err());
+        assert!(json.index_selective_safe_rc_gc("a..", true).is_err());
+        assert!(gc_to_json(json.index_selective_safe_rc_gc("a", true).unwrap()).is_object());
 
-        assert!(json.index_selective_safe("a", false).unwrap().is_object());
-        assert!(json.index_selective_safe("a.b.c", false).is_err());
-
-        assert!(json
-            .index_selective_safe_mut("a", false)
-            .unwrap()
-            .is_object());
-        assert!(json.index_selective_safe_mut("a.b.c", false).is_err());
+        assert!(gc_to_json(json.index_selective_safe_rc_gc("a", false).unwrap()).is_object());
+        assert!(json.index_selective_safe_rc_gc("a.b.c", false).is_err());
     }
 
 }

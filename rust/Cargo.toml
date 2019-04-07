@@ -13,7 +13,7 @@ panic = "unwind"
 
 [profile.release]
 lto = true
-panic = "abort"
+panic = "unwind"
 
 [features]
 vendored = ["reqwest/default-tls-vendored"]
@@ -34,8 +34,13 @@ rust-ini = "0.13.0"
 clone_all = "0.1.1"
 either = "1.5.2"
 lazy_static = "1.3.0"
-serde_json = "1.0.39"
+serde_json = {version = "1.0.39", features = ["preserve_order"] }
 float-cmp = "0.4.0"
+bacon_rajan_cc = "0.2.4"
+newtype_derive = "0.1.6"
+custom_derive = "0.1.7"
+indexmap = "1.0.2"
+owning_ref = "0.4.0"
 
 [build-dependencies]
 cbindgen = "0.8.3"
