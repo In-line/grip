@@ -76,6 +76,7 @@ mod errors {
         ErrorKind::FFIError(t.into()).into()
     }
 }
+
 #[macro_use]
 pub mod gc_json;
 

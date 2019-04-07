@@ -2,6 +2,7 @@ use bacon_rajan_cc::{Cc, Trace, Tracer};
 use indexmap::IndexMap;
 use serde_json::*;
 use std::cell::{Ref, RefCell, RefMut};
+use std::rc::Rc;
 
 #[macro_export]
 macro_rules! gc_json {
@@ -64,7 +65,7 @@ pub enum InnerValue {
     Number(value::Number),
     String(String),
     Array(Vec<GCValue>),
-    Object(IndexMap<String, GCValue>),
+    Object(IndexMap<String, Rc<RefCell<GCValue>>>),
 }
 
 impl From<Value> for InnerValue {
@@ -79,7 +80,7 @@ impl From<Value> for InnerValue {
             }
             Value::Object(m) => InnerValue::Object(
                 m.into_iter()
-                    .map(|(k, v)| (k, GCValue::new(v.into())))
+                    .map(|(k, v)| (k, Rc::new(RefCell::new(GCValue::new(v.into())))))
                     .collect(),
             ),
         }
@@ -100,7 +101,7 @@ impl Into<Value> for InnerValue {
             ),
             InnerValue::Object(m) => Value::Object(
                 m.into_iter()
-                    .map(|(k, v)| (k, gc_borrow_inner!(v).clone().into()))
+                    .map(|(k, v)| (k, gc_borrow_inner!(&v.borrow()).clone().into()))
                     .collect(),
             ),
         }

@@ -104,6 +104,8 @@ cell grip_json_init_object();
 
 cell grip_json_init_string(const void *amx, char *string);
 
+cell grip_json_object_clear(const void *amx, cell object);
+
 cell grip_json_object_get_bool(const void *amx, cell object, const char *name, bool dot_notation);
 
 cell grip_json_object_get_count(const void *amx, cell object);
@@ -134,6 +136,34 @@ cell grip_json_object_has_value(const void *amx,
                                 const char *name,
                                 cell json_type,
                                 bool dot_notation);
+
+cell grip_json_object_remove(const void *amx, cell object, const char *name, bool dot_notation);
+
+cell grip_json_object_set_bool(const void *amx,
+                               cell object,
+                               const char *name,
+                               bool value,
+                               bool dot_notation);
+
+cell grip_json_object_set_float(const void *amx,
+                                cell object,
+                                const char *name,
+                                float number,
+                                bool dot_notation);
+
+cell grip_json_object_set_null(const void *amx, cell object, const char *name, bool dot_notation);
+
+cell grip_json_object_set_number(const void *amx,
+                                 cell object,
+                                 const char *name,
+                                 cell number,
+                                 bool dot_notation);
+
+cell grip_json_object_set_string(const void *amx,
+                                 cell object,
+                                 const char *name,
+                                 const char *string,
+                                 bool dot_notation);
 
 cell grip_json_object_set_value(const void *amx,
                                 cell object,

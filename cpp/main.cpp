@@ -474,7 +474,6 @@ cell AMX_NATIVE_CALL grip_json_object_get_value_at_amxx(AMX *amx, cell *params) 
     return grip_json_object_get_value_at(amx, params[arg_object], params[arg_index]);
 }
 
-//(const GripJSONValue:object, const name[], GripJSONType:type = GripJSONError, bool:dot_not = false);
 cell AMX_NATIVE_CALL grip_json_object_has_value_amxx(AMX *amx, cell *params) {
     enum { arg_count, arg_object, arg_name, arg_type, arg_dot_not };
 
@@ -482,6 +481,79 @@ cell AMX_NATIVE_CALL grip_json_object_has_value_amxx(AMX *amx, cell *params) {
             MF_GetAmxString(amx, params[arg_name], 3, &dummy),
             params[arg_type], params[arg_dot_not] != 0);
 }
+
+cell AMX_NATIVE_CALL grip_json_object_set_value_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_value, arg_dot_not };
+
+    return grip_json_object_set_value(amx, params[arg_object],
+                                      MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                      params[arg_value], params[arg_dot_not] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_set_string_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_string, arg_dot_not };
+
+
+    return grip_json_object_set_string(amx, params[arg_object],
+                                       MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                       MF_GetAmxString(amx, params[arg_string], 2, &dummy),
+                                       params[arg_dot_not] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_set_number_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_number, arg_dot_not };
+
+
+    return grip_json_object_set_number(amx, params[arg_object],
+                                       MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                       params[arg_number],
+                                       params[arg_dot_not] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_set_float_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_number, arg_dot_not };
+
+
+    return grip_json_object_set_float(amx, params[arg_object],
+                                       MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                       amx_ctof(params[arg_number]),
+                                       params[arg_dot_not] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_set_bool_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_value, arg_dot_not };
+
+
+    return grip_json_object_set_bool(amx, params[arg_object],
+                                      MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                      params[arg_value] != 0,
+                                      params[arg_dot_not] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_set_null_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_dot_not };
+
+    return grip_json_object_set_null(amx, params[arg_object],
+                                     MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                     params[arg_dot_not] != 0);
+}
+
+
+cell AMX_NATIVE_CALL grip_json_object_remove_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_dot_not };
+
+    return grip_json_object_set_null(amx, params[arg_object],
+                                     MF_GetAmxString(amx, params[arg_name], 3, &dummy),
+                                     params[arg_dot_not] != 0);
+}
+
+cell AMX_NATIVE_CALL grip_json_object_clear_amxx(AMX *amx, cell *params) {
+    enum { arg_count, arg_object, arg_name, arg_dot_not };
+
+    return grip_json_object_clear(amx, params[arg_object]);
+}
+
+
 
 AMX_NATIVE_INFO grip_exports[] = {
 	{"grip_request", grip_request_amxx},
@@ -541,7 +613,15 @@ AMX_NATIVE_INFO grip_exports[] = {
     {"grip_json_object_get_count", grip_json_object_get_count_amxx},
     {"grip_json_object_get_name", grip_json_object_get_name_amxx},
     {"grip_json_object_get_value_at", grip_json_object_get_value_at_amxx},
-    {"grip_json_object_has_value", grip_json_object_has_value_amxx}
+    {"grip_json_object_has_value", grip_json_object_has_value_amxx},
+    {"grip_json_object_set_value", grip_json_object_set_value_amxx},
+    {"grip_json_object_set_string", grip_json_object_set_string_amxx},
+    {"grip_json_object_set_number", grip_json_object_set_number_amxx},
+    {"grip_json_object_set_float", grip_json_object_set_float_amxx},
+    {"grip_json_object_set_bool", grip_json_object_set_bool_amxx},
+    {"grip_json_object_set_null", grip_json_object_set_null_amxx},
+    {"grip_json_object_remove", grip_json_object_remove_amxx},
+    {"grip_json_object_clear", grip_json_object_clear_amxx},
 	{nullptr, nullptr}
 };
 

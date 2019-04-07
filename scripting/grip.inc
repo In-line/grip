@@ -907,7 +907,7 @@ native bool:grip_json_object_has_value(const GripJSONValue:object, const name[],
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSONValue:value, bool:dot_not = false);
+native bool:grip_json_object_set_value(GripJSONValue:object, const name[], const GripJSONValue:value, bool:dot_not = false);
 
 /**
  * Sets string data in the object.
@@ -924,8 +924,7 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_set_string(JSON:object, const name[], const string[], bool:dot_not = false);
+native bool:grip_json_object_set_string(GripJSONValue:object, const name[], const string[], bool:dot_not = false);
 
 /**
  * Sets a number in the object.
@@ -942,8 +941,7 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_set_number(JSON:object, const name[], number, bool:dot_not = false);
+native bool:grip_json_object_set_number(GripJSONValue:object, const name[], number, bool:dot_not = false);
 
 /**
  * Sets a real number in the object.
@@ -960,8 +958,8 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_set_real(JSON:object, const name[], Float:number, bool:dot_not = false);
+native bool:grip_json_object_set_float(GripJSONValue:object, const name[], Float:number, bool:dot_not = false);
+#define grip_json_object_set_real(%1, %2, %3, %4) grip_json_object_set_float(%1, %2, %3, %4)
 
 /**
  * Sets a boolean value in the object.
@@ -978,8 +976,7 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_set_bool(JSON:object, const name[], bool:boolean, bool:dot_not = false);
+native bool:grip_json_object_set_bool(GripJSONValue:object, const name[], bool:boolean, bool:dot_not = false);
 
 /**
  * Sets a null in the object.
@@ -995,8 +992,7 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_set_null(JSON:object, const name[], bool:dot_not = false);
+native bool:grip_json_object_set_null(GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Removes a key and its value in the object.
@@ -1011,8 +1007,7 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-//TODO: Low priority
-//native bool:json_object_remove(JSON:object, const name[], bool:dot_not = false);
+native bool:grip_json_object_remove(GripJSONValue:object, const name[], bool:dot_not = false);
 
 /**
  * Removes all keys and their values in the object.
@@ -1022,8 +1017,7 @@ native bool:grip_json_object_set_value(JSON:object, const name[], const GripJSON
  * @return                  True if succeed, false otherwise
  * @error                   If passed handle is not a valid object
  */
-// TODO: Low priority
-// native bool:json_object_clear(JSON:object);
+native bool:grip_json_object_clear(GripJSONValue:object);
 
 /**
  * Gets size of serialization.
