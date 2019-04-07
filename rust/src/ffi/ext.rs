@@ -358,7 +358,7 @@ mod tests {
 
     #[test]
     fn dot_index_safe_rc_gc() {
-        let json = gc_json!({
+        let json: GCValue = gc_json!({
             "a": {
                 "b": 123
             }
@@ -366,7 +366,7 @@ mod tests {
 
         fn gc_to_json(v: Rc<RefCell<GCValue>>) -> Value {
             let value: &RefCell<_> = v.borrow();
-            (*gc_borrow_inner!(value.borrow())).clone().into()
+            (*gc_borrow_inner!(value.borrow())).clone().into_with_recursion_limit(2)
         }
 
         assert_eq!(
