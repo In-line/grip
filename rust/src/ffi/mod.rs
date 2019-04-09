@@ -1226,21 +1226,12 @@ pub unsafe extern "C" fn grip_json_object_set_string(
     string: *const c_char,
     dot_notation: bool,
 ) -> Cell {
-    match &mut try_to_get_json_object_value_mut!(amx, object, name, dot_notation) {
-        InnerValue::String(s) => {
-            *s = try_and_log_ffi!(
-                amx,
-                str_from_ptr(string).chain_err(|| ffi_error("Can't create UTF-8 string"))
-            )
-            .to_owned();
-
-            1
-        }
-        v => unconditionally_log_error!(
+    *try_to_get_json_object_value_gc_or_insert_mut!(amx, object, name, dot_notation) =
+        gc_json!(try_and_log_ffi!(
             amx,
-            ffi_error(format!("Object at index is not string: {:?}", v))
-        ),
-    }
+            str_from_ptr(string).chain_err(|| ffi_error("Can't create UTF-8 string"))
+        ));
+    1
 }
 
 #[no_mangle]
@@ -1251,16 +1242,9 @@ pub unsafe extern "C" fn grip_json_object_set_number(
     number: Cell,
     dot_notation: bool,
 ) -> Cell {
-    match &mut try_to_get_json_object_value_mut!(amx, object, name, dot_notation) {
-        InnerValue::Number(n) => {
-            *n = number.into();
-            1
-        }
-        v => unconditionally_log_error!(
-            amx,
-            ffi_error(format!("Object at index is not number: {:?}", v))
-        ),
-    }
+    *try_to_get_json_object_value_gc_or_insert_mut!(amx, object, name, dot_notation) =
+        gc_json!(number);
+    1
 }
 
 #[no_mangle]
