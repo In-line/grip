@@ -35,3 +35,22 @@ You start a request with the corresponding arguments and just after that, functi
 Next I think it is important to describe idiomatic callback implementation. User is forced to provide completion handler, which is guaranteed to be called in the case of success, timeout, cancelation, etc.. Requests completion order is unspecified. On completion, response status should be checked. No function silently failes. it is strict API which forces users to consider all cases. All network requests are done simultaneously in the implementation specified order.
 
 JSON API tries to mimic corresponding `json.inc` file from AMX Mod X. Some things were removed/changed, because in my opinion they are bad design choices. Such dangerous components should rarely cause compilation errors in the plugin, but in the majority of the cases gRIP JSON API is drop-in replacemant of AMX Mod X `json.inc` .
+
+## Building
+
+Currently building only on the Linux is supported, but there is some discussions and ongoing work for Windows support. Anywas, the best way to get list of up to date build time dependencies is to view [.travis.yml](https://github.com/In-line/grip/blob/master/.travis.yml) section containing debian packages.
+
+After installing these dependencies you need to install Rust, follow your distribution specific instruction or simply download it from [rustup](https://rustup.rs/).
+
+Because, currently Rustup ships by default only host target, you need to manually install 32-bit x86 target for Rust. 
+```bash
+$ rustup target install i686-unknown-linux-gnu
+```
+To get nice IDE for Rust and C++, I recomment first of all googling and choosing something based on your taste, but I usually develop using CLion with InteliJ Rust plugin, it is very convenient to use in with mixed Rust/C++ project.
+
+To start building you should use cmake, so first of all, do standard procedure.
+```
+$ cmake . # Generate makefile
+$ make # Make makefile.
+```
+This will compile Rust code, C++ code and produce single shared library at the end. There is no much to tell about this process, but feel free to ask questions (even stupid!). I appreciate contributions and will help anybody, who wants to be involved.
