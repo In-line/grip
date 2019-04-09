@@ -1208,7 +1208,7 @@ pub unsafe extern "C" fn grip_json_object_set_value(
     try_and_log_ffi!(
         amx,
         catch_unwind(|| {
-            *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) =
+            *try_to_get_json_object_value_gc_or_insert_mut!(amx, object, name, dot_notation) =
                 try_to_get_json_value_gc!(amx, value).clone();
             1
         })
@@ -1271,7 +1271,8 @@ pub unsafe extern "C" fn grip_json_object_set_float(
     number: f32,
     dot_notation: bool,
 ) -> Cell {
-    *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) = gc_json!(number);
+    *try_to_get_json_object_value_gc_or_insert_mut!(amx, object, name, dot_notation) =
+        gc_json!(number);
     1
 }
 
@@ -1283,7 +1284,8 @@ pub unsafe extern "C" fn grip_json_object_set_bool(
     value: bool,
     dot_notation: bool,
 ) -> Cell {
-    *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) = gc_json!(value);
+    *try_to_get_json_object_value_gc_or_insert_mut!(amx, object, name, dot_notation) =
+        gc_json!(value);
     1
 }
 
@@ -1294,7 +1296,8 @@ pub unsafe extern "C" fn grip_json_object_set_null(
     name: *const c_char,
     dot_notation: bool,
 ) -> Cell {
-    *try_to_get_json_object_value_gc_mut!(amx, object, name, dot_notation) = gc_json!(null);
+    *try_to_get_json_object_value_gc_or_insert_mut!(amx, object, name, dot_notation) =
+        gc_json!(null);
     1
 }
 
@@ -1468,4 +1471,26 @@ pub unsafe extern "C" fn grip_json_validate(amx: *const c_void, schema: Cell, va
     } else {
         1
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_body_from_json(
+    amx: *const c_void,
+    value: Cell,
+    pretty: bool,
+    recursion_limit: Cell,
+) -> Cell {
+    get_module_mut().bodies_handles.insert_with_unique_id(
+        try_and_log_ffi!(
+            amx,
+            serialize_to_string(
+                &try_to_get_json_value!(amx, value)
+                    .clone()
+                    .into_with_recursion_limit(try_as_usize!(amx, recursion_limit)),
+                pretty,
+                true
+            )
+        )
+        .into_bytes(),
+    )
 }

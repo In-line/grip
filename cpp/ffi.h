@@ -8,6 +8,8 @@
 
 extern "C" {
 
+cell grip_body_from_json(const void *amx, cell value, bool pretty, cell recursion_limit);
+
 cell grip_body_from_string(const void *amx, const char *str);
 
 cell grip_cancel_request(const void *amx, cell cancellation);

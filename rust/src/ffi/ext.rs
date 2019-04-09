@@ -185,15 +185,28 @@ macro_rules! try_to_get_json_object_value_rc_gc {
     };
 }
 
+macro_rules! try_to_get_json_object_value_or_insert_rc_gc {
+    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {
+        try_and_log_ffi!(
+            $amx,
+            try_to_get_json_value_gc!($amx, $object).index_selective_safe_or_insert_rc_gc(
+                try_and_log_ffi!($amx, str_from_ptr($name)),
+                $dot_notation,
+                Some(InnerValue::Null)
+            )
+        )
+    };
+}
+
 macro_rules! try_to_get_json_object_value_gc {
     ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
         try_to_get_json_object_value_rc_gc!($amx, $object, $name, $dot_notation).borrow()
     }};
 }
 
-macro_rules! try_to_get_json_object_value_gc_mut {
+macro_rules! try_to_get_json_object_value_gc_or_insert_mut {
     ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {
-        (&*try_to_get_json_object_value_rc_gc!($amx, $object, $name, $dot_notation)
+        (&*try_to_get_json_object_value_or_insert_rc_gc!($amx, $object, $name, $dot_notation)
             as &RefCell<GCValue>)
             .borrow_mut()
     };
@@ -212,7 +225,7 @@ macro_rules! try_to_get_json_object_value {
 
 macro_rules! try_to_get_json_object_value_mut {
     ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
-        gc_borrow_inner_mut!(try_to_get_json_object_value_gc_mut!(
+        gc_borrow_inner_mut!(try_to_get_json_object_value_gc_or_insert_mut!(
             $amx,
             $object,
             $name,
@@ -269,10 +282,22 @@ use std::rc::Rc;
 
 pub trait ValueExt<'a> {
     fn dot_index_safe_rc_gc(&'a self, name: &str) -> Result<Rc<RefCell<GCValue>>>;
+    fn dot_index_safe_or_insert_rc_gc(
+        &'a self,
+        name: &str,
+        default: Option<InnerValue>,
+    ) -> Result<Rc<RefCell<GCValue>>>;
     fn index_selective_safe_rc_gc(
         &'a self,
         name: &str,
         dot_notation: bool,
+    ) -> Result<Rc<RefCell<GCValue>>>;
+
+    fn index_selective_safe_or_insert_rc_gc(
+        &'a self,
+        name: &str,
+        dot_notation: bool,
+        default: Option<InnerValue>,
     ) -> Result<Rc<RefCell<GCValue>>>;
 }
 
@@ -301,6 +326,90 @@ impl<'a> ValueExt<'a> for GCValue {
         Ok(it.chain_err(|| "Name is invalid")?)
     }
 
+    fn dot_index_safe_or_insert_rc_gc(
+        &'a self,
+        name: &str,
+        default: Option<InnerValue>,
+    ) -> Result<Rc<RefCell<GCValue>>> {
+        let mut it: Option<Rc<RefCell<GCValue>>> = None;
+        let names = name.split('.').collect::<Vec<&str>>();
+        let len = names.len();
+        for (default_to_insert, element) in {
+            names.into_iter().enumerate().map(|(index, string)| {
+                (
+                    if index == len - 1 {
+                        default.clone()
+                    } else {
+                        None
+                    },
+                    string,
+                )
+            })
+        } {
+            if element.is_empty() {
+                bail!("Double/Empty separator in `{}`", name);
+            }
+
+            // Same as bounds checked index.
+            if let Some(it_raw) = it {
+                let it_raw: &RefCell<_> = it_raw.borrow();
+                it = Some(
+                    it_raw
+                        .borrow_mut()
+                        .index_selective_safe_or_insert_rc_gc(element, false, default_to_insert)?
+                        .clone(),
+                );
+            } else {
+                it = Some(
+                    self.index_selective_safe_or_insert_rc_gc(element, false, default_to_insert)?
+                        .clone(),
+                );
+            }
+        }
+
+        Ok(it.chain_err(|| "Name is invalid")?)
+    }
+
+    fn index_selective_safe_or_insert_rc_gc(
+        &'a self,
+        name: &str,
+        dot_notation: bool,
+        default: Option<InnerValue>,
+    ) -> Result<Rc<RefCell<GCValue>>> {
+        if dot_notation {
+            self.dot_index_safe_or_insert_rc_gc(name, default)
+        } else {
+            match &mut self.borrow_inner_ref_mut() as &mut InnerValue {
+                InnerValue::Object(m) => match {
+                    match m.get_mut(name) {
+                        None => {
+                            if let Some(default) = default {
+                                m.insert(
+                                    name.to_owned(),
+                                    Rc::new(RefCell::new(GCValue::new(default))),
+                                );
+                                m.get_mut(name)
+                            } else {
+                                None
+                            }
+                        }
+                        v => v,
+                    }
+                } {
+                    Some(target) => Ok(target.clone()),
+                    None => bail!(
+                        "Can't index json using `{}`, because json doesn't contain it",
+                        name
+                    ),
+                },
+                _ => bail!(
+                    "Can't index json using `{}` json stops is not object.",
+                    name
+                ),
+            }
+        }
+    }
+
     fn index_selective_safe_rc_gc(
         &'a self,
         name: &str,
@@ -312,7 +421,7 @@ impl<'a> ValueExt<'a> for GCValue {
             match &self.borrow_inner_ref() as &InnerValue {
                 InnerValue::Object(m) => match m.get(name) {
                     Some(target) => Ok(target.clone()),
-                    _ => bail!(
+                    None => bail!(
                         "Can't index json using `{}`, because json doesn't contain it",
                         name
                     ),
@@ -366,7 +475,9 @@ mod tests {
 
         fn gc_to_json(v: Rc<RefCell<GCValue>>) -> Value {
             let value: &RefCell<_> = v.borrow();
-            (*gc_borrow_inner!(value.borrow())).clone().into_with_recursion_limit(2)
+            (*gc_borrow_inner!(value.borrow()))
+                .clone()
+                .into_with_recursion_limit(2)
         }
 
         assert_eq!(
@@ -391,6 +502,50 @@ mod tests {
 
         assert!(gc_to_json(json.index_selective_safe_rc_gc("a", false).unwrap()).is_object());
         assert!(json.index_selective_safe_rc_gc("a.b.c", false).is_err());
+
+        assert_eq!(
+            gc_to_json(
+                json.index_selective_safe_or_insert_rc_gc("a.b", true, None)
+                    .unwrap()
+            )
+            .as_u64()
+            .unwrap(),
+            123
+        );
+        assert!(json
+            .index_selective_safe_or_insert_rc_gc("a.b.c", true, None)
+            .is_err());
+        assert!(json
+            .index_selective_safe_or_insert_rc_gc("a..", true, None)
+            .is_err());
+        assert!(gc_to_json(
+            json.index_selective_safe_or_insert_rc_gc("a", true, None)
+                .unwrap()
+        )
+        .is_object());
+
+        assert!(gc_to_json(
+            json.index_selective_safe_or_insert_rc_gc("a", false, None)
+                .unwrap()
+        )
+        .is_object());
+        assert!(json
+            .index_selective_safe_or_insert_rc_gc("a.b.c", false, None)
+            .is_err());
+
+        assert!(json
+            .index_selective_safe_or_insert_rc_gc("a.d.d", false, None)
+            .is_err());
+
+        assert!(gc_to_json(
+            json.index_selective_safe_or_insert_rc_gc("a.d", true, Some(InnerValue::Null))
+                .unwrap()
+        )
+        .is_null());
+
+        assert!(json
+            .index_selective_safe_or_insert_rc_gc("a.d.d", false, None)
+            .is_err());
     }
 
 }

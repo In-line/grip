@@ -1,6 +1,6 @@
 [package]
 name = "grip-rust"
-version = "0.1.0-beta"
+version = "0.1.1-beta"
 authors = ["alik"]
 edition = "2018"
 build = "src/build.rs"
