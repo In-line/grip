@@ -38,7 +38,7 @@ JSON API tries to mimic corresponding `json.inc` file from AMX Mod X. Some thing
 
 ## Building
 
-Currently building only on the Linux is supported, but there is some discussions and ongoing work for Windows support. Anywas, the best way to get list of up to date build time dependencies is to view [.travis.yml](https://github.com/In-line/grip/blob/master/.travis.yml) section containing debian packages.
+Currently building only on the Linux is supported, but there is some discussions and ongoing work for Windows support. Anyway, the best way to get list of up to date build time dependencies is to view [.travis.yml](https://github.com/In-line/grip/blob/master/.travis.yml) section containing debian packages.
 
 After installing these dependencies you need to install Rust, follow your distribution specific instruction or simply download it from [rustup](https://rustup.rs/).
 
