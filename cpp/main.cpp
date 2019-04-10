@@ -570,7 +570,7 @@ cell AMX_NATIVE_CALL grip_json_serial_to_string_amxx(AMX *amx, cell *params) {
 cell AMX_NATIVE_CALL grip_json_serial_to_file_amxx(AMX *amx, cell *params) {
     enum { arg_count, arg_value, arg_file, arg_pretty, arg_recursion_limit };
     return grip_json_serial_to_file(amx, params[arg_value], 
-            MF_GetAmxString(amx, params[arg_file], 3, &dummy),
+            MF_BuildPathname("%s", MF_GetAmxString(amx, params[arg_file], 3, &dummy)),
             params[arg_pretty] != 0,
             params[arg_recursion_limit]);
 }
@@ -667,9 +667,7 @@ void OnAmxxAttach()
 }
 
 void OnPluginsLoaded() {
-    char configFilePath[MAX_PATH];
-    MF_BuildPathnameR(configFilePath, sizeof(configFilePath), "%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs"));
-    grip_init(log_error, configFilePath);
+    grip_init(log_error, MF_BuildPathname("%s/grip.ini", MF_GetLocalInfo("amxx_configsdir", "addons/amxmodx/configs")));
 }
 
 void OnPluginsUnloaded() {
