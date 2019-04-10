@@ -42,7 +42,7 @@ impl GCValue {
         (&*self.0 as &RefCell<InnerValue>).borrow()
     }
 
-    pub fn borrow_inner_ref_mut(&mut self) -> RefMut<InnerValue> {
+    pub fn borrow_inner_ref_mut(&self) -> RefMut<InnerValue> {
         (&*self.0 as &RefCell<InnerValue>).borrow_mut()
     }
 

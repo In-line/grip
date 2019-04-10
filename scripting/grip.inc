@@ -195,6 +195,19 @@ native grip_is_request_active(GripRequestCancellation:request);
 native GripBody:grip_body_from_string(str[]);
 
 /**
+ * Creates new body handle from string
+ *
+ * @note 			        Body should be destroyed with the relevant call.
+ *
+ * @param str		        Zero terminated string from which body should be created
+ * @param pretty            True to format pretty JSON string, false to not
+ * @param recursion_limit   Limit of the internal recursion
+ *
+ * @return			        Newly crated body handle
+ */
+native GripBody:grip_body_from_json(GripJSONValue:value, bool:pretty = false, recursion_limit = 100);
+
+/**
  * Destroys body handle
  *
  * @param body		Body to be destroyed
