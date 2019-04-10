@@ -85,10 +85,10 @@ script:
 before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
-- mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
+- mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting/include
 - cp $TRAVIS_BUILD_DIR/build/release/*.so $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
 - cp $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
-- cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting
+- cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting/include
 - cd $TRAVIS_BUILD_DIR/deploy
 - tar czf grip-${TRAVIS_TAG}-${TARGET}.tar.gz addons
 deploy:
