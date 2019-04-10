@@ -223,17 +223,6 @@ macro_rules! try_to_get_json_object_value {
     }};
 }
 
-macro_rules! try_to_get_json_object_value_mut {
-    ($amx:expr, $object:expr, $name:expr, $dot_notation:expr) => {{
-        gc_borrow_inner_mut!(try_to_get_json_object_value_gc_or_insert_mut!(
-            $amx,
-            $object,
-            $name,
-            $dot_notation
-        ))
-    }};
-}
-
 macro_rules! try_to_get_json_array {
     ($amx:expr, $array:expr) => {
         match &try_to_get_json_value!($amx, $array) {
