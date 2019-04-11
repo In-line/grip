@@ -33,7 +33,7 @@ addons:
     - lld-8
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-xenial-7
+      - llvm-toolchain-xenial-8
 install:
 - rustup target add $TARGET
 - cargo install cargo-sweep || true
