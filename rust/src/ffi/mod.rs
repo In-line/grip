@@ -244,8 +244,6 @@ pub unsafe extern "C" fn grip_request(
             .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle)))
     );
 
-    // TODO: JSON
-
     let next_cancellation_id = get_module().cancellations_handles.peek_id();
     let cancellation = get_module_mut().global_queue.send_request(
         RequestBuilder::default()
