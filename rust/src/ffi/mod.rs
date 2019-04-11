@@ -1446,8 +1446,8 @@ pub unsafe extern "C" fn grip_json_validate(amx: *const c_void, schema: Cell, va
             .values()
             .map(|i| std::mem::discriminant(gc_borrow_inner!(&i.borrow()) as &InnerValue))
             .collect::<Vec<_>>()
-        || schema.keys().map(|i| i.as_str()).collect::<Vec<_>>()
-            != value.keys().map(|i| i.as_str()).collect::<Vec<_>>()
+        || schema.keys().map(String::as_str).collect::<Vec<_>>()
+            != value.keys().map(String::as_str).collect::<Vec<_>>()
     {
         0
     } else {
