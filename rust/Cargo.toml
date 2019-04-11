@@ -12,7 +12,7 @@ crate-type = ["staticlib"]
 panic = "unwind"
 
 [profile.release]
-lto = true
+lto = "thin"
 panic = "unwind"
 
 [features]
