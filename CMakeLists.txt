@@ -31,7 +31,7 @@ file(GLOB_RECURSE SOURCE_FILES ${SRC_DIR}/*.h ${SRC_DIR}/*.cpp ${AMXXSDK}/sdk/*.
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} )
 
-set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto -fPIC")
+set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto=thin -fPIC")
 set(PORTABLE_LINK_FLAGS "${FLAGS} -static-libgcc -static-libstdc++ -s  -Wl,--gc-sections -Wl,--version-script=${CMAKE_SOURCE_DIR}/version_script.lds")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections -fpermissive")

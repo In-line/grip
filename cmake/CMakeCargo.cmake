@@ -51,8 +51,8 @@ function(cargo_build)
 
     if(${LIB_BUILD_TYPE} STREQUAL "release")
         list(APPEND CARGO_ARGS "--release")
+        set(CMAME_CARGO_ADDITIONAL_ENV "RUSTFLAGS=\"-Clinker-plugin-lto\"")
     endif()
-
 
     list(APPEND CARGO_ARGS "--verbose")
 

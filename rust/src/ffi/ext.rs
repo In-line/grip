@@ -31,7 +31,7 @@
 
 use crate::errors::*;
 use crate::gc_json::*;
-use std::ffi::CStr;
+use std::ffi::{CStr, c_void};
 use std::os::raw::c_char;
 
 pub trait ResultFFIExt<T> {
@@ -64,7 +64,7 @@ macro_rules! try_and_log_ffi {
 
     ($amx:expr, $expr:expr) => {
         try_and_log_ffi!($amx, $expr, |amx, err| {
-            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+             log_error(amx, err);
         });
     };
 }
@@ -101,9 +101,15 @@ macro_rules! try_as_usize {
 
     ($amx:expr, $size:expr) => {
         try_as_usize!($amx, $size, |amx, err| {
-            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+             log_error(amx, err);
         })
     };
+}
+
+#[cold]
+pub unsafe fn log_error(amx: *const c_void, err: String) {
+    use crate::ffi::get_module;
+    (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
 }
 
 macro_rules! try_to_copy_unsafe_string {
@@ -117,7 +123,7 @@ macro_rules! try_to_copy_unsafe_string {
 
     ($amx:expr, $dest:expr, $source:expr, $size:expr) => {
         try_to_copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
-            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+             log_error(amx, err);
         })
     };
 }
@@ -129,7 +135,7 @@ macro_rules! unconditionally_log_error {
 
     ($amx:expr, $err:expr) => {
         unconditionally_log_error!($amx, $err, |amx, err| {
-            (get_module().error_logger)(amx, format!("{}\0", err).as_ptr() as *const c_char);
+             log_error(amx, err);
         })
     };
 }
