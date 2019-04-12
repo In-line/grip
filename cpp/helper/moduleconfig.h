@@ -26,7 +26,7 @@
  *   to add multiple entries.
  */
 #define MODULE_NAME "gRIP"
-#define MODULE_VERSION "0.1.1 Beta"
+#define MODULE_VERSION "0.1.2 Beta"
 #define MODULE_AUTHOR "Inline"
 #define MODULE_URL "https://github.com/in-line/grip"
 #define MODULE_LOGTAG "gRIP"
