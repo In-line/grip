@@ -12,8 +12,9 @@ crate-type = ["staticlib"]
 panic = "unwind"
 
 [profile.release]
-lto = "full"
+lto = "thin"
 panic = "unwind"
+codegen-units = 1
 
 [features]
 vendored = ["reqwest/default-tls-vendored"]
