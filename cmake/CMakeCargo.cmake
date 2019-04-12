@@ -47,8 +47,6 @@ function(cargo_build)
 	else()
     	set(CARGO_ARGS "build")
 		list(APPEND CARGO_ARGS "--target" ${LIB_TARGET})
-        list(APPEND CARGO_ARGS "--jobs")
-        list(APPEND CARGO_ARGS "3")
     endif()
 
     if(${LIB_BUILD_TYPE} STREQUAL "release")
