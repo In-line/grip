@@ -15,6 +15,7 @@ panic = "unwind"
 lto = "fat"
 panic = "unwind"
 codegen-units = 1
+opt-level = 3
 
 [features]
 vendored = ["reqwest/default-tls-vendored"]
