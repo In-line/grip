@@ -12,8 +12,10 @@ crate-type = ["staticlib"]
 panic = "unwind"
 
 [profile.release]
-lto = true
+lto = "fat"
 panic = "unwind"
+codegen-units = 1
+opt-level = 3
 
 [features]
 vendored = ["reqwest/default-tls-vendored"]
@@ -41,6 +43,7 @@ newtype_derive = "0.1.6"
 custom_derive = "0.1.7"
 indexmap = "1.0.2"
 owning_ref = "0.4.0"
+fnv = "1.0.6"
 
 [build-dependencies]
 cbindgen = "0.8.3"

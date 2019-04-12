@@ -92,7 +92,7 @@ pub enum InnerValue {
     Number(value::Number),
     String(String),
     Array(Vec<GCValue>),
-    Object(IndexMap<String, Rc<RefCell<GCValue>>>),
+    Object(IndexMap<String, Rc<RefCell<GCValue>>, fnv::FnvBuildHasher>),
 }
 
 impl From<Value> for GCValue {
@@ -102,7 +102,7 @@ impl From<Value> for GCValue {
             Value::Bool(b) => InnerValue::Bool(b),
             Value::Number(n) => InnerValue::Number(n),
             Value::String(s) => InnerValue::String(s),
-            Value::Array(v) => InnerValue::Array(v.into_iter().map(|e| e.into()).collect()),
+            Value::Array(v) => InnerValue::Array(v.into_iter().map(Into::into).collect()),
             Value::Object(m) => InnerValue::Object(
                 m.into_iter()
                     .map(|(k, v)| (k, Rc::new(RefCell::new(v.into()))))

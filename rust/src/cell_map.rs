@@ -29,11 +29,11 @@
  *
  */
 
-use std::collections::HashMap;
+use fnv::FnvHashMap;
 
 /// Just a simple, general and limited abstraction for storing Pawn handle id's
 pub struct CellMap<T> {
-    inner: HashMap<isize, T>,
+    inner: FnvHashMap<isize, T>,
     counter: isize,
 }
 
@@ -45,7 +45,7 @@ impl<T> Default for CellMap<T> {
 impl<T> CellMap<T> {
     pub fn new() -> CellMap<T> {
         CellMap {
-            inner: HashMap::new(),
+            inner: FnvHashMap::default(),
             counter: 1,
         }
     }

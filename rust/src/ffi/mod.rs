@@ -244,8 +244,6 @@ pub unsafe extern "C" fn grip_request(
             .chain_err(|| ffi_error(format!("Invalid options handle: {}", options_handle)))
     );
 
-    // TODO: JSON
-
     let next_cancellation_id = get_module().cancellations_handles.peek_id();
     let cancellation = get_module_mut().global_queue.send_request(
         RequestBuilder::default()
@@ -1448,8 +1446,8 @@ pub unsafe extern "C" fn grip_json_validate(amx: *const c_void, schema: Cell, va
             .values()
             .map(|i| std::mem::discriminant(gc_borrow_inner!(&i.borrow()) as &InnerValue))
             .collect::<Vec<_>>()
-        || schema.keys().map(|i| i.as_str()).collect::<Vec<_>>()
-            != value.keys().map(|i| i.as_str()).collect::<Vec<_>>()
+        || schema.keys().map(String::as_str).collect::<Vec<_>>()
+            != value.keys().map(String::as_str).collect::<Vec<_>>()
     {
         0
     } else {

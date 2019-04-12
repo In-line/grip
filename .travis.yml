@@ -8,16 +8,26 @@ rust:
 - nightly
 env:
   global:
-    - PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu CXX=/usr/bin/clang++-7 CC=/usr/bin/clang-7
+    - PKG_CONFIG_ALLOW_CROSS=1 TARGET=i686-unknown-linux-gnu CXX=/usr/bin/clang++-8 CC=/usr/bin/clang-8
   matrix:
-    - RUN_CLIPPY=1 RUN_DEBUG_TEST=1 RUN_DEBUG_BUILD=1
-    - RUN_RELEASE_TEST=1 RUN_RELEASE_BUILD=1
+    - RUN_DEBUG_TEST=1 RUN_DEBUG_BUILD=1
+    - RUN_RELEASE_TEST=1 RUN_CLIPPY=1
+    - RUN_RELEASE_BUILD=1
 os:
 - linux
 matrix:
   allow_failures:
   - rust: nightly
   fast_finish: true
+  exclude:
+    - env: RUN_RELEASE_TEST=1 RUN_CLIPPY=1
+      rust: beta
+    - env: RUN_RELEASE_TEST=1 RUN_CLIPPY=1
+      rust: nightly
+    - env: RUN_RELEASE_BUILD=1
+      rust: beta
+    - env: RUN_RELEASE_BUILD=1
+      rust: nightly
 addons:
   apt:
     packages:
@@ -29,11 +39,11 @@ addons:
     - gcc-multilib
     - g++-multilib
     - ninja-build
-    - clang-7
-    - lld-7
+    - clang-8
+    - lld-8
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-xenial-7
+      - llvm-toolchain-xenial-8
 install:
 - rustup target add $TARGET
 - cargo install cargo-sweep || true
