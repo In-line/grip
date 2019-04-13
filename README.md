@@ -36,6 +36,8 @@ Next I think it is important to describe idiomatic callback implementation. User
 
 JSON API tries to mimic corresponding `json.inc` file from AMX Mod X. Some things were removed/changed, because in my opinion they are bad design choices. Such dangerous components should rarely cause compilation errors in the plugin, but in the majority of the cases gRIP JSON API is drop-in replacemant of AMX Mod X `json.inc` .
 
+Anyway they are some fundamental places where my point of view and that of AMX Mod X JSON implementation diverge drastically. Here is semi-complete list of such [problems](https://github.com/alliedmodders/amxmodx/issues?q=is%3Aissue+sort%3Aupdated-desc+json+author%3AIn-line).
+
 ## Building
 
 Currently building only on the Linux is supported, but there is some discussions and ongoing work for Windows support. Anyway, the best way to get list of up to date build time dependencies is to view [.travis.yml](https://github.com/In-line/grip/blob/master/.travis.yml) section containing debian packages.
