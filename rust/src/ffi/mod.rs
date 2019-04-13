@@ -1470,7 +1470,7 @@ pub unsafe extern "C" fn grip_body_from_json(
                     .clone()
                     .into_with_recursion_limit(try_as_usize!(amx, recursion_limit)),
                 pretty,
-                true
+                false
             )
         )
         .into_bytes(),
