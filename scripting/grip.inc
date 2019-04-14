@@ -316,7 +316,7 @@ native grip_options_add_header(GripRequestOptions:options, const headerName[], c
  *
  * @return 		Request options handle.
  */
-stock grip_create_create_options(const headers[][2][], const headers_count, Float:timeout = -1.0) {
+stock grip_create_options(const headers[][2][], const headers_count, Float:timeout = -1.0) {
 	new GripRequestOptions:options = grip_create_default_options(timeout);
 	
 	for(new i = 0; i < headers_count; ++i) {
