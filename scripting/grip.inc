@@ -36,35 +36,35 @@
 */
 
 #if defined _grip_included
-	#endinput
+    #endinput
 #endif
 #define _grip_included
 
 #pragma reqlib grip
 #if !defined AMXMODX_NOAUTOLOAD
-	#pragma loadlib grip
+    #pragma loadlib grip
 #endif
 
 
 enum GripRequestType {
-	GripRequestTypeGet = 0,
-	GripRequestTypePost = 1,
-	GripRequestTypePut = 2,
-	GripRequestTypeDelete = 3
+    GripRequestTypeGet = 0,
+    GripRequestTypePost = 1,
+    GripRequestTypePut = 2,
+    GripRequestTypeDelete = 3
 }
 
 enum GripRequestCancellation {
-	Invalid_GripRequestCancellation = 0,
+    Invalid_GripRequestCancellation = 0,
 }
 
 enum GripRequestOptions {
-	Empty_GripRequestOptions = -1,
-	Invalid_GripRequestOptions = 0,
+    Empty_GripRequestOptions = -1,
+    Invalid_GripRequestOptions = 0,
 }
 
 enum GripBody {
-	Empty_GripBody = -1,
-	Invalid_GripBody = 0,
+    Empty_GripBody = -1,
+    Invalid_GripBody = 0,
 }
 
 enum GripJSONValue {
@@ -76,20 +76,20 @@ enum GripJSONValue {
  */
 enum GripJSONType
 {
-	GripJSONNull    = 1,
-	GripJSONString  = 2,
-	GripJSONNumber  = 3,
-	GripJSONObject  = 4,
-	GripJSONArray   = 5,
-	GripJSONBoolean = 6,
-	GripJSONError = 7,
+    GripJSONNull    = 1,
+    GripJSONString  = 2,
+    GripJSONNumber  = 3,
+    GripJSONObject  = 4,
+    GripJSONArray   = 5,
+    GripJSONBoolean = 6,
+    GripJSONError = 7,
 };
 
 enum GripResponseState {
-	GripResponseStateCancelled = 1,
-	GripResponseStateError = 2,
-	GripResponseStateSuccessful = 3,
-	GripResponseStateTimeout = 4,
+    GripResponseStateCancelled = 1,
+    GripResponseStateError = 2,
+    GripResponseStateSuccessful = 3,
+    GripResponseStateTimeout = 4,
 }
 
 enum GripHTTPStatus {
@@ -158,9 +158,9 @@ enum GripHTTPStatus {
 /**
  * Gets state of the response.
  *
- * @note    		This has nothing to do with HTTP status codes.
+ * @note            This has nothing to do with HTTP status codes.
  *
- * @return			Returns current response state.
+ * @return          Returns current response state.
  */
 native GripResponseState:grip_get_response_state();
 
@@ -168,49 +168,49 @@ native GripResponseState:grip_get_response_state();
 /**
  * Gets HTTP status code of the response.
  *
- * @return			Returns current response state.
+ * @return          Returns current response state.
  */
 native any:grip_get_response_status_code();
 
 /**
  * Returns whether request exists/active. 
  *
- * @note 			This has nothing to do with HTTP status codes.
+ * @note            This has nothing to do with HTTP status codes.
  *
- * @param request	Request handle.
+ * @param request   Request handle.
  *  
- * @return			Returns current response state.
+ * @return          Returns current response state.
  */
 native grip_is_request_active(GripRequestCancellation:request);
 
 /**
  * Creates new body handle from string
  * 
- * @note 			Body should be destroyed with the relevant call.
+ * @note            Body should be destroyed with the relevant call.
  *
- * @param str		Zero terminated string from which body should be created
+ * @param str       Zero terminated string from which body should be created
  *  
- * @return			Newly crated body handle
+ * @return          Newly crated body handle
  */
 native GripBody:grip_body_from_string(str[]);
 
 /**
  * Creates new body handle from string
  *
- * @note 			        Body should be destroyed with the relevant call.
+ * @note                    Body should be destroyed with the relevant call.
  *
- * @param str		        Zero terminated string from which body should be created
+ * @param str               Zero terminated string from which body should be created
  * @param pretty            True to format pretty JSON string, false to not
  * @param recursion_limit   Limit of the internal recursion
  *
- * @return			        Newly crated body handle
+ * @return                  Newly crated body handle
  */
 native GripBody:grip_body_from_json(GripJSONValue:value, bool:pretty = false, recursion_limit = 100);
 
 /**
  * Destroys body handle
  *
- * @param body		Body to be destroyed
+ * @param body      Body to be destroyed
  *  
  * @noreturn
  */
@@ -218,27 +218,27 @@ native grip_destroy_body(GripBody:body);
 
 /**
  * Starts sending of the request  
- * @note	The handle should look like:
- * 		public RequestHandler(const any: userData);
+ * @note    The handle should look like:
+ *      public RequestHandler(const any: userData);
  *
  *
- * @param uri		Request URI. Supports TLS.
- * @param type		Request type which should be sended.
- * @param body		Reqeust body, can be either JSON or plaintext 
- * @param handler	A callback which will be called when request finishes execution
- * @param options	Request options containing HTTP headers, timeout and so on..
- * @param userData 	User data (can be datapack or anything)
+ * @param uri       Request URI. Supports TLS.
+ * @param type      Request type which should be sended.
+ * @param body      Reqeust body, can be either JSON or plaintext 
+ * @param handler   A callback which will be called when request finishes execution
+ * @param options   Request options containing HTTP headers, timeout and so on..
+ * @param userData  User data (can be datapack or anything)
  *  
- * @return		Cancellation handle.
+ * @return      Cancellation handle.
  */
 native GripRequestCancellation:grip_request(const uri[], GripBody:body, GripRequestType:type, const handler[], GripRequestOptions:options = Empty_GripRequestOptions, const any: userData = 0);
 
 /**
  * Cancel sending of the request and receiving of response.  
  *
- * @param cancellation	Cancellation handle of the request.
+ * @param cancellation  Cancellation handle of the request.
  *  
- * @return		Request handle
+ * @return      Request handle
  */
 native grip_cancel_request(GripRequestCancellation:cancellation);
 
@@ -247,8 +247,8 @@ native grip_cancel_request(GripRequestCancellation:cancellation);
  *
  * @note There are certain AMXX limitations to maximum string sizes.  
  *
- * @param buffer	    Output buffer to which description should be written
- * @param buffer_size	Maximum length of the buffer.
+ * @param buffer        Output buffer to which description should be written
+ * @param buffer_size   Maximum length of the buffer.
  *  
  * @return              Number of cells written
  */
@@ -259,8 +259,8 @@ native grip_get_error_description(buffer[], buffer_size);
  *
  * @note There are certain AMXX limitations to maximum string sizes.  
  *
- * @param buffer	    Output buffer to which body should be written
- * @param buffer_size	Maximum length of the buffer.
+ * @param buffer        Output buffer to which body should be written
+ * @param buffer_size   Maximum length of the buffer.
  *  
  * @return              Number of cells written
  */
@@ -269,7 +269,7 @@ native grip_get_response_body_string(buffer[], buffer_size);
 /**
  * Destroy this JSON value
  *
- * @param json_value	JSON Value to be destroyed.
+ * @param json_value    JSON Value to be destroyed.
  *
  * @noreturn
  */
@@ -278,11 +278,11 @@ native grip_destroy_json_value(GripJSONValue:grip_json_value);
 /**
  * Create options with empty headers and some timeout.
  *
- * @note 		Options should be destroyed with the relevant call.
+ * @note        Options should be destroyed with the relevant call.
  *
- * @param timeout	timeout -1 to disable, >0 to enable timeout.
+ * @param timeout   timeout -1 to disable, >0 to enable timeout.
  *
- * @return 		Request options handle.
+ * @return      Request options handle.
  */
 native GripRequestOptions:grip_create_default_options(Float:timeout = -1.0);
 
@@ -296,11 +296,11 @@ native grip_destroy_options(GripRequestOptions:options);
 /**
  * Add HTTP Header to this options.
  *.
- * @param options	Options to which header should be added
- * @param headerName 	Header name
- * @param headerValue	Header value
+ * @param options   Options to which header should be added
+ * @param headerName    Header name
+ * @param headerValue   Header value
  *
- * @return 		Request options handle.
+ * @return      Request options handle.
  */
 native grip_options_add_header(GripRequestOptions:options, const headerName[], const headerValue[]);
 
@@ -308,29 +308,29 @@ native grip_options_add_header(GripRequestOptions:options, const headerName[], c
 /**
  * Create options with headers and some timeout.
  *
- * @note 		Options should be destroyed with the relevant call.
+ * @note        Options should be destroyed with the relevant call.
  *
- * @param headers	Array of header pairs.
- * @param headers_count	Count of the header pairs.
- * @param timeout	timeout -1 to disable, >0 to enable timeout.
+ * @param headers   Array of header pairs.
+ * @param headers_count Count of the header pairs.
+ * @param timeout   timeout -1 to disable, >0 to enable timeout.
  *
- * @return 		Request options handle.
+ * @return      Request options handle.
  */
 stock grip_create_options(const headers[][2][], const headers_count, Float:timeout = -1.0) {
-	new GripRequestOptions:options = grip_create_default_options(timeout);
-	
-	for(new i = 0; i < headers_count; ++i) {
-		grip_options_add_header(options, headers[i][0], headers[i][1]);
-	}
-	
-	return options;
+    new GripRequestOptions:options = grip_create_default_options(timeout);
+    
+    for(new i = 0; i < headers_count; ++i) {
+        grip_options_add_header(options, headers[i][0], headers[i][1]);
+    }
+    
+    return options;
 }
 
 /**
  * Parse current response body as JSON.
  *
- * @param buffer	            Output buffer to which possible error should be written
- * @param error_buffer_size	    Maximum length of the buffer.
+ * @param buffer                Output buffer to which possible error should be written
+ * @param error_buffer_size     Maximum length of the buffer.
  *
  *
  * @return                      JSON Value handle. If error occurred, returns invalid handle.
@@ -343,8 +343,8 @@ native GripJSONValue:grip_json_parse_response_body(error_buffer[], const error_b
  * @note                    Needs to be destroyed using grip_destroy_json_value() native.
  *
  * @param string            String to parse
- * @param buffer	        Output buffer to which possible error should be written
- * @param error_buffer_size	Maximum length of the buffer.
+ * @param buffer            Output buffer to which possible error should be written
+ * @param error_buffer_size Maximum length of the buffer.
  *
  * @return                  JSON value, Invalid_GripJSONValue if error occurred
  */
