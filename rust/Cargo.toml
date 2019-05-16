@@ -24,7 +24,7 @@ default = ["vendored"] # TODO: Conditional dynamic linking.
 [dependencies]
 bytes = "0.4.12"
 crossbeam-channel = "0.3.8"
-reqwest = { version = "0.9.16", features = ["trust-dns"] }
+reqwest = { version = "0.9.17", features = ["trust-dns"] }
 futures = "0.1.26"
 derive_more = "0.14.0"
 libc = "0.2.51"
