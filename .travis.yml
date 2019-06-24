@@ -3,8 +3,7 @@ language: rust
 compiler:
 - clang
 rust:
-- stable-1.34.0
-- beta-1.34.0
+- 1.34.0
 - nightly
 env:
   global:
