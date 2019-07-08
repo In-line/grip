@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
+#include <new>
 #include "amxxmodule.h"
 
 extern "C" {
@@ -33,6 +34,8 @@ cell grip_get_response_state(const void *amx);
 cell grip_get_response_status_code(const void *amx);
 
 void grip_init(void (*error_logger)(const void*, const char*), const char *config_file_path);
+
+bool grip_is_initialized();
 
 cell grip_is_request_active(cell request_id);
 

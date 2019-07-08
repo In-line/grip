@@ -57,7 +57,6 @@ type Cell = isize;
 use crate::networking_queue::{
     Queue, RequestBuilder, RequestCancellation, RequestOptions, RequestType, Response,
 };
-use std::prelude::v1::Vec;
 
 use crate::cell_map::CellMap;
 use crate::gc_json::*;
@@ -83,10 +82,6 @@ pub unsafe extern "C" fn grip_init(
     error_logger: extern "C" fn(*const c_void, *const c_char),
     config_file_path: *const c_char,
 ) {
-    if MODULE.is_some() {
-        return;
-    }
-
     let ini = Ini::load_from_file(str_from_ptr(config_file_path).unwrap())
         .map_err(|e| {
             println!(
@@ -140,11 +135,11 @@ pub unsafe extern "C" fn grip_init(
 }
 
 unsafe fn get_module() -> &'static ModuleStorage {
-    MODULE.as_ref().unwrap()
+    MODULE.as_ref().expect("Module wasn't initalized")
 }
 
 unsafe fn get_module_mut() -> &'static mut ModuleStorage {
-    MODULE.as_mut().unwrap()
+    MODULE.as_mut().expect("Module wasn't initalized")
 }
 
 #[no_mangle]
@@ -152,7 +147,12 @@ pub unsafe extern "C" fn grip_deinit() {
     if MODULE.is_some() {
         get_module_mut().cancellations_handles.clear(); // Cancel all operations, before queue stopped.
     }
-    MODULE = None;
+    MODULE.take();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn grip_is_initialized() -> bool {
+    MODULE.is_some()
 }
 
 #[no_mangle]
@@ -1397,7 +1397,6 @@ pub unsafe extern "C" fn grip_json_serial_to_file(
     pretty: bool,
     recursion_limit: Cell,
 ) -> Cell {
-    use std::fs::File;
     use std::io::{BufWriter, Write};
 
     try_and_log_ffi!(

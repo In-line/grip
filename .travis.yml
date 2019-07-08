@@ -96,6 +96,7 @@ before_deploy:
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
 - mkdir -p $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting/include
 - cp $TRAVIS_BUILD_DIR/build/release/*.so $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules
+- strip --strip-debug $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/modules/*.so
 - cp $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/configs
 - cp $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/deploy/addons/amxmodx/scripting/include
 - cd $TRAVIS_BUILD_DIR/deploy
