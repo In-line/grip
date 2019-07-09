@@ -31,7 +31,7 @@
 
 use crate::errors::*;
 use crate::gc_json::*;
-use std::ffi::{CStr, c_void};
+use std::ffi::{c_void, CStr};
 use std::os::raw::c_char;
 
 pub trait ResultFFIExt<T> {
@@ -64,7 +64,7 @@ macro_rules! try_and_log_ffi {
 
     ($amx:expr, $expr:expr) => {
         try_and_log_ffi!($amx, $expr, |amx, err| {
-             log_error(amx, err);
+            log_error(amx, err);
         });
     };
 }
@@ -101,7 +101,7 @@ macro_rules! try_as_usize {
 
     ($amx:expr, $size:expr) => {
         try_as_usize!($amx, $size, |amx, err| {
-             log_error(amx, err);
+            log_error(amx, err);
         })
     };
 }
@@ -123,7 +123,7 @@ macro_rules! try_to_copy_unsafe_string {
 
     ($amx:expr, $dest:expr, $source:expr, $size:expr) => {
         try_to_copy_unsafe_string!($amx, $dest, $source, $size, |amx, err| {
-             log_error(amx, err);
+            log_error(amx, err);
         })
     };
 }
@@ -135,7 +135,7 @@ macro_rules! unconditionally_log_error {
 
     ($amx:expr, $err:expr) => {
         unconditionally_log_error!($amx, $err, |amx, err| {
-             log_error(amx, err);
+            log_error(amx, err);
         })
     };
 }
