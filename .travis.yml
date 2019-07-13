@@ -74,7 +74,6 @@ script:
         cd $TRAVIS_BUILD_DIR/build/debug
         cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
         make -j1
-        sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
       fi
 
   - |
@@ -82,7 +81,6 @@ script:
         cd $TRAVIS_BUILD_DIR/build/release
         cmake $TRAVIS_BUILD_DIR -DCMAKE_BUILD_TYPE=Release
         make -j1
-        sh $TRAVIS_BUILD_DIR/scripts/check_static_linking.sh .
       fi
 
   - |
