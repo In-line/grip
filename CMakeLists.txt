@@ -34,7 +34,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} )
 set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto -fPIC")
 set(PORTABLE_LINK_FLAGS "${FLAGS} -static-libgcc -static-libstdc++ -Wl,--gc-sections -Wl,--version-script=${CMAKE_SOURCE_DIR}/version_script.lds")
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections -fpermissive")
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections -fpermissive -fno-exceptions -fno-rtti")
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 if(WIN32)
