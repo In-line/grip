@@ -12,7 +12,7 @@ crate-type = ["staticlib"]
 panic = "unwind"
 
 [profile.release]
-lto = "fat"
+lto = "thin"
 panic = "unwind"
 codegen-units = 1
 opt-level = 3

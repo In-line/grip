@@ -31,7 +31,7 @@ file(GLOB_RECURSE SOURCE_FILES ${SRC_DIR}/*.h ${SRC_DIR}/*.cpp ${AMXXSDK}/sdk/*.
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} )
 
-set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto -fPIC")
+set(FLAGS "-m32 -O3 -mtune=generic -fvisibility=hidden -flto=thin -fpic")
 set(PORTABLE_LINK_FLAGS "${FLAGS} -static-libgcc -static-libstdc++ -Wl,--gc-sections -Wl,--version-script=${CMAKE_SOURCE_DIR}/version_script.lds")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${FLAGS} -fdata-sections -ffunction-sections -fpermissive")
@@ -43,7 +43,7 @@ if(WIN32)
 	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.dll")
 else()
 	target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-rust pthread) # TODO: Conditional dynamic linking of OpenSSL. (ssl crypto)
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${PORTABLE_LINK_FLAGS} -fuse-ld=lld")
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${PORTABLE_LINK_FLAGS} -static -fuse-ld=lld -Wl,--allow-multiple-definition")
 	set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "_amxx_i386.so")
 endif()
 
