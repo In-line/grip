@@ -1,5 +1,8 @@
 # GoldSrc Rest In Pawn (gRIP) [![Build Status](https://travis-ci.com/In-line/grip.svg?branch=master)](https://travis-ci.com/In-line/grip)
 
+# Unmaintained.
+## Because of several reasons, such as army service. This project is currently unmaintained.
+
 GRIP started as an effort to make an asynchronous REST API for Pawn.  
 
 Months ago I was invited to participate in the GameX project initiative. GameX was striving to create a modern administrating system for HLDS. To do this many problems queued up, waiting to be solved. One of the major challenges was the interaction with the database. 
