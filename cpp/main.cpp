@@ -560,7 +560,7 @@ cell AMX_NATIVE_CALL grip_json_serial_size_amxx(AMX *amx, cell *params) {
 }
 
 cell AMX_NATIVE_CALL grip_json_serial_to_string_amxx(AMX *amx, cell *params) {
-    enum { arg_count, arg_value, arg_pretty, arg_buffer, arg_maxlen, arg_recursion_limit };
+    enum { arg_count, arg_value, arg_buffer, arg_maxlen, arg_pretty, arg_recursion_limit };
     ZERO_INIT_STACK_BUFFER(buffer, params[arg_maxlen]);
     cell ret = grip_json_serial_to_string(amx, params[arg_value], params[arg_pretty] != 0, &buffer[0], params[arg_maxlen], params[arg_recursion_limit]);
     MF_SetAmxStringSafe(amx, params[arg_buffer], &buffer[0], params[arg_maxlen]);
