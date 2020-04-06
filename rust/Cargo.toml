@@ -32,7 +32,7 @@ rust-ini = "0.13.0"
 clone_all = "0.1.1"
 either = "1.5.2"
 lazy_static = "1.4.0"
-serde_json = {version = "1.0.40", features = ["preserve_order"] }
+serde_json = {version = "1.0.42", features = ["preserve_order"] }
 float-cmp = "0.4.0"
 bacon_rajan_cc = "0.2.4"
 newtype_derive = "0.1.6"
