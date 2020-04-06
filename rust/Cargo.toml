@@ -27,7 +27,7 @@ libc = "0.2.59"
 tokio = "0.1.22"
 derive_builder = "0.7.2"
 error-chain = { version = "0.12.1", default-features = false }
-log = "0.4.7"
+log = "0.4.8"
 rust-ini = "0.13.0"
 clone_all = "0.1.1"
 either = "1.5.2"
