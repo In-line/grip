@@ -24,6 +24,12 @@ find_program(CARGO_EXECUTABLE cargo
 	PATH_SUFFIXES "bin")
 mark_as_advanced(CARGO_EXECUTABLE)
 
+# Find cross executable
+find_program(CROSS_EXECUTABLE cross
+		HINTS "${CARGO_HOME}"
+		PATH_SUFFIXES "bin")
+mark_as_advanced(CROSS_EXECUTABLE)
+
 # Find rustc executable
 find_program(RUSTC_EXECUTABLE rustc
 	HINTS "${CARGO_HOME}"
