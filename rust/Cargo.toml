@@ -19,7 +19,7 @@ opt-level = 3
 
 [dependencies]
 bytes = "0.4.12"
-crossbeam-channel = "0.3.8"
+crossbeam-channel = "0.5.0"
 reqwest = { version = "0.9.18", default-features = false, features = ["trust-dns", "rustls-tls"] }
 futures = "0.1.28"
 derive_more = "0.15.0"
