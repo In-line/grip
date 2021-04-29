@@ -1,0 +1,40 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/rust"
+  schedule:
+    interval: daily
+    time: "01:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: float-cmp
+    versions:
+    - ">= 0.5.a, < 0.6"
+  - dependency-name: libc
+    versions:
+    - 0.2.84
+    - 0.2.85
+    - 0.2.86
+    - 0.2.87
+    - 0.2.88
+    - 0.2.89
+    - 0.2.90
+    - 0.2.91
+    - 0.2.92
+    - 0.2.93
+  - dependency-name: futures
+    versions:
+    - 0.3.12
+    - 0.3.13
+  - dependency-name: indexmap
+    versions:
+    - 1.6.1
+  - dependency-name: crossbeam-channel
+    versions:
+    - 0.5.0
+- package-ecosystem: gitsubmodule
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "01:00"
+  open-pull-requests-limit: 10
